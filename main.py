@@ -1,5 +1,7 @@
+import db_setup
+
 ####### MAIN #######
 
-import psycopg2
-
+# Connect with PostGre MIMIC-III Database
+db_setup.connect()
 
