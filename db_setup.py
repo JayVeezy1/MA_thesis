@@ -1,16 +1,12 @@
-# FROM https://www.postgresqltutorial.com/postgresql-python/connect/
 from configparser import ConfigParser
-import psycopg2
 
 
-def config(filename='database.ini', section='postgresql'):
-    # create a parser
+def config(filename='database.ini', section='postgresql') -> dict:
     parser = ConfigParser()
-    # read config file
-    parser.read(filename)
+    parser.read(filename)           # use external database.ini file to secure access data
 
-    # get section, default to postgresql
-    db = {}
+    # get db parameters from postgresql section
+    db: dict = {}
     if parser.has_section(section):
         params = parser.items(section)
         for param in params:
@@ -21,35 +17,11 @@ def config(filename='database.ini', section='postgresql'):
     return db
 
 
-def connect():
-    """ Connect to the PostgreSQL database server """
-    conn = None
-    try:
-        # read connection parameters
-        params = config()
+# database.ini needs to look something like this:
+# [postgresql]
+# host=localhost
+# database=mimic
+# user=postgres
+# password=xxxxxxxxxxxxxx
 
-        # connect to the PostgreSQL server
-        print('Connecting to the PostgreSQL database:')
-        conn = psycopg2.connect(**params)
-        print('successful')
-
-        # create a cursor
-        cur = conn.cursor()
-
-        # execute a statement
-        print('PostgreSQL database version:')
-        cur.execute('SELECT version()')
-
-        # display the PostgreSQL database server version
-        db_version = cur.fetchone()
-        print(db_version)
-
-        # close the communication with the PostgreSQL
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-
-    finally:
-        if conn is not None:
-            conn.close()
-            print('Database connection closed.')
+# Reference: https://www.postgresqltutorial.com/postgresql-python/connect/
