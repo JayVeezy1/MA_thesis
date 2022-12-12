@@ -2,6 +2,8 @@ import csv
 import os
 
 import psycopg2
+
+import SQL_queries
 from db_setup import config
 
 
@@ -32,16 +34,11 @@ def export_unique_adm_to_csv(use_case_icd_list=None, use_case_name=None) -> None
         cur_1 = conn.cursor()
         print('Connection successful.')
 
-        ##### 1) execute the query_basic_statistics procedure #####
+        ##### 1) execute the query_patient_cohort #####
         ## QUERY 1
-        query_basic_statistics: str = 'SELECT row_id, subject_id FROM mimiciii.patients'
-        # TODO this needs to be unique key: hadm&subject_id not just row_id
-        # TODO also needs to WHERE icd_9 = use_case_icd_list (list)
-        cur_1.execute(query_basic_statistics)
-        basic_statistics: list = cur_1.fetchall()
-        print('query_basic_statistics executed.')
-
-        header_basic_statistics = ['row_id', 'subject_id']  # todo: make automatic (see header_single_adm)
+        SQL_queries.query_patient_cohort(cur_1, use_case_icd_list)
+        patient_cohort: list = cur_1.fetchall()
+        header_patient_cohort: list = SQL_queries.get_header_patient_cohort(cur_1)
 
         # create new directory for this use-case if it does not exist yet
         directory: str = f'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/exports/{use_case_name}'
@@ -51,12 +48,12 @@ def export_unique_adm_to_csv(use_case_icd_list=None, use_case_name=None) -> None
             pass
 
         # export to csv
-        filename_string: str = f'{directory}/0_basic_statistics.csv'
+        filename_string: str = f'{directory}/0_patient_cohort.csv'
         filename = filename_string.encode()
         with open(filename, 'w') as output_file:
             csv_out = csv.writer(output_file)
-            csv_out.writerow(header_basic_statistics)
-            csv_out.writerows(basic_statistics)
+            csv_out.writerow(header_patient_cohort)
+            csv_out.writerows(patient_cohort)
 
         ##### 2) export data for each single_admission #####
         cur_2 = conn.cursor()
