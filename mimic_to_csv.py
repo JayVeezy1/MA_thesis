@@ -92,3 +92,35 @@ def export_unique_adm_to_csv(use_case_icd_list=None, use_case_name=None) -> None
     finally:
         if conn is not None:
             conn.close()
+
+
+def create_all_diagnoses_table() -> None:
+    """
+    This function is only needed when using the database for the first time.
+    It creates the table 'all_diagnoses_icd' where for each admission all available diagnoses are saved in the new
+    field 'all_icd_codes' as an array.
+    Thus, in later filtering for only one admission, all other diagnoses for this admission are not lost.
+    """
+    # Setup connection to PostGre MIMIC-III Database
+    db_params: dict = config()
+
+    conn = None
+    try:
+        # connect to the database
+        print('Connecting to the PostgreSQL database:')
+        conn = psycopg2.connect(**db_params)
+        cur_1 = conn.cursor()
+        print('Connection successful.')
+
+        ##### 0) Only first time: create the necessary table 'all_diagnoses_icd' #####
+        ## QUERY 0
+        SQL_queries.query_create_table_all_diagnoses_icd(cur_1)
+
+        # close the communication with the database
+        cur_1.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print('Error occurred:', error)
+
+    finally:
+        if conn is not None:
+            conn.close()
