@@ -94,7 +94,7 @@ def export_unique_adm_to_csv(use_case_icd_list=None, use_case_name=None) -> None
             conn.close()
 
 
-def create_all_diagnoses_table() -> None:
+def create_table_all_diagnoses() -> None:
     """
     This function is only needed when using the database for the first time.
     It creates the table 'all_diagnoses_icd' where for each admission all available diagnoses are saved in the new

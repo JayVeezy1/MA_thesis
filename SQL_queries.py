@@ -1,3 +1,5 @@
+# TODO: Add the corresponding SQL Scripts to GitHub Repository
+
 def query_patient_cohort(cur_1, use_case_icd_list=None):
     if use_case_icd_list is None:
         use_case_icd_list = []
@@ -44,8 +46,8 @@ def get_header_patient_cohort(cur_1) -> list:
 
 
 def query_create_table_all_diagnoses_icd(cur_1):
-    query_create_table_all_diagnoses: str = 'select get_all_diagnoses();'
-    cur_1.execute(query_create_table_all_diagnoses)
-    print('query_create_table_all_diagnoses executed.')
+    query_create_table_all_diagnoses_icd_string: str = 'select get_all_diagnoses();'
+    cur_1.execute(query_create_table_all_diagnoses_icd_string)
+    print('query_create_table_all_diagnoses_icd executed.')
 
     return None
