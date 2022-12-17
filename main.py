@@ -1,4 +1,5 @@
 import mimic_to_csv
+import supplements.icd9_codes
 
 ####### MAIN #######
 if __name__ == '__main__':
@@ -7,8 +8,8 @@ if __name__ == '__main__':
     # mimic_to_csv.create_table_all_diagnoses()
 
     # Step 1.1) Export the patient_cohort for the specified use_case (icd_list) into .csv file:
-    # TOdo: add all_diagnoses field and filtering options
-    mimic_to_csv.export_unique_adm_to_csv(use_case_icd_list=[42731], use_case_name='testing')
+    mimic_to_csv.export_unique_adm_to_csv(use_case_icd_list=supplements.icd9_codes.icd9_00_stroke_selected,
+                                          use_case_name='testing_stroke')
 
 #### Next Task #########################################################################################################
     # Step 1.2) Export a unique .csv file with Chart-Data (time series) for each admission (from now on admission = patient)

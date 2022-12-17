@@ -38,7 +38,7 @@ def export_unique_adm_to_csv(use_case_icd_list=None, use_case_name=None) -> None
         ## QUERY 1
         SQL_queries.query_patient_cohort(cur_1, use_case_icd_list)
         patient_cohort: list = cur_1.fetchall()
-        header_patient_cohort: list = SQL_queries.get_header_patient_cohort(cur_1)
+        header_patient_cohort: list = SQL_queries.get_header_patient_cohort(cur_1)      # todo: check if header is correct
 
         # create new directory for this use-case if it does not exist yet
         directory: str = f'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/exports/{use_case_name}'
@@ -55,6 +55,8 @@ def export_unique_adm_to_csv(use_case_icd_list=None, use_case_name=None) -> None
             csv_out.writerow(header_patient_cohort)
             csv_out.writerows(patient_cohort)
 
+        # TODO: export chart_event per patient to .csv
+        """
         ##### 2) export data for each single_admission #####
         cur_2 = conn.cursor()
         # TODO header_single_adm = 'select * from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME=<table name>', this probably needs to be based on the view-object that is used in query_2
@@ -84,8 +86,11 @@ def export_unique_adm_to_csv(use_case_icd_list=None, use_case_name=None) -> None
                 csv_out.writerow(data_list)
 
         # close the communication with the database
-        cur_1.close()
         cur_2.close()
+        """
+        cur_1.close()
+
+
     except (Exception, psycopg2.DatabaseError) as error:
         print('Error occurred:', error)
 

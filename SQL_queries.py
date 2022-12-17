@@ -1,32 +1,27 @@
-# TODO: Add the corresponding SQL Scripts to GitHub Repository
-
+# Option 1: complete SQL in Python,
+# PRO: all code in one place, CON: creating objects inside DB is better, query is way too long
+# Option 2: Use a function in PGAdmin CON: works, but view is easier -> choose option 3
+# cur_1.callproc('Function_name', parameters=use_case_icd_list)
+# Option 3: Call a View that was created in PGAdmin
 def query_patient_cohort(cur_1, use_case_icd_list=None):
     if use_case_icd_list is None:
         use_case_icd_list = []
 
-    # Option 1: function inside PGAdmin CON: too complex
-    # cur_1.callproc('Function_name', parameters=use_case_icd_list)  # parameters = IN, OUT
+    # TODO check if filter with this long string works
+    # TODO remove duplicate hadm_id rows (keep where seq_num is minimum)
+    # TODO add 'all_icd9' column to query 1
 
-    # Option 2: complete SQL in Python, PRO: all code in one place, CON: creating objects inside DB might be better, SQL is way too long
-    # query_basic_statistics: str = 'Select.....'
+    # Setup query_icd_filter as string
+    query_with_icd_filter: str = f'SELECT * FROM mimiciii.patient_cohort_with_icd where patient_cohort_with_icd.icd9_code = {use_case_icd_list[0]}'
+    if len(use_case_icd_list) > 1:
+        for icd_code in use_case_icd_list[1:]:
+            query_with_icd_filter += ' OR patient_cohort_with_icd.icd9_code = ' + str(icd_code)
+        query_with_icd_filter = query_with_icd_filter[:-44] + ';'
 
-    # Option 3: View inside PGAdmin PRO: less complex than function
-    # TODO how to deal with multiple diagnosis -> 'all_icd9' column
-    # TODO how to filter for multiple WHERE icd_9 = use_case_icd_list (list) inside the new column
-
-    # Setup icd_filter
-    query_icd_filter: str = '('
-    for code in use_case_icd_list:
-        query_icd_filter += str(code) + ', '
-    query_icd_filter = query_icd_filter[:-2] + ')'
+    print('TEST QUERY:', query_with_icd_filter)
 
     # Execute Query for patient cohort
-    string_test = ''
-    for element in query_icd_filter:
-        string_test += element
-    string_test = string_test[1:-1]
-
-    query_patient_cohort_string: str = f'SELECT * FROM mimiciii.patient_cohort_with_icd where patient_cohort_with_icd.icd9_code = \'{string_test}\';'
+    query_patient_cohort_string: str = f'SELECT * FROM mimiciii.patient_cohort_with_icd where patient_cohort_with_icd.icd9_code = \'{query_with_icd_filter}\';'
     cur_1.execute(query_patient_cohort_string)
     print('query_basic_statistics executed.')
 
