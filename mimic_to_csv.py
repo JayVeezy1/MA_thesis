@@ -7,7 +7,7 @@ import SQL_queries
 from db_setup import config
 
 
-def export_unique_adm_to_csv(use_case_icd_list=None, use_case_name=None) -> None:
+def export_patient_cohort_to_csv(use_case_icd_list=None, use_case_name=None) -> None:
     """
     This function exports a .csv file per unique-admission (each patient once).
     The files are saved inside /export/use_case_name/
@@ -29,16 +29,14 @@ def export_unique_adm_to_csv(use_case_icd_list=None, use_case_name=None) -> None
     conn = None
     try:
         # connect to the database
-        print('Connecting to the PostgreSQL database:')
         conn = psycopg2.connect(**db_params)
         cur_1 = conn.cursor()
-        print('Connection successful.')
+        print('STATUS: Connection to the PostgreSQL database successful.')
 
         ##### 1) execute the query_patient_cohort #####
         ## QUERY 1
         SQL_queries.query_patient_cohort(cur_1, use_case_icd_list)
         patient_cohort: list = cur_1.fetchall()
-        header_patient_cohort: list = SQL_queries.get_header_patient_cohort(cur_1)      # todo: check if header is correct
 
         # create new directory for this use-case if it does not exist yet
         directory: str = f'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/exports/{use_case_name}'
@@ -52,10 +50,11 @@ def export_unique_adm_to_csv(use_case_icd_list=None, use_case_name=None) -> None
         filename = filename_string.encode()
         with open(filename, 'w') as output_file:
             csv_out = csv.writer(output_file)
-            csv_out.writerow(header_patient_cohort)
+            csv_out.writerow(['hadm_id','icustay_id','intime','outtime','age','gender','ethnicity','first_service','dbsource','subject_id','seq_num','icd9_code','all_icd9_codes'])
             csv_out.writerows(patient_cohort)
+        print('STATUS: 0_patient_cohort.csv created.')
 
-        # TODO: export chart_event per patient to .csv
+        # TODO: export chart_event per patient to .csv with 'get_unique_patients' function. Probably create a new Python-Function for this as well.
         """
         ##### 2) export data for each single_admission #####
         cur_2 = conn.cursor()
