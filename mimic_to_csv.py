@@ -1,5 +1,6 @@
 import csv
 import os
+from datetime import time, datetime
 
 import psycopg2
 
@@ -7,7 +8,7 @@ import SQL_queries
 from db_setup import config
 
 
-def export_patient_cohort_to_csv(use_case_icd_list=None, use_case_name=None) -> None:
+def export_patients_to_csv(use_case_icd_list=None, use_case_name=None) -> None:
     """
     This function exports a .csv file per unique-admission (each patient once).
     The files are saved inside /export/use_case_name/
@@ -30,13 +31,12 @@ def export_patient_cohort_to_csv(use_case_icd_list=None, use_case_name=None) -> 
     try:
         # connect to the database
         conn = psycopg2.connect(**db_params)
-        cur_1 = conn.cursor()
+        cursor_1 = conn.cursor()
         print('STATUS: Connection to the PostgreSQL database successful.')
 
-        ##### 1) execute the query_patient_cohort #####
-        ## QUERY 1
-        SQL_queries.query_patient_cohort(cur_1, use_case_icd_list)
-        patient_cohort: list = cur_1.fetchall()
+        ##### 1) execute the query_patient_cohort
+        patient_cohort: list = SQL_queries.query_patient_cohort(cursor_1, use_case_icd_list)
+        cohort_header: list = SQL_queries.query_header_patient_cohort(cursor_1)
 
         # create new directory for this use-case if it does not exist yet
         directory: str = f'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/exports/{use_case_name}'
@@ -50,45 +50,46 @@ def export_patient_cohort_to_csv(use_case_icd_list=None, use_case_name=None) -> 
         filename = filename_string.encode()
         with open(filename, 'w') as output_file:
             csv_out = csv.writer(output_file)
-            csv_out.writerow(['hadm_id','icustay_id','intime','outtime','age','gender','ethnicity','first_service','dbsource','subject_id','seq_num','icd9_code','all_icd9_codes'])
+            csv_out.writerow(cohort_header)
             csv_out.writerows(patient_cohort)
         print('STATUS: 0_patient_cohort.csv created.')
 
-        # TODO: export chart_event per patient to .csv with 'get_unique_patients' function. Probably create a new Python-Function for this as well.
-        """
-        ##### 2) export data for each single_admission #####
-        cur_2 = conn.cursor()
-        # TODO header_single_adm = 'select * from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME=<table name>', this probably needs to be based on the view-object that is used in query_2
-        header_single_adm = ['row_id', 'subject_id', 'gender', 'dob', 'dod', 'dod_hosp', 'dod_ssn', 'expire_flag']
 
-        for selected_unique_admission in range(1, 10):    # cur_1.rowcount): TODO: select row_id from basic_statistics instead of rowcount! or maybe even hadm&subject_id
-            ## QUERY 2
-            query_single_admission: str = f'SELECT * FROM mimiciii.patients WHERE mimiciii.patients.row_id = {selected_unique_admission}'
-            cur_2.execute(query_single_admission)
-            single_admission: list = cur_2.fetchall()
-            print('query_single_admission executed for: ', selected_unique_admission)
+        ##### 2) export chart_events data for each icu_stay #####
+        # Get icu_stay_ids from patient_cohort
+        icu_stay_ids: list = []
+        icu_stay_ids_set: set = set()
+        for entry in patient_cohort:
+            icu_stay_ids.append(entry[1])
+            icu_stay_ids_set.add(entry[1])
+        # icu_stay_ids.sort()
+        if len(icu_stay_ids) != len(icu_stay_ids_set):
+            print('Warning: Duplicate icustay_ids exist. Recommended to check patient_cohort.')
 
-            # each row per single_admission is one string in the final list -> TODO: check if this works for time-series, probably better to do it with writerows like in basic_statistics
-            final_list: list = []
-            for row in single_admission:
-                final_list.append(row)
-            final_list[0] = str(final_list[0])[1:]      # bei mehreren rows das hier auch einschieben und für jedes [row] machen?
-            final_list[0] = str(final_list[0])[:-1]
-            data_list = final_list[0].split(',')
+        # Get chart_events for each icustay and export to .csv
+        first_counter = 0
+        single_header = []
+        for icustay_id in icu_stay_ids[:3]:             # loop through for all ids
+            print('STATUS: Executing query_single_icustay for icustay_id', str(icustay_id))
+            starting_time = datetime.now()
+            single_icustay: list = SQL_queries.query_single_icustay(cursor_1, icustay_id)
+            # print('CHECK: Query result:', single_icustay)
+            if first_counter == 0:
+                ending_time = datetime.now()
+                time_needed = ending_time - starting_time
+                print('CHECK: Seconds needed for first Query:', round(time_needed.total_seconds()))
+                print(f'CHECK: Estimated minutes for all {len(icu_stay_ids)} Queries: {round(time_needed.total_seconds() * len(icu_stay_ids) / 60)}')
+                single_header: list = SQL_queries.query_header_single(cursor_1)
+                first_counter += 1
 
-            # export to csv
-            filename_string: str = f'{directory}/patient_{selected_unique_admission}.csv'
+            filename_string: str = f'{directory}/icustay_id_{icustay_id}.csv'
             filename = filename_string.encode()
             with open(filename, 'w') as output_file:
                 csv_out = csv.writer(output_file)
-                csv_out.writerow(header_single_adm)
-                csv_out.writerow(data_list)
+                csv_out.writerow(single_header)
+                csv_out.writerows(single_icustay)
 
-        # close the communication with the database
-        cur_2.close()
-        """
-        cur_1.close()
-
+        cursor_1.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
         print('Error occurred:', error)
@@ -98,7 +99,7 @@ def export_patient_cohort_to_csv(use_case_icd_list=None, use_case_name=None) -> 
             conn.close()
 
 
-def create_table_all_diagnoses() -> None:
+def create_table_all_diagnoses() -> None:               # possibly also create all later needed dictionary-tables here (like the label-measurement dict)
     """
     This function is only needed when using the database for the first time.
     It creates the table 'all_diagnoses_icd' where for each admission all available diagnoses are saved in the new

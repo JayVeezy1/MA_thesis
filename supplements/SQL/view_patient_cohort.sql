@@ -1,13 +1,15 @@
 -- reference: https://github.com/alistairewj/sepsis3-mimic/blob/master/query/tbls/cohort.sql
 -- SET search_path TO mimiciii;  		-- This command is only needed once for the creation of the view in the mimiciii schema
 
+-- TODO: check&rework the excluded logic (read paper) but "secondary_filtering" must definitely stay otherwise duplicate icu_stays
+
 create or replace view patient_cohort_view
 AS
 	with serv as
 	(
 		select services.hadm_id, curr_service
 		, ROW_NUMBER() over (partition by services.hadm_id order by transfertime) as rn
-		from services
+		from mimiciii.services
 	)
 	, t1 as
 	(
@@ -23,10 +25,10 @@ AS
 		, s.curr_service as first_service
 		, adm.HAS_CHARTEVENTS_DATA
 		-- suspicion of infection using POE / spoe.suspected_infection_time was removed, not needed as it was derived only for special case of sepsis-prediction
-	from icustays ie
-	inner join admissions adm
+	from mimiciii.icustays ie
+	inner join mimiciii.admissions adm
 		on ie.hadm_id = adm.hadm_id
-	inner join patients pat				
+	inner join mimiciii.patients pat				
 		on ie.subject_id = pat.subject_id
 	left join serv s
 		on ie.hadm_id = s.hadm_id

@@ -4,21 +4,7 @@ create or replace view patient_cohort_with_icd
 AS
 	with diagnoses as
 	(
-		select 
-			row_id,
-			subject_id,
-			diagnoses_icd.hadm_id,
-			seq_num,
-			icd9_code
-		/*	
-		, case 
-				when left(diag.icd9_code, 3) < 100 then 'first'
-			 	when left(diag.icd9_code, 3) < 100 then 'first'
-			 	when left(diag.icd9_code, 3) < 100 then 'first'
-		  		else 'no_category' 
-			end as icd_category
-		*/
-		from mimiciii.diagnoses_icd
+		select * from get_all_diagnoses()
 	), t1 as
 	(
 		select 
@@ -39,7 +25,8 @@ AS
 			cohort.excluded,
 			diag.subject_id,
 			diag.seq_num,
-			diag.icd9_code
+			diag.icd9_code,
+			diag.all_icd9_codes
 		from mimiciii.patient_cohort_view cohort
 		inner join diagnoses diag
 			on cohort.hadm_id = diag.hadm_id
@@ -47,9 +34,15 @@ AS
 	select
 		*
 	from t1 
-	where excluded = 0		-- TODO: check&rework the excluded logic (read paper)
-	order by t1.icustay_id;
-
+	where excluded = 0					-- remove all 'excluded' entries
+	order by t1.hadm_id, t1.seq_num;
 end;
 
-select * from patient_cohort_with_icd;
+-- select * from patient_cohort_with_icd;
+
+-- select count(*) from  patient_cohort_with_icd;
+-- join leads to 705921 entries, but in diagnoses only 600.000 hadm_id entries 
+-- because in cohort_view some hadm_ids are duplicate, because it was 1 hadm but multiple times icustay_id
+-- solution: with "excluded = 1" count = 513035 and independent on join-type (right, left, inner) -> always same matches.
+
+	
