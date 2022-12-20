@@ -8,33 +8,45 @@ import SQL_queries
 from db_setup import config
 
 
-def export_patients_to_csv(use_case_icd_list=None, use_case_name=None) -> None:
+def export_patients_to_csv(use_case_icd_list=None, use_case_itemids=None, use_case_name=None, ) -> None:
     """
     This function exports a .csv file per unique-admission (each patient once).
     The files are saved inside /export/use_case_name/
     The function does not return anything.
     Analysis of the selection can be conducted on the .csv file created by export_basic_statistics
     :param use_case_icd_list: recommended to use this list of all icd_9 codes that should be selected for this use-case
+    :param use_case_itemids:
     :param use_case_name: the title for this use-case e.g. stroke, heart_failure, sepsis
     :return: None
     """
     if use_case_icd_list is None:
         use_case_icd_list = []
         use_case_name = 'all_cases'
+        print('NOTICE: No icd9 codes were selected. Not recommended, but query will be run for all available use-cases.')
+    if use_case_itemids is None:
+        print('Error: Mandatory to choose "use_case_itemids". Otherwise too many available chart_events.')
+        return None
     if use_case_name is None:
         use_case_name = 'no_use_case_name'
+        print('NOTICE: No use-case name was chosen. Export files will be saved in folder "no_use_case_name".')
+
+    # Setup itemids Filter
+    selected_itemids_string: str = '\'{'
+    for itemid in use_case_itemids:
+        selected_itemids_string = selected_itemids_string + str(itemid) + ', '
+    selected_itemids_string = selected_itemids_string[:-2] + '}\''
+    # print('CHECK: itemid Filter:', len(use_case_itemids))
 
     # Setup connection to PostGre MIMIC-III Database
     db_params: dict = config()
-
     conn = None
     try:
-        # connect to the database
+        ##### 0) Connect to the database
         conn = psycopg2.connect(**db_params)
         cursor_1 = conn.cursor()
         print('STATUS: Connection to the PostgreSQL database successful.')
 
-        ##### 1) execute the query_patient_cohort
+        ##### 1) Execute the query_patient_cohort
         patient_cohort: list = SQL_queries.query_patient_cohort(cursor_1, use_case_icd_list)
         cohort_header: list = SQL_queries.query_header_patient_cohort(cursor_1)
 
@@ -69,10 +81,10 @@ def export_patients_to_csv(use_case_icd_list=None, use_case_name=None) -> None:
         # Get chart_events for each icustay and export to .csv
         first_counter = 0
         single_header = []
-        for icustay_id in icu_stay_ids[:3]:             # loop through for all ids
+        for icustay_id in icu_stay_ids[:2]:             # loop through for all ids, also turn on sorting again
             print('STATUS: Executing query_single_icustay for icustay_id', str(icustay_id))
             starting_time = datetime.now()
-            single_icustay: list = SQL_queries.query_single_icustay(cursor_1, icustay_id)
+            single_icustay: list = SQL_queries.query_single_icustay(cursor_1, icustay_id, selected_itemids_string)
             # print('CHECK: Query result:', single_icustay)
             if first_counter == 0:
                 ending_time = datetime.now()
@@ -97,6 +109,7 @@ def export_patients_to_csv(use_case_icd_list=None, use_case_name=None) -> None:
     finally:
         if conn is not None:
             conn.close()
+        print('STATUS: Finished mimic_to_csv.')
 
 
 def create_table_all_diagnoses() -> None:               # possibly also create all later needed dictionary-tables here (like the label-measurement dict)

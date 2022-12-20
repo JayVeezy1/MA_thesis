@@ -48,14 +48,14 @@ def query_header_patient_cohort(cur_1) -> list:
     return header_list
 
 
-def query_single_icustay(cursor_1, icustay_id: int) -> list:
-    query_single: str = f'SELECT * FROM public.get_single_patients({icustay_id})'
+def query_single_icustay(cursor_1, icustay_id: int, selected_itemids_string: str) -> list:
+    query_single: str = f'CALL create_transposed_patient({icustay_id}, {selected_itemids_string}); SELECT * FROM temp_transposed_patient;'         # here two SQL steps, not just one function call because RETURN table columns can be dynamic
     cursor_1.execute(query_single)
     return cursor_1.fetchall()
 
 
 def query_header_single(cur_1) -> list:
-    query_single_header: str = 'SELECT column_name FROM information_schema.columns WHERE table_schema = \'public\' AND table_name = \'single_icustay_events\';'
+    query_single_header: str = 'SELECT column_name FROM information_schema.columns WHERE table_schema = \'public\' AND table_name = \'temp_transposed_patient\';'
     cur_1.execute(query_single_header)
     header_list: list = []
     for element in cur_1.fetchall():

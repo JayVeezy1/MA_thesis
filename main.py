@@ -1,5 +1,6 @@
 import mimic_to_csv
 import supplements.icd9_codes
+import supplements.itemids_list_mv
 
 ####### MAIN #######
 if __name__ == '__main__':
@@ -9,7 +10,11 @@ if __name__ == '__main__':
 
     # Step 1.1) Export the patient data for the specified use_case (icd_list) into .csv files:
     mimic_to_csv.export_patients_to_csv(use_case_icd_list=supplements.icd9_codes.icd9_00_stroke_selected,
+                                        use_case_itemids=supplements.itemids_list_mv.selected_itemids_stroke,
                                         use_case_name='testing_stroke')
+
+    # TODO: Check why filtering with itemids doesnt lead to more features?
+
     # INFO: ICD9 Codes for Stroke found: 1447
     # INFO: Total available patients after filtering like research: 13762 (which they also had -> correct)
 
@@ -18,6 +23,8 @@ if __name__ == '__main__':
     # TODO 2: add death_column and merge patient-data with chart_events data
     # TODO 3: add labevents, procedure_events, compute events?
     # TODO 4: check again all implemented filters, explain why used
+
+    # TODO: get important side-illnesses as features
 
 
 #### Long Term #########################################################################################################

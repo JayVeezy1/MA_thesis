@@ -18,10 +18,14 @@ with their hourly chart-events (time-series data).
 
 **Estimated Time:** 
 
+Getting access to the MIMIC-III dataset by PhysioNet takes between 1-4 weeks. 
+For this, also a course regarding data-protection had to be conducted, which regularly takes about 4 hours.
+The download and import of the data into the postgre database takes about 5 hours.
+
 Running the set-up for the table 'all_diagnoses_icd' takes about 45 minutes.
 There, for each admission all available diagnoses are saved in the new field 'all_icd_codes' as an array. 
 Thus, in later filtering for only one diagnoses-type, all other diagnoses for this admission are not lost.
-Creation of the patient_cohort can be calculated quickly in 10 seconds. However, the creation of the single patient files with 
+Creation of the patient_cohort can be calculated very quickly (10 seconds). However, the creation of the single patient files with 
 all their chart-events takes up multiple hours. 
 
 **Optional Filtering:** 
