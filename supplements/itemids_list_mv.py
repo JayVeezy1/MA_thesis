@@ -1,5 +1,10 @@
 # Selected itemids for use-case: stroke
 selected_itemids_stroke = [
+    220045,  # "Heart Rate",            # should always keep this in, because every patient has it.
+    227342,  # "Secondary diagnosis",
+    ]
+
+potential_itemids_stroke = [
     220003,     # "ICU Admission date",
     220045,     # "Heart Rate",
     220050,     # "Arterial Blood Pressure systolic",
@@ -35,7 +40,6 @@ selected_itemids_stroke = [
     223805,     # "Nausea and Vomiting (CIWA)",
     223806,     # "Tremor (CIWA)",
     223810,     # "Paroxysmal Sweats",
-    223811,     # "Anxiety",
     223814,     # "Auditory Disturbance",
     223817,     # "Agitation",
     223818,     # "Tactile Disturbances",

@@ -11,10 +11,26 @@ Once, this setup is finished a user can run all functions from the main.py Pytho
 
 The actual data for the MIMIC-III dataset can not be shared here. It is available, upon request, through PhysioNet.
 
+**Analysis Goal**
+
+Previous research had 3 main directions. Either, the hourly prediction of the occurrence of a sickness, death or 
+complications (like sepsis) is intended. The goal here is to offer earlier prediction than conventional scoring-methods.
+For this, hourly time-series data is used as a basis. This is rather complex and many times, supportive features 
+need to be derived first.
+
+A second direction is the prediction of the occurrence of a sickness based on general data (averages, not hourly).
+For this, a precise knowledge of the medical factors is required.
+
+The last case is to predict the general development of a patient. Different approaches are possible: 
+length of stay, probability of a secondary stay (relapse) and mortality prediction.
+This last case is the intention of this work: 
+the prediction of death within the hospital stay, within 30 days and within 360 days.
+
 **Output:**
 
 An overview of all selected patients is created in '0_patient_cohort.csv'. For each patient a .csv file is created
-with their hourly chart-events (time-series data). 
+with their hourly chart-events (time-series data). These time-series data will be converted to averages, min and max 
+features in a later step.
 
 **Estimated Time:** 
 
@@ -25,14 +41,38 @@ The download and import of the data into the postgre database takes about 5 hour
 Running the set-up for the table 'all_diagnoses_icd' takes about 45 minutes.
 There, for each admission all available diagnoses are saved in the new field 'all_icd_codes' as an array. 
 Thus, in later filtering for only one diagnoses-type, all other diagnoses for this admission are not lost.
-Creation of the patient_cohort can be calculated very quickly (10 seconds). However, the creation of the single patient files with 
-all their chart-events takes up multiple hours. 
 
-**Optional Filtering:** 
+Creation of the patient_cohort can be calculated very quickly (10 seconds). 
 
-The patients can be filtered with the icd9-codes (diagnoses at admission). 
-Also, the required labels can be chosen by the user. Some further filtering is conducted, which can not be changed by the user. This filtering was based on previous research,
-for example, data with error-flags or underage patients where removed.
+However, the creation of the single patient files with all their chart-events takes up multiple hours. 
+Approximately the creation of one patient .csv file takes 30 seconds. 
+Depending on the use case, for example stroke there are 1400 available patients, which leads to about 700 minutes (>10h).
+
+**Filtering:** 
+
+There are 3 steps where the dataset is filtered.
+1) Patient Selection (not changeable):
+
+The filtering, which patient is suitable. There are 58.976 unique admissions in the dataset. 
+However, many patients are underage or need to be excluded because there is missing data.
+Also, only patients, for which the 'metavision' system was used, are included. 
+This filtering is in line with previous research. It should not be changed by the user.
+After this first step, there are still 13.762 admissions left. 
+
+2) Use-Case Selection (Input at the 'export_patients_to_csv()' function):
+ 
+The patients can be filtered for their illnesses with the icd9-codes (diagnoses at admission). 
+There are 1.440 unique icustay_ids for the use-case of stroke. A patient can come to the ICU multiple times, within one 
+hospital stay (one admission). Thus, the relevant key shall be the icu-stay, to not use duplicate patients.
+
+3) Feature Selection (Input at the 'export_patients_to_csv()' function):
+
+The relevant labels/features can be chosen by the user. The complete dataset offers 12.487 itemids (for any kind of chart_event that happened at the ICU). These are too many features for any useful analysis. But as stated in 1), only metavision patients are included. Metavision enables 2.992 itemids. This would still be too many features.
+Thus, a user has to choose, which labels will be important for the respective use-case. 
+It is recommended to choose about 40 itemids. This selection naturally requires some medical knowledge, 
+thus it is also recommended to use previous research filtering as a guideline. 
+Patient demographics, secondary diagnosis will always be derived, regardless of this filter. 
+
 
 # WIP
 

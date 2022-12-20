@@ -12,19 +12,16 @@ if __name__ == '__main__':
     mimic_to_csv.export_patients_to_csv(use_case_icd_list=supplements.icd9_codes.icd9_00_stroke_selected,
                                         use_case_itemids=supplements.itemids_list_mv.selected_itemids_stroke,
                                         use_case_name='testing_stroke')
-
-    # TODO: Check why filtering with itemids doesnt lead to more features?
-
     # INFO: ICD9 Codes for Stroke found: 1447
     # INFO: Total available patients after filtering like research: 13762 (which they also had -> correct)
 
 #### Current Task
-    # TODO 1: transpose the Chart-Data (time series) for each patient (crosstab in sql), for this filter for required labels
-    # TODO 2: add death_column and merge patient-data with chart_events data
+    # TODO 1: add death_columns -> prediction goal
+    # TODO 2: choose chart_events itemids -> from other papers?
     # TODO 3: add labevents, procedure_events, compute events?
     # TODO 4: check again all implemented filters, explain why used
 
-    # TODO: get important side-illnesses as features
+    # TODO: add important side-illnesses as features
 
 
 #### Long Term #########################################################################################################
