@@ -81,7 +81,7 @@ def export_patients_to_csv(use_case_icd_list=None, use_case_itemids=None, use_ca
         # Get chart_events for each icustay and export to .csv
         first_counter = 0
         single_header = []
-        for icustay_id in icu_stay_ids[:2]:             # loop through for all ids, also turn on sorting again
+        for icustay_id in icu_stay_ids[:2]:             # todo reminder: loop through for all ids, also turn on sorting again
             print('STATUS: Executing query_single_icustay for icustay_id', str(icustay_id))
             starting_time = datetime.now()
             single_icustay: list = SQL_queries.query_single_icustay(cursor_1, icustay_id, selected_itemids_string)
@@ -112,7 +112,7 @@ def export_patients_to_csv(use_case_icd_list=None, use_case_itemids=None, use_ca
         print('STATUS: Finished mimic_to_csv.')
 
 
-def create_table_all_diagnoses() -> None:               # possibly also create all later needed dictionary-tables here (like the label-measurement dict)
+def create_table_all_diagnoses() -> None:
     """
     This function is only needed when using the database for the first time.
     It creates the table 'all_diagnoses_icd' where for each admission all available diagnoses are saved in the new

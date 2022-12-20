@@ -12,16 +12,19 @@ if __name__ == '__main__':
     mimic_to_csv.export_patients_to_csv(use_case_icd_list=supplements.icd9_codes.icd9_00_stroke_selected,
                                         use_case_itemids=supplements.itemids_list_mv.selected_itemids_stroke,
                                         use_case_name='testing_stroke')
-    # INFO: ICD9 Codes for Stroke found: 1447
-    # INFO: Total available patients after filtering like research: 13762 (which they also had -> correct)
 
-#### Current Task
-    # TODO 1: add death_columns -> prediction goal
+#### Current Tasks
+    # TODO 1.1: add death_columns -> prediction goal
+    # TODO 1.2: add important side-illnesses as features
+
+    # after christmas
     # TODO 2: choose chart_events itemids -> from other papers?
     # TODO 3: add labevents, procedure_events, compute events?
     # TODO 4: check again all implemented filters, explain why used
 
-    # TODO: add important side-illnesses as features
+    # langfristig
+    # TODO 5: save a label-to-measurement dict in supplements, also those supplements could have been automated with SQL, but they dont change so thats ok? -> explain in Readme.md
+    # TODO cleanup: make creation of VIEWs in SQL as functions, only provide functions in supplemens/SQL
 
 
 #### Long Term #########################################################################################################

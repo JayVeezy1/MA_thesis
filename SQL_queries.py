@@ -7,9 +7,13 @@
 
 # Short explanation of SQL Querying steps:
 # 1. First call is of function 'get_filtered_patient_cohort' with user-input icd-codes as filter parameter
-# 2. this function uses the view 'patient_cohort_with_icd' where the 'patient_cohort_view' is joined with the diagnoses (with the extra field 'all_icd_codes') on the hadm_id field
-# 3. the patient_cohort_view is created previously based on code by previous research (reference in the code) as they used very reasonable filtering steps.
+# this function uses the view 'patient_cohort_with_icd' where the 'patient_cohort_view' is joined with the diagnoses (with the extra field 'all_icd_codes') on the hadm_id field
+# the patient_cohort_view is created previously, the filtering is based on code by previous research (reference in the code) as they used very reasonable filtering steps.
 
+# 2. The second SQL Query that is conducted is 'create_transposed_patient', which collects all available chart_events
+# for a patient (icustay_id) , transposes (crosstable) these labels to columns, and saves a .csv file for each patient.
+
+# 3. The headers for the .csv files are created with their respective functions
 
 def query_patient_cohort(cur_1, use_case_icd_list=None) -> list:
     if use_case_icd_list is None:
@@ -24,7 +28,7 @@ def query_patient_cohort(cur_1, use_case_icd_list=None) -> list:
     else:                              # if no icd9 code was selected
         icd_array_string = icd_array_string + '}\''
 
-    query_check_count: str = f'SELECT COUNT(*) FROM get_filtered_patient_cohort({icd_array_string})'            # TODO: langfristig aufräumen this function uses 2 VIEWs which must be created previously -> only offer functions in supplemens/SQL
+    query_check_count: str = f'SELECT COUNT(*) FROM get_filtered_patient_cohort({icd_array_string})'
     query_with_icd_filter: str = f'SELECT * FROM get_filtered_patient_cohort({icd_array_string})'
     # print('CHECK: ICD9 Filter QUERY:', query_with_icd_filter)
 
@@ -49,7 +53,7 @@ def query_header_patient_cohort(cur_1) -> list:
 
 
 def query_single_icustay(cursor_1, icustay_id: int, selected_itemids_string: str) -> list:
-    query_single: str = f'CALL create_transposed_patient({icustay_id}, {selected_itemids_string}); SELECT * FROM temp_transposed_patient;'         # here two SQL steps, not just one function call because RETURN table columns can be dynamic
+    query_single: str = f'CALL create_transposed_patient({icustay_id}, {selected_itemids_string}); SELECT * FROM temp_transposed_patient;'         # here two SQL steps, not just one function call because the RETURN table columns can be dynamic
     cursor_1.execute(query_single)
     return cursor_1.fetchall()
 
