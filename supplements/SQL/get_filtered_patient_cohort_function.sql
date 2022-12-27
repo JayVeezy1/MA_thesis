@@ -4,7 +4,16 @@ returns table (
 		icustay_id					integer,
 		intime						timestamp without time zone,
 		outtime						timestamp without time zone,
-		age							numeric,
+		los 						double precision,
+		icustays_count				bigint,
+		age 						numeric,
+		patientweight				numeric,
+		dob 						date,
+		dod 						date,
+		death_in_hosp 				int,
+		death_3_days 				int,
+		death_30_days 				int,
+		death_365_days 				int,				
 		gender						varchar(5),
 		ethnicity					varchar(200),
 		first_service				varchar(20),
@@ -37,7 +46,7 @@ begin
 	IF (SELECT COUNT(*) FROM temp_icd9_codes_selected) = 0 THEN
 		create or replace view patient_cohort_filtered
 		AS		
-		-- 1. step filter for relevant admissions
+		-- 1. step get all patients (no filter)
 		with cohort as
 		( 
 		SELECT
@@ -45,7 +54,16 @@ begin
 			patient_cohort_with_icd.icustay_id,		
 			patient_cohort_with_icd.intime,			
 			patient_cohort_with_icd.outtime,			
-			patient_cohort_with_icd.age,				
+			patient_cohort_with_icd.los,
+			patient_cohort_with_icd.icustays_count,
+			patient_cohort_with_icd.age,
+			patient_cohort_with_icd.patientweight,
+			patient_cohort_with_icd.dob,
+			patient_cohort_with_icd.dod,
+			patient_cohort_with_icd.death_in_hosp,
+			patient_cohort_with_icd.death_3_days,
+			patient_cohort_with_icd.death_30_days,
+			patient_cohort_with_icd.death_365_days,			
 			patient_cohort_with_icd.gender,			
 			patient_cohort_with_icd.ethnicity,		
 			patient_cohort_with_icd.first_service,	
@@ -64,22 +82,32 @@ begin
 								patient_cohort_with_icd.subject_id,
 							   	patient_cohort_with_icd.seq_num
 			) rownum
-		FROM patient_cohort_with_icd 				 -- This View must be created before running this function here. 
+		FROM patient_cohort_with_icd 				 -- This view must be created before running this function here. 
 		-- no Filtering for ICD9 Code if no code in parameter list
 		ORDER BY patient_cohort_with_icd.hadm_id, patient_cohort_with_icd.seq_num
 		)
+		
 		SELECT 
 			cohort.hadm_id,			
 			cohort.icustay_id,		
 			cohort.intime,			
 			cohort.outtime,			
-			cohort.age,				
+			cohort.los,
+			cohort.icustays_count,
+			cohort.age,
+			cohort.patientweight,
+			cohort.dob,
+			cohort.dod,
+			cohort.death_in_hosp,
+			cohort.death_3_days,
+			cohort.death_30_days,
+			cohort.death_365_days,				
 			cohort.gender,			
 			cohort.ethnicity,		
 			cohort.first_service,	
 			cohort.dbsource,		
 			cohort.subject_id,		
-			cohort.seq_num,			
+			cohort.seq_num,
 			cohort.icd9_code,		
 			cohort.all_icd9_codes
 		FROM cohort				-- only keep the first diagnoses, no duplicate admissions
@@ -98,12 +126,21 @@ begin
 			patient_cohort_with_icd.icustay_id,		
 			patient_cohort_with_icd.intime,			
 			patient_cohort_with_icd.outtime,			
-			patient_cohort_with_icd.age,				
+			patient_cohort_with_icd.los,
+			patient_cohort_with_icd.icustays_count,
+			patient_cohort_with_icd.age,
+			patient_cohort_with_icd.patientweight,
+			patient_cohort_with_icd.dob,
+			patient_cohort_with_icd.dod,
+			patient_cohort_with_icd.death_in_hosp,
+			patient_cohort_with_icd.death_3_days,
+			patient_cohort_with_icd.death_30_days,
+			patient_cohort_with_icd.death_365_days,				
 			patient_cohort_with_icd.gender,			
 			patient_cohort_with_icd.ethnicity,		
 			patient_cohort_with_icd.first_service,	
 			patient_cohort_with_icd.dbsource,		
-			patient_cohort_with_icd.subject_id,		
+			patient_cohort_with_icd.subject_id,	
 			patient_cohort_with_icd.seq_num,			
 			patient_cohort_with_icd.icd9_code,		
 			patient_cohort_with_icd.all_icd9_codes,
@@ -117,8 +154,7 @@ begin
 								patient_cohort_with_icd.subject_id,
 							   	patient_cohort_with_icd.seq_num
 			) rownum
-		FROM patient_cohort_with_icd 
-		WHERE patient_cohort_with_icd.icd9_code IN (SELECT icd9_codes FROM temp_icd9_codes_selected)
+		FROM patient_cohort_with_icd
 		ORDER BY patient_cohort_with_icd.hadm_id, patient_cohort_with_icd.seq_num
 		)
 		SELECT 
@@ -126,17 +162,27 @@ begin
 			cohort.icustay_id,		
 			cohort.intime,			
 			cohort.outtime,			
-			cohort.age,				
+			cohort.los,
+			cohort.icustays_count,
+			cohort.age,
+			cohort.patientweight,
+			cohort.dob,
+			cohort.dod,
+			cohort.death_in_hosp,
+			cohort.death_3_days,
+			cohort.death_30_days,
+			cohort.death_365_days,				
 			cohort.gender,			
 			cohort.ethnicity,		
 			cohort.first_service,	
 			cohort.dbsource,		
 			cohort.subject_id,		
-			cohort.seq_num,			
+			cohort.seq_num,
 			cohort.icd9_code,		
 			cohort.all_icd9_codes
 		FROM cohort				-- only keep the first diagnoses, no duplicate admissions
-		WHERE cohort.rownum = '1';
+		WHERE cohort.icd9_code IN (SELECT icd9_code FROM temp_icd9_codes_selected) 
+		AND cohort.rownum = min(cohort.rownum);
 		
 		RETURN QUERY SELECT * FROM patient_cohort_filtered;
 

@@ -49,7 +49,7 @@ begin
 								order by diagnoses_icd.hadm_id)	
 			LOOP  
 				temp_all_icd9_codes:= '{}';  		-- hatte ich den vergessen??
-				Raise Notice 'Current round is: %', v_counter;
+				-- Raise Notice 'Current round is: %', v_counter;
 				-- Raise Notice 'For hadm_id: %', admission_entry.hadm_id;
 				v_counter = v_counter + '1';
 
@@ -61,7 +61,6 @@ begin
 				UPDATE diagnoses_all_icd9
 				SET all_icd9_codes = temp_all_icd9_codes
 				WHERE diagnoses_all_icd9.hadm_id = admission_entry.hadm_id;	
-				-- Raise Notice 'New all_icd9_codes: %', temp_all_icd9_codes;
 
 			END LOOP;         
 		RETURN Query (SELECT * FROM diagnoses_all_icd9);

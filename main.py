@@ -14,22 +14,21 @@ if __name__ == '__main__':
                                         use_case_name='testing_stroke')
 
 #### Current Tasks
-    # TODO 1.1: add death_columns -> prediction goal
-    # TODO 1.2: add important side-illnesses as features
+    # TODO 1: add prescription events, also filter lab_events charttime < outtime
+    # todo: get labevents, etc events as dictionary or better dataframe with label, itemid, valueuom (unit of measurement)
 
-    # after christmas
     # TODO 2: choose chart_events itemids -> from other papers?
-    # TODO 3: add labevents, procedure_events, compute events?
-    # TODO 4: check again all implemented filters, explain why used
+        #  alternative: simply take all 2000 features -> one big export
+        #  filter inside python after import depending on occurence of the itemids
 
     # langfristig
+    # TODO 4: cleanup SQL Files, check why it now takes 40 seconds, previously it was only 20 seconds
     # TODO 5: save a label-to-measurement dict in supplements, also those supplements could have been automated with SQL, but they dont change so thats ok? -> explain in Readme.md
-    # TODO cleanup: make creation of VIEWs in SQL as functions, only provide functions in supplemens/SQL
-
 
 #### Long Term #########################################################################################################
     ### CSV Import & Preprocessing
     # Step 2.1) Import all .csv files as a 'Patient' Object with a related dataframe
+    # addition of important side-illnesses as features: create new columns secondary_illness_cancer, secondary_illness_diabetes, secondary_illness_hypertension depending on icd9_code_list
 
     # Step 2.2) Calculate avg, min, max for each feature for each patient
     # Depending on missing value-rate either interpolate or remove feature ?

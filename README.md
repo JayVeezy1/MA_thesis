@@ -53,11 +53,15 @@ Depending on the use case, for example stroke there are 1400 available patients,
 There are 3 steps where the dataset is filtered.
 1) Patient Selection (not changeable):
 
-The filtering, which patient is suitable. There are 58.976 unique admissions in the dataset. 
-However, many patients are underage or need to be excluded because there is missing data.
-Also, only patients, for which the 'metavision' system was used, are included. 
-This filtering is in line with previous research. It should not be changed by the user.
-After this first step, there are still 13.762 admissions left. 
+The first filtering determines, which patient is suitable. While there are 58.976 unique admissions in the dataset, 
+many patients are underage or need to be excluded because there is missing data.
+Also, only patients, for which the 'metavision' system was used, are included. This is regretful, as 'CareVue' patients make up
+a large amount. However, the different software that was used led to different chart_event-ids /item_ids. This makes it 
+not suitable to use both systems. Metavision was chosen, as it is the newer one and most other researchers use it.
+This also means, that instead of around 12.000  (often duplicate) aspects that were measured on the ICU, only 2.200 remain.
+
+This filtering was in parts based on concepts from previous research by Alistair et al. (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5851804/pdf/nihms925667.pdf).
+It should not be changed by the user. After this first step, there are still 16.058 unique icu-stays left. 
 
 2) Use-Case Selection (Input at the 'export_patients_to_csv()' function):
  
@@ -73,6 +77,13 @@ It is recommended to choose about 40 itemids. This selection naturally requires 
 thus it is also recommended to use previous research filtering as a guideline. 
 Patient demographics, secondary diagnosis will always be derived, regardless of this filter. 
 
+
+4) Notes for future Research:
+
+There are many labels in the MIMIC-III dataset that have not yet been included into this analysis.
+It is possible to include sources like: transfers, services, microbiologyevents, cptevents for further research. 
+Especially noteevents offer a noteworthy source for possible ML-research based on text-analysis.
+These sources might be included in the SQL-function 'get_all_events_view'. 
 
 # WIP
 
