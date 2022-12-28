@@ -1,11 +1,11 @@
 import csv
 import os
-from datetime import time, datetime
+from datetime import datetime
 
 import psycopg2
 
-import SQL_queries
-from db_setup import config
+from mimic_to_csv_folder import SQL_queries
+from mimic_to_csv_folder.db_setup import config
 
 
 def export_patients_to_csv(use_case_icd_list=None, use_case_itemids=None, use_case_name=None, ) -> None:
@@ -79,20 +79,18 @@ def export_patients_to_csv(use_case_icd_list=None, use_case_itemids=None, use_ca
             print('Warning: Duplicate icustay_ids exist. Recommended to check patient_cohort.')
 
         # Get chart_events for each icustay and export to .csv
-        first_counter = 0
-        single_header = []
+        query_counter = 0
         for icustay_id in icu_stay_ids[:2]:             # todo reminder: loop through for all ids, also turn on sorting again
             print('STATUS: Executing query_single_icustay for icustay_id', str(icustay_id))
+            query_counter += 1
             starting_time = datetime.now()
             single_icustay: list = SQL_queries.query_single_icustay(cursor_1, icustay_id, selected_itemids_string)
             # print('CHECK: Query result:', single_icustay)
-            if first_counter == 0:
-                ending_time = datetime.now()
-                time_needed = ending_time - starting_time
-                print('CHECK: Seconds needed for first Query:', round(time_needed.total_seconds()))
-                print(f'CHECK: Estimated minutes for all {len(icu_stay_ids)} Queries: {round(time_needed.total_seconds() * len(icu_stay_ids) / 60)}')
-                single_header: list = SQL_queries.query_header_single(cursor_1)
-                first_counter += 1
+            remaining_queries: int = len(icu_stay_ids) - query_counter
+            single_header: list = SQL_queries.query_header_single(cursor_1)
+            time_needed = datetime.now() - starting_time
+            print('CHECK: Seconds needed for last Query:', round(time_needed.total_seconds()))
+            print(f'CHECK: Estimated minutes for remaining {remaining_queries} Queries: {round(time_needed.total_seconds() * remaining_queries / 60)}')
 
             filename_string: str = f'{directory}/icustay_id_{icustay_id}.csv'
             filename = filename_string.encode()
@@ -112,6 +110,7 @@ def export_patients_to_csv(use_case_icd_list=None, use_case_itemids=None, use_ca
         print('STATUS: Finished mimic_to_csv.')
 
 
+### SETUP FUNCTIONS ###
 def create_table_all_diagnoses() -> None:
     """
     This function is only needed when using the database for the first time.
@@ -121,24 +120,46 @@ def create_table_all_diagnoses() -> None:
     """
     # Setup connection to PostGre MIMIC-III Database
     db_params: dict = config()
-
     conn = None
     try:
         # connect to the database
-        print('Connecting to the PostgreSQL database:')
+        print('Connecting to the PostgreSQL database for create_table_all_diagnoses:')
         conn = psycopg2.connect(**db_params)
         cur_1 = conn.cursor()
         print('Connection successful.')
-
-        ##### 0) Only first time: create the necessary table 'all_diagnoses_icd' #####
-        ## QUERY 0
+        ##### create the necessary table 'all_diagnoses_icd' #####
         SQL_queries.query_create_table_all_diagnoses_icd(cur_1)
-
         # close the communication with the database
         cur_1.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print('Error occurred:', error)
+    finally:
+        if conn is not None:
+            conn.close()
 
+
+def setup_postgre_files():
+    """
+        This function is only needed when using the database for the first time.
+        It creates all necessary backend files (functions and views) for the postgre database.
+        Sometimes does not create the functions. Then it is easiest to simply copy&paste the SQL Scripts into
+        Postgre QueryTool and execute each there.
+        """
+    # Setup connection to PostGre MIMIC-III Database
+    db_params: dict = config()
+    conn = None
+    try:
+        # connect to the database
+        print('Connecting to the PostgreSQL database for setup_postgre_files:')
+        conn = psycopg2.connect(**db_params)
+        cur_1 = conn.cursor()
+        print('Connection successful.')
+        ##### create the necessary table 'all_diagnoses_icd' #####
+        SQL_queries.query_setup_postgre_files(cur_1)
+        # close the communication with the database
+        cur_1.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print('Error occurred:', error)
     finally:
         if conn is not None:
             conn.close()

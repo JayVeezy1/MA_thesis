@@ -66,8 +66,9 @@ It should not be changed by the user. After this first step, there are still 16.
 2) Use-Case Selection (Input at the 'export_patients_to_csv()' function):
  
 The patients can be filtered for their illnesses with the icd9-codes (diagnoses at admission). 
-There are 1.440 unique icustay_ids for the use-case of stroke. A patient can come to the ICU multiple times, within one 
-hospital stay (one admission). Thus, the relevant key shall be the icu-stay, to not use duplicate patients.
+There are 1.522 unique icustay_ids for the use-case of stroke (about 9.5% of the available data). 
+A patient can come to the ICU multiple times, within one hospital stay (one admission). 
+Thus, the relevant key shall be the icu-stay, to not use duplicate patients.
 
 3) Feature Selection (Input at the 'export_patients_to_csv()' function):
 
@@ -78,12 +79,16 @@ thus it is also recommended to use previous research filtering as a guideline.
 Patient demographics, secondary diagnosis will always be derived, regardless of this filter. 
 
 
-4) Notes for future Research:
+4) Notes for Future Research:
 
 There are many labels in the MIMIC-III dataset that have not yet been included into this analysis.
-It is possible to include sources like: transfers, services, microbiologyevents, cptevents for further research. 
-Especially noteevents offer a noteworthy source for possible ML-research based on text-analysis.
-These sources might be included in the SQL-function 'get_all_events_view'. 
+It is possible to include sources like: transfers, services, microbiologyevents, cptevents, prescriptions for further research.
+For example, the amount of transfers or a special kind of prescriptions might be strong indicators for relapse-rates. 
+However, these features are related to the treatment and behavior of the medical staff. They are not directly related
+to the illness itself and thus, where not included in this analysis.
+Especially the table noteevents offers a noteworthy source for possible ML-research based on text-analysis.
+
+All of these sources might be included inside the SQL-function 'get_all_events_view' for future research. 
 
 # WIP
 

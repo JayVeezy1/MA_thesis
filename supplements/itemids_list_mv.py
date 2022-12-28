@@ -2,6 +2,13 @@
 selected_itemids_stroke = [
     220045,  # "Heart Rate",            # should always keep this in, because every patient has it.
     227342,  # "Secondary diagnosis",
+    220181,
+    220210,
+    227428,
+    228130,
+    50879,  # labevent test
+    50912,  # labevent test
+    226559  # outputevent test
     ]
 
 potential_itemids_stroke = [

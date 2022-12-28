@@ -1,4 +1,4 @@
-create or replace function public.get_all_events_view(input_icustay_id integer, selected_itemids_list varchar[])		
+create or replace function get_all_events_view(input_icustay_id integer, selected_itemids_list varchar[])		
 returns table (
 		icustay_id				integer,
 		itemid					integer,
@@ -20,7 +20,7 @@ begin
 		DROP TABLE temp_selected_itemids CASCADE;		-- CASCADE needed because view patient_cohort_filtered is related
 	end if;
 	
-	CREATE TABLE public.temp_selected_itemids(itemids integer);
+	CREATE TABLE temp_selected_itemids(itemids integer);
 	
 	FOREACH v_selected_itemid IN ARRAY selected_itemids_list LOOP
 		INSERT INTO temp_selected_itemids (itemids)
@@ -28,7 +28,7 @@ begin
 	END LOOP;
 
 	-- 1. step: merge/join different event types into 'all_events_view'
-	CREATE OR REPLACE VIEW public.all_events_view
+	CREATE OR REPLACE VIEW all_events_view
 	AS
 		with d_items as (		
 		Select
@@ -44,9 +44,7 @@ begin
 		),	
 		first_icustay_id as (
 			SELECT hadm_id, 
-				   icustay_id, 
-				   intime,	   
-			       outtime
+				   icustay_id 
 			FROM mimiciii.icustays 
 			WHERE (hadm_id,icustay_id) IN 
 				(SELECT hadm_id, MIN(icustay_id)
@@ -58,13 +56,11 @@ begin
 			Select
 				first_icustay_id.icustay_id,
 				labevents.itemid,
-				labevents.charttime,		 
+				labevents.charttime,		-- TODO: only acceppt items with charttimes < icustay_id-outtime, otherwise event from other icustay
 				labevents.value,
 				labevents.valueuom
 			FROM mimiciii.labevents
 			left join first_icustay_id on first_icustay_id.hadm_id = labevents.hadm_id
-			where first_icustay_id.outtime >= labevents.charttime
-			and first_icustay_id.intime <= labevents.charttime 		-- only acceppt labitems with icustay_id-intime < charttimes < icustay_id-outtime
 		),	
 		events as
 		(
@@ -128,11 +124,11 @@ begin
 
 
 	-- step 2: add labevent labels into temp_table
-	DROP TABLE IF EXISTS public.temp_single_patient_DUMMY;				
-    CREATE TABLE public.temp_single_patient_DUMMY AS
+	DROP TABLE IF EXISTS temp_single_patient_DUMMY;				
+    CREATE TABLE temp_single_patient_DUMMY AS
     SELECT * FROM all_events_view WHERE all_events_view.icustay_id = input_icustay_id;
 	
-	UPDATE public.temp_single_patient_DUMMY
+	UPDATE temp_single_patient_DUMMY
 	SET label = (SELECT d_labitems.label FROM mimiciii.d_labitems WHERE d_labitems.itemid = temp_single_patient_DUMMY.itemid)
 	WHERE temp_single_patient_DUMMY.itemid IN (SELECT d_labitems.itemid FROM mimiciii.d_labitems);
 

@@ -1,12 +1,14 @@
-import mimic_to_csv
+from mimic_to_csv_folder import mimic_to_csv
 import supplements.icd9_codes
 import supplements.itemids_list_mv
 
 ####### MAIN #######
 if __name__ == '__main__':
     ### Mimic to CSV Export
-    # Step 0) Only first time using db: create the needed temp table 'all_diagnoses_icd' (takes approx. 45 min):
-    # mimic_to_csv.create_table_all_diagnoses()
+    # Step 0) Setup when first time using db:
+    # mimic_to_csv.setup_postgre_files()                        # setup all needed background functions and views for postgre. Warning: Sometimes this setup from Python does not work. Then you simply copy&paste each SQL Script into PostGre QueryTool and execute it.
+    # mimic_to_csv_folder.create_label_dictionaries()           # TODO 1: create a necessary csv supplement file with: label | itemid | unit-of-measurement and also for icd9: icd9_code | short_name | long_name | <optional: category> -> explain in Readme.md
+    # mimic_to_csv_folder.create_table_all_diagnoses()          # create a necessary table 'all_diagnoses' where for each admission all available diagnoses are saved in the new field 'all_icd_codes' (takes approx. 45 min)
 
     # Step 1.1) Export the patient data for the specified use_case (icd_list) into .csv files:
     mimic_to_csv.export_patients_to_csv(use_case_icd_list=supplements.icd9_codes.icd9_00_stroke_selected,
@@ -14,16 +16,14 @@ if __name__ == '__main__':
                                         use_case_name='testing_stroke')
 
 #### Current Tasks
-    # TODO 1: add prescription events, also filter lab_events charttime < outtime
-    # todo: get labevents, etc events as dictionary or better dataframe with label, itemid, valueuom (unit of measurement)
+    # TODO: check why it now takes 40 seconds, previously it was only 20 seconds
 
-    # TODO 2: choose chart_events itemids -> from other papers?
-        #  alternative: simply take all 2000 features -> one big export
-        #  filter inside python after import depending on occurence of the itemids
-
-    # langfristig
-    # TODO 4: cleanup SQL Files, check why it now takes 40 seconds, previously it was only 20 seconds
-    # TODO 5: save a label-to-measurement dict in supplements, also those supplements could have been automated with SQL, but they dont change so thats ok? -> explain in Readme.md
+### Next Tasks
+    # TODO: choose if chart_events itemids -> from other papers?
+        # first step here: check how long it will take on average for a patient to take all labels, also check estimated file-size
+        # probably best to take all labels into csv, then filter inside python. Also the research-guided labels is still possible inside python
+        # alternative: simply take all 2200 item_id features + 700 labevents features -> one big export
+        # filter inside python after import depending on occurence of the itemids
 
 #### Long Term #########################################################################################################
     ### CSV Import & Preprocessing

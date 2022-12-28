@@ -1,4 +1,4 @@
-create or replace function public.get_all_diagnoses()		
+create or replace function get_all_diagnoses()		
 returns table (															
 		row_id						int,
 		subject_id					int,
@@ -23,8 +23,8 @@ begin
 		return query select * from public.diagnoses_all_icd9;
 	else
 		-- 1) create the new table
-		DROP TABLE public.diagnoses_all_icd9;  -- -> once this is created for all entries, do not delete table again!
-		CREATE TABLE public.diagnoses_all_icd9 (
+		DROP TABLE diagnoses_all_icd9;  -- -> once this is created for all entries, do not delete table again!
+		CREATE TABLE diagnoses_all_icd9 (
 				row_id						int,
 				subject_id					int,
 				hadm_id						int,
@@ -32,7 +32,7 @@ begin
 				icd9_code					varchar(10),
 				all_icd9_codes 				varchar[] DEFAULT '{none}'
 		);
-		INSERT INTO public.diagnoses_all_icd9 (row_id, subject_id, hadm_id, seq_num, icd9_code)
+		INSERT INTO diagnoses_all_icd9 (row_id, subject_id, hadm_id, seq_num, icd9_code)
 		SELECT 
 			diagnoses_icd.row_id, 
 			diagnoses_icd.subject_id, 
@@ -58,7 +58,7 @@ begin
 						temp_all_icd9_codes:= array_append(temp_all_icd9_codes, icd9_code_entry.icd9_code);   
 					END LOOP;
 
-				UPDATE public.diagnoses_all_icd9
+				UPDATE diagnoses_all_icd9
 				SET all_icd9_codes = temp_all_icd9_codes
 				WHERE diagnoses_all_icd9.hadm_id = admission_entry.hadm_id;	
 

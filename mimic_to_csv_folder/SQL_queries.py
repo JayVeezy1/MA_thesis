@@ -4,6 +4,10 @@
 # Option 2: Use a function in PGAdmin CON: works, but view is easier -> choose option 3
 # cur_1.callproc('Function_name', parameters=use_case_icd_list)
 # Option 3: Call a View that was created in PGAdmin
+import time
+from os import listdir
+from os.path import isfile, join
+
 
 # Short explanation of SQL Querying steps:
 # 1. First call is of function 'get_filtered_patient_cohort' with user-input icd-codes as filter parameter
@@ -37,13 +41,13 @@ def query_patient_cohort(cur_1, use_case_icd_list=None) -> list:
     count = cur_1.fetchall()[0][0]
     cur_1.execute(query_with_icd_filter)
     print('STATUS: query_basic_statistics executed.')
-    print('CHECK:  Count() of entries for the selected ICD9 codes=', count)
+    print('CHECK:  Amount of entries for the selected ICD9 codes:', count)
 
     return cur_1.fetchall()
 
 
 def query_header_patient_cohort(cur_1) -> list:
-    query_cohort_header: str = 'SELECT column_name FROM information_schema.columns WHERE table_schema = \'public\' AND table_name = \'patient_cohort_filtered\';'
+    query_cohort_header: str = 'SELECT column_name FROM information_schema.columns WHERE table_schema = \'public\' AND table_name = \'patient_cohort_with_icd\';'
     cur_1.execute(query_cohort_header)
     header_list: list = []
     for element in cur_1.fetchall():
@@ -76,4 +80,14 @@ def query_create_table_all_diagnoses_icd(cur_1) -> None:
     return None
 
 
+def query_setup_postgre_files(cur_1):
+    for file in listdir('supplements/SQL/'):
+        if isfile(join('supplements/SQL/', file)):                      # making sure only files, no other dictionaries inside the SQL folder
+            query_setup_postgre_files_string: str = open(f'supplements/SQL/{file}', 'r').read()
 
+            print('STATUS: Loading file into postgre database:', file)
+            cur_1.execute(query_setup_postgre_files_string)
+            time.sleep(5)
+    print('STATUS: query_setup_postgre_files_string executed.')
+
+    return None
