@@ -1,3 +1,5 @@
+# This file can be used to manually select itemids (features).
+
 # Selected itemids for use-case: stroke
 selected_itemids_stroke = [
     220045,  # "Heart Rate",            # should always keep this in, because every patient has it.
@@ -146,8 +148,8 @@ potential_itemids_stroke = [
 ]
 
 
-# An overview of all available itemids for metavision
-# itemids describe chart_events and other events that occur on the icustay
+# OLD: An overview of all available itemids for metavision
+# NEW: The file 'events_dictionary' offers an even more precise source to join itemids to respective labels and also the unit-of-measurement
 itemids_metavision_dict: dict = {  # "itemid","label"
     220003: "ICU Admission date",
     220045: "Heart Rate",

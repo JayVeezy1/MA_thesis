@@ -9,6 +9,8 @@ declare
 	str text;
 	
 begin
+	raise notice 'Creating transposed_patient for icustay_id: %', input_icustay_id;
+
 -- Step 1: Get all_events_view temporarily into temp_single_patient table
 	DROP TABLE IF EXISTS public.temp_single_patient;				
     CREATE TABLE public.temp_single_patient AS
@@ -22,7 +24,7 @@ begin
     	str :=  str || '"' || rec.label || '" text' ||',';			-- str is used for defintion of table below
     END LOOP;
     str:= substring(str, 0, length(str));							-- remove last comma
-	raise notice 'str: %', str;
+	raise notice 'Selected labels for header str: %', str;
 
 -- Step 2: Dynamically create a temp_table with transposed row->column for selected labels
     EXECUTE 												 
@@ -38,7 +40,14 @@ begin
 -- Setp 3: Join the chart_events data with the general patient data
 	DELETE FROM temp_transposed_patient WHERE temp_transposed_patient.charttime = '0001-01-01 00:00:01';	-- remove DUMMY values
 	
-	SELECT * FROM get_filtered_patient_cohort('{}') WHERE icustay_id = input_icustay_id INTO v_patient_record;
+	-- check if not exists (should never be the case, always call single transposed_patient after having created temp_filtered_patient_cohort)
+	if not (SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'temp_filtered_patient_cohort')) then	
+		raise notice 'WARNING: temp_filtered_patient_cohort should have already existed for creation of transposed_patient.';
+		CREATE TABLE public.temp_filtered_patient_cohort AS
+		SELECT * FROM get_filtered_patient_cohort('{}');		
+	end if;
+	
+	SELECT * FROM temp_filtered_patient_cohort WHERE temp_filtered_patient_cohort.icustay_id = input_icustay_id INTO v_patient_record;
 	ALTER TABLE public.temp_transposed_patient	
 		ADD COLUMN hadm_id						integer, 
 		ADD COLUMN icustay_id					integer, 
@@ -50,6 +59,13 @@ begin
 		ADD COLUMN patientweight				double precision,
 		ADD COLUMN gender						varchar(5),
 		ADD COLUMN ethnicity					varchar(200),
+		ADD COLUMN admission_type				varchar(50),
+		ADD COLUMN discharge_location 			varchar(50),
+		ADD COLUMN insurance 					varchar(255),
+		ADD COLUMN language 					varchar(10),
+		ADD COLUMN religion						varchar(50),
+		ADD COLUMN marital_status				varchar(50),
+		ADD COLUMN diagnosis_text				varchar(255),
 		ADD COLUMN dob 							date,
 		ADD COLUMN dod 							date,
 		ADD COLUMN death_in_hosp 				int,
@@ -71,6 +87,13 @@ begin
 		patientweight = v_patient_record.patientweight,
 		gender = v_patient_record.gender,
 		ethnicity = v_patient_record.ethnicity,
+		admission_type = v_patient_record.admission_type,
+		discharge_location = v_patient_record.discharge_location,
+		insurance = v_patient_record.insurance,
+		language = v_patient_record.language,
+		religion = v_patient_record.religion,
+		marital_status = v_patient_record.marital_status,
+		diagnosis_text = v_patient_record.diagnosis_text,
 		dob = v_patient_record.dob,	
 		dod = v_patient_record.dod,						
 		death_in_hosp = v_patient_record.death_in_hosp, 				

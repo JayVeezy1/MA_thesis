@@ -66,6 +66,12 @@ It should not be changed by the user. After this first step, there are still 16.
 2) Use-Case Selection (Input at the 'export_patients_to_csv()' function):
  
 The patients can be filtered for their illnesses with the icd9-codes (diagnoses at admission). 
+A user can change the selected icd9-codes in the supplement file 'selection_icd9_codes.py'.
+
+Another helpful file to inspect all available icd9-codes and map codes to their titles is 'icd9_codes_dictionary.csv'.
+This file can also be created with the SQL script 'create_icd9_codes_dictionary.sql'. 
+Important: Many procedures have the same code like diagnoses. They must be considered separately.
+
 There are 1.522 unique icustay_ids for the use-case of stroke (about 9.5% of the available data). 
 A patient can come to the ICU multiple times, within one hospital stay (one admission). 
 Thus, the relevant key shall be the icu-stay, to not use duplicate patients.
@@ -73,7 +79,12 @@ Thus, the relevant key shall be the icu-stay, to not use duplicate patients.
 3) Feature Selection (Input at the 'export_patients_to_csv()' function):
 
 The relevant labels/features can be chosen by the user. The complete dataset offers 12.487 itemids (for any kind of chart_event that happened at the ICU). These are too many features for any useful analysis. But as stated in 1), only metavision patients are included. Metavision enables 2.992 itemids. This would still be too many features.
-Thus, a user has to choose, which labels will be important for the respective use-case. 
+Thus, a user has to choose, which labels (itemids) will be important for the respective use-case. 
+This can be selected in the supplement file 'selection_itemids_list_mv.py'.
+
+A helpful file to inspect and map itemids to their labels and unit-of-measurements is the file 'events_dictionary.csv'.
+This file can also be created with the SQL script 'create_events_dictionary.sql'.
+
 It is recommended to choose about 40 itemids. This selection naturally requires some medical knowledge, 
 thus it is also recommended to use previous research filtering as a guideline. 
 Patient demographics, secondary diagnosis will always be derived, regardless of this filter. 

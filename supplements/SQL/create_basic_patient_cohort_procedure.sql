@@ -17,6 +17,13 @@ returns view (
 		death_365_days 				int,				
 		gender						varchar(5),
 		ethnicity					varchar(200),
+		admission_type				varchar(50),
+		discharge_location 			varchar(50),
+		insurance 					varchar(255),
+		language					varchar(10),
+		religion					varchar(50),
+		marital_status				varchar(50),
+		diagnosis_text				varchar(255),
 		first_service				varchar(20),
 		dbsource					varchar(20),			
 		exclusion_secondarystay		int,			
@@ -73,6 +80,13 @@ begin
 			, case when (cast(pat.dod as date) - cast(ie.intime as date)) <= 365 then 1 else 0 end as death_365_days		-- flag for 365 days after admission
 			, pat.gender
 			, adm.ethnicity
+			, adm.admission_type
+			, adm.discharge_location 
+			, adm.insurance
+			, adm.language
+			, adm.religion
+			, adm.marital_status
+			, adm.diagnosis as diagnosis_text
 			, ie.dbsource
 			-- used to get first ICUSTAY_ID
 			, ROW_NUMBER() over (partition by ie.subject_id order by ie.intime) as rn
@@ -113,6 +127,13 @@ begin
 		  , t1.death_365_days
 		  , t1.gender
 		  , t1.ethnicity
+		  , t1.admission_type
+		  , t1.discharge_location 
+		  , t1.insurance
+		  , t1.language
+		  , t1.religion
+		  , t1.marital_status
+		  , t1.diagnosis_text
 		  , t1.first_service
 		  , t1.dbsource
 		  -- exclusions

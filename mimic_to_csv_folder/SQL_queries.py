@@ -78,16 +78,3 @@ def query_create_table_all_diagnoses_icd(cur_1) -> None:
     print('query_create_table_all_diagnoses_icd executed.')
 
     return None
-
-
-def query_setup_postgre_files(cur_1):
-    for file in listdir('supplements/SQL/'):
-        if isfile(join('supplements/SQL/', file)):                      # making sure only files, no other dictionaries inside the SQL folder
-            query_setup_postgre_files_string: str = open(f'supplements/SQL/{file}', 'r').read()
-
-            print('STATUS: Loading file into postgre database:', file)
-            cur_1.execute(query_setup_postgre_files_string)
-            time.sleep(5)
-    print('STATUS: query_setup_postgre_files_string executed.')
-
-    return None

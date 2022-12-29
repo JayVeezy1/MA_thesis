@@ -1,0 +1,83 @@
+icd9_code,short_title,long_title
+430,Gastrotomy,Gastrotomy,procedure
+430,Subarachnoid hemorrhage,Subarachnoid hemorrhage,diagnose
+431,Intracerebral hemorrhage,Intracerebral hemorrhage,diagnose
+4311,Percu endosc gastrostomy,Percutaneous [endoscopic] gastrostomy [PEG],procedure
+4319,Other gastrostomy,Other gastrostomy,procedure
+4320,Nontraum extradural hem,Nontraumatic extradural hemorrhage,diagnose
+4321,Subdural hemorrhage,Subdural hemorrhage,diagnose
+4329,Intracranial hemorr NOS,Unspecified intracranial hemorrhage,diagnose
+433,Pyloromyotomy,Pyloromyotomy,procedure
+43300,Ocl bslr art wo infrct,Occlusion and stenosis of basilar artery without mention of cerebral infarction,diagnose
+43301,Ocl bslr art w infrct,Occlusion and stenosis of basilar artery with cerebral infarction,diagnose
+43310,Ocl crtd art wo infrct,Occlusion and stenosis of carotid artery without mention of cerebral infarction,diagnose
+43311,Ocl crtd art w infrct,Occlusion and stenosis of carotid artery with cerebral infarction,diagnose
+43320,Ocl vrtb art wo infrct,Occlusion and stenosis of vertebral artery without mention of cerebral infarction,diagnose
+43321,Ocl vrtb art w infrct,Occlusion and stenosis of vertebral artery with cerebral infarction,diagnose
+43330,Ocl mlt bi art wo infrct,Occlusion and stenosis of multiple and bilateral precerebral arteries without mention of cerebral infarction,diagnose
+43331,Ocl mlt bi art w infrct,Occlusion and stenosis of multiple and bilateral precerebral arteries with cerebral infarction,diagnose
+43380,Ocl spcf art wo infrct,Occlusion and stenosis of other specified precerebral artery without mention of cerebral infarction,diagnose
+43381,Ocl spcf art w infrct,Occlusion and stenosis of other specified precerebral artery with cerebral infarction,diagnose
+43390,Ocl art NOS wo infrct,Occlusion and stenosis of unspecified precerebral artery without mention of cerebral infarction,diagnose
+43391,Ocl art NOS w infrct,Occlusion and stenosis of unspecified precerebral artery with cerebral infarction,diagnose
+43400,Crbl thrmbs wo infrct,Cerebral thrombosis without mention of cerebral infarction,diagnose
+43401,Crbl thrmbs w infrct,Cerebral thrombosis with cerebral infarction,diagnose
+4341,Endosc destr stomach les,Endoscopic excision or destruction of lesion or tissue of stomach,procedure
+43410,Crbl emblsm wo infrct,Cerebral embolism without mention of cerebral infarction,diagnose
+43411,Crbl emblsm w infrct,Cerebral embolism with cerebral infarction,diagnose
+4342,Local gastr excision NEC,Local excision of other lesion or tissue of stomach,procedure
+4349,Local gastr destruct NEC,Other destruction of lesion or tissue of stomach,procedure
+43490,Crbl art oc NOS wo infrc,"Cerebral artery occlusion, unspecified without mention of cerebral infarction",diagnose
+43491,Crbl art ocl NOS w infrc,"Cerebral artery occlusion, unspecified with cerebral infarction",diagnose
+435,Proximal gastrectomy,Partial gastrectomy with anastomosis to esophagus,procedure
+4350,Basilar artery syndrome,Basilar artery syndrome,diagnose
+4351,Vertebral artery syndrom,Vertebral artery syndrome,diagnose
+4352,Subclavian steal syndrom,Subclavian steal syndrome,diagnose
+4353,Vertbrobaslr artery synd,Vertebrobasilar artery syndrome,diagnose
+4358,Trans cereb ischemia NEC,Other specified transient cerebral ischemias,diagnose
+4359,Trans cereb ischemia NOS,Unspecified transient cerebral ischemia,diagnose
+436,Cva,"Acute, but ill-defined, cerebrovascular disease",diagnose
+436,Distal gastrectomy,Partial gastrectomy with anastomosis to duodenum,procedure
+437,Part gastrec w jej anast,Partial gastrectomy with anastomosis to jejunum,procedure
+4370,Cerebral atherosclerosis,Cerebral atherosclerosis,diagnose
+4371,Ac cerebrovasc insuf NOS,Other generalized ischemic cerebrovascular disease,diagnose
+4372,Hypertens encephalopathy,Hypertensive encephalopathy,diagnose
+4373,Nonrupt cerebral aneurym,"Cerebral aneurysm, nonruptured",diagnose
+4374,Cerebral arteritis,Cerebral arteritis,diagnose
+4375,Moyamoya disease,Moyamoya disease,diagnose
+4376,Nonpyogen thrombos sinus,Nonpyogenic thrombosis of intracranial venous sinus,diagnose
+4377,Transient global amnesia,Transient global amnesia,diagnose
+4378,Cerebrovasc disease NEC,Other ill-defined cerebrovascular disease,diagnose
+4379,Cerebrovasc disease NOS,Unspecified cerebrovascular disease,diagnose
+4380,Late ef CV dis-cognf def,"Late effects of cerebrovascular disease, cognitive deficits",diagnose
+4381,Part gast w jej transpos,Partial gastrectomy with jejunal transposition,procedure
+43810,Late ef-spch/lng def NOS,"Late effects of cerebrovascular disease, speech and language deficit, unspecified",diagnose
+43811,Late eff CV dis-aphasia,"Late effects of cerebrovascular disease, aphasia",diagnose
+43812,Late eff CV dis-dysphsia,"Late effects of cerebrovascular disease, dysphasia",diagnose
+43813,Late eff CV-dysarthria,"Late effects of cerebrovascular disease, dysarthria",diagnose
+43814,Late eff CV-fluency dis,"Late effects of cerebrovascular disease, fluency disorder",diagnose
+43819,Late ef-spch/lang df NEC,"Late effects of cerebrovascular disease, other speech and language deficits",diagnose
+4382,Lap vertical gastrectomy,Laparoscopic vertical (sleeve) gastrectomy,procedure
+43820,Late ef-hemplga side NOS,"Late effects of cerebrovascular disease, hemiplegia affecting unspecified side",diagnose
+43821,Late ef-hemplga dom side,"Late effects of cerebrovascular disease, hemiplegia affecting dominant side",diagnose
+43822,Late ef-hemiplga non-dom,"Late effects of cerebrovascular disease, hemiplegia affecting nondominant side",diagnose
+43830,Late ef-mplga up lmb NOS,"Late effects of cerebrovascular disease, monoplegia of upper limb affecting unspecified side",diagnose
+43831,Late ef-mplga up lmb dom,"Late effects of cerebrovascular disease, monoplegia of upper limb affecting dominant side",diagnose
+43832,Lt ef-mplga uplmb nondom,"Late effects of cerebrovascular disease, monoplegia of upper limb affecting nondominant side",diagnose
+43840,Lte ef-mplga low lmb NOS,"Late effects of cerebrovascular disease, monoplegia of lower limb affecting unspecified side",diagnose
+43841,Lte ef-mplga low lmb dom,"Late effects of cerebrovascular disease, monoplegia of lower limb affecting dominant side",diagnose
+43842,Lt ef-mplga lowlmb nondm,"Late effects of cerebrovascular disease, monoplegia of lower limb affecting nondominant side",diagnose
+43850,Lt ef oth paral side NOS,"Late effects of cerebrovascular disease, other paralytic syndrome affecting unspecified side",diagnose
+43851,Lt ef oth paral dom side,"Late effects of cerebrovascular disease, other paralytic syndrome affecting dominant side",diagnose
+43852,Lt ef oth parals non-dom,"Late effects of cerebrovascular disease, other paralytic syndrome affecting nondominant side",diagnose
+43853,Lt ef oth parals-bilat,"Late effects of cerebrovascular disease, other paralytic syndrome, bilateral",diagnose
+4386,Alteration of sensations,"Late effects of cerebrovascular disease, alterations of sensations",diagnose
+4387,Disturbances of vision,"Late effects of cerebrovascular disease, disturbances of vision",diagnose
+43881,Late eff CV dis-apraxia,"Other late effects of cerebrovascular disease, apraxia",diagnose
+43882,Late ef CV dis dysphagia,"Other late effects of cerebrovascular disease, dysphagia",diagnose
+43883,Facial weakness,"Other late effects of cerebrovascular disease, facial weakness",diagnose
+43884,Ataxia,"Other late effects of cerebrovascular disease, ataxia",diagnose
+43885,Vertigo,"Other late effects of cerebrovascular disease, vertigo",diagnose
+43889,Late effect CV dis NEC,Other late effects of cerebrovascular disease,diagnose
+4389,Late effect CV dis NOS,Unspecified late effects of cerebrovascular disease,diagnose
+
