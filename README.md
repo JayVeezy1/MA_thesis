@@ -67,12 +67,22 @@ It should not be changed by the user. After this first step, there are still 16.
  
 The patients can be filtered for their illnesses with the icd9-codes (diagnoses at admission). 
 A user can change the selected icd9-codes in the supplement file 'selection_icd9_codes.py'.
+This step is fundamental and probably needs some medical background knowledge. 
+
+Moreover, some icd9_titles might seem like they have medical relevance, but they were used differently in the actual
+diagnosis of patients for MIMIC-III.
+For example, not all cerebrovascular icd9_code titles that sound like they indicate stroke can actually be accounted as stroke cases.
+The code '43883 - Facial Weakness' might be considered as a valid indicator. However, after cross-referencing 
+the 'diagnosis_text' for all the patients with 43883, it became clear that those were mainly heart-attack patients. 
+Thus, 43883 was removed as a selector for stroke. Of course, if one of those removed patients also has another actually
+valid icd9_code, like '430 - Subarachnoid hemorrhage', then they were kept in the dataset. This example was meant to 
+explain, that it is crucial to select the correct icd9_codes, as the right patient selection is one of the most important steps of the analysis.
 
 Another helpful file to inspect all available icd9-codes and map codes to their titles is 'icd9_codes_dictionary.csv'.
 This file can also be created with the SQL script 'create_icd9_codes_dictionary.sql'. 
-Important: Many procedures have the same code like diagnoses. They must be considered separately.
+Important: Many procedures have the same code as diagnoses. They must be considered separately.
 
-There are 1.522 unique icustay_ids for the use-case of stroke (about 9.5% of the available data). 
+There are 1.451 unique icustay_ids for the use-case of stroke (about 9.5% of the available data). 
 A patient can come to the ICU multiple times, within one hospital stay (one admission). 
 Thus, the relevant key shall be the icu-stay, to not use duplicate patients.
 
@@ -93,11 +103,11 @@ Patient demographics, secondary diagnosis will always be derived, regardless of 
 4) Notes for Future Research:
 
 There are many labels in the MIMIC-III dataset that have not yet been included into this analysis.
-It is possible to include sources like: transfers, services, microbiologyevents, cptevents, prescriptions for further research.
+It is possible to include sources like: transfers, services, microbiology-events, cptevents, prescriptions for further research.
 For example, the amount of transfers or a special kind of prescriptions might be strong indicators for relapse-rates. 
 However, these features are related to the treatment and behavior of the medical staff. They are not directly related
 to the illness itself and thus, where not included in this analysis.
-Especially the table noteevents offers a noteworthy source for possible ML-research based on text-analysis.
+Especially the table note-events offers a noteworthy source for possible ML-research based on text-analysis.
 
 All of these sources might be included inside the SQL-function 'get_all_events_view' for future research. 
 

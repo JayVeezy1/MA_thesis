@@ -15,11 +15,10 @@ if __name__ == '__main__':
                                             use_case_itemids=supplements.selection_itemids_list_mv.selected_itemids_stroke,
                                             use_case_name='testing_stroke_with_selected_labels')
 
-
 #### Current Tasks
-# todo: compare research guidelines which icd9 codes are relevant for stroke -> then export could start
+# TODO 1: compare research guidelines which icd9 codes are relevant for stroke -> then export could possibly start
 
-# TODO 1: Export patients with all of their available features -> build new transposed_patient version without filtering
+# TODO 2: Export patients with ALL of their available features -> build new transposed_patient version without filtering
 # first step here: check how long it will take on average for a patient to take all labels, also check estimated file-size
 # probably best to take all labels into csv, then filter inside python. Also the research-guided labels is still possible inside python
 # alternative: simply take all 2200 item_id features + 700 labevents features -> one big export

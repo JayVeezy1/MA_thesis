@@ -62,7 +62,7 @@ def export_patients_to_csv(use_case_icd_list=None, use_case_itemids=None, use_ca
         # export to csv
         filename_string: str = f'{directory}/0_patient_cohort.csv'
         filename = filename_string.encode()
-        with open(filename, 'w') as output_file:
+        with open(filename, 'w', newline='') as output_file:                        # use newline with windows
             csv_out = csv.writer(output_file)
             csv_out.writerow(cohort_header)
             csv_out.writerows(patient_cohort)
@@ -74,8 +74,8 @@ def export_patients_to_csv(use_case_icd_list=None, use_case_itemids=None, use_ca
         icu_stay_ids: list = []
         icu_stay_ids_set: set = set()
         for entry in patient_cohort:
-            icu_stay_ids.append(entry[1])
-            icu_stay_ids_set.add(entry[1])
+            icu_stay_ids.append(entry[0])
+            icu_stay_ids_set.add(entry[0])
         # icu_stay_ids.sort()
         if len(icu_stay_ids) != len(icu_stay_ids_set):
             print('Warning: Duplicate icustay_ids exist. Recommended to check patient_cohort.')
@@ -83,7 +83,7 @@ def export_patients_to_csv(use_case_icd_list=None, use_case_itemids=None, use_ca
         # Get chart_events for each icustay and export to .csv
         query_counter = 0
         seconds_cumulated = 0
-        for icustay_id in icu_stay_ids[:2]:             # todo reminder: loop through for all ids, also turn on sorting again
+        for icustay_id in icu_stay_ids[:1]:             # todo reminder: loop through for all ids, also turn on sorting again
             print('STATUS: Executing query_single_icustay for icustay_id', str(icustay_id))
             query_counter += 1
             starting_time = datetime.now()
@@ -99,12 +99,12 @@ def export_patients_to_csv(use_case_icd_list=None, use_case_itemids=None, use_ca
 
             filename_string: str = f'{directory}/icustay_id_{icustay_id}.csv'
             filename = filename_string.encode()
-            with open(filename, 'w') as output_file:
+            with open(filename, 'w', newline='') as output_file:                    # use newline with windows
                 csv_out = csv.writer(output_file)
                 csv_out.writerow(single_header)
                 csv_out.writerows(single_icustay)
 
-        cursor_1.execute('DROP TABLE public.temp_filtered_patient_cohort;')     # deleting table temp_filtered_patient_cohort, it should always only exist in DB for the current use-case
+        # cursor_1.execute('DROP TABLE public.temp_filtered_patient_cohort;')       # deleting table temp_filtered_patient_cohort, it should always only exist in DB for the current use-case
         cursor_1.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
@@ -160,7 +160,6 @@ def setup_postgre_files():
         conn = psycopg2.connect(**db_params)
         cur_1 = conn.cursor()
         print('Connection successful.')
-
         ##### run query #####
         for file in os.listdir('supplements/SQL/'):
             if isfile(join('supplements/SQL/',
@@ -170,9 +169,7 @@ def setup_postgre_files():
                     print('STATUS: Loading file into postgre database:', file)
                     cur_1.execute(query_setup_postgre_files_string)
                     time.sleep(2)  # safety to give db time to create files
-
         print('STATUS: query_setup_postgre_files_string executed.')
-
         # close the communication with the database
         cur_1.close()
     except (Exception, psycopg2.DatabaseError) as error:
@@ -209,7 +206,7 @@ def create_label_dictionaries():
 
                     filename_string: str = './supplements/events_dictionary.csv'
                     filename = filename_string.encode()
-                    with open(filename, 'w') as output_file:
+                    with open(filename, 'w', newline='') as output_file:
                         csv_out = csv.writer(output_file)
                         csv_out.writerow(['itemid', 'label', 'category', 'dbsource', 'valueuom'])
                         csv_out.writerows(events_dictionary)
@@ -223,7 +220,7 @@ def create_label_dictionaries():
 
                     filename_string: str = './supplements/icd9_codes_dictionary.csv'
                     filename = filename_string.encode()
-                    with open(filename, 'w') as output_file:
+                    with open(filename, 'w', newline='') as output_file:
                         csv_out = csv.writer(output_file)
                         csv_out.writerow(['icd9_code', 'short_title', 'long_title', 'source'])
                         csv_out.writerows(events_dictionary)
