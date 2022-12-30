@@ -82,7 +82,17 @@ Another helpful file to inspect all available icd9-codes and map codes to their 
 This file can also be created with the SQL script 'create_icd9_codes_dictionary.sql'. 
 Important: Many procedures have the same code as diagnoses. They must be considered separately.
 
+The final selection of icd9-codes for stroke was chosen based on the stroke-type definition from https://health.mo.gov/data/mica/CDP_MICA/StrokeDefofInd.html :
+
+- Hemorrhage: 430, 431, 432, 4329
+
+- Ischemic (+TIA): 433, 4330, 4331, 4332, 434, 4340, 43400, 43401, 4341, 43411, 435, 4350, 4351, 4353, 4359, 436
+
+- Other (+late_effects_of_stroke): 437, 4370, 4371, 4372, 4373, 4374, 438, 4381, 43811, 4382, 43820, 4383, 4384, 4385, 4388, 43882, 43885
+
+
 There are 1.451 unique icustay_ids for the use-case of stroke (about 9.5% of the available data). 
+Also all icustays with less than 24 hours were removed, which resulted in a total of 1232 icustays.
 A patient can come to the ICU multiple times, within one hospital stay (one admission). 
 Thus, the relevant key shall be the icu-stay, to not use duplicate patients.
 

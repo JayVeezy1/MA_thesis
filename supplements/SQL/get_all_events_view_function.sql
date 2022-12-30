@@ -16,16 +16,19 @@ temp_related_label varchar(200);
 	
 begin
 	-- 0. step create list from selected itemids input string
-	if (SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'temp_selected_itemids')) then	
-		DROP TABLE temp_selected_itemids CASCADE;		-- CASCADE needed because view patient_cohort_filtered is related
+	if array_length(selected_itemids_list, 1) > 0 then		-- old function: selection of itemids usually not done here but inside python
+		if (SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'temp_selected_itemids')) then	
+			DROP TABLE temp_selected_itemids CASCADE;		-- CASCADE needed because view patient_cohort_filtered is related
+		end if;
+
+		CREATE TABLE public.temp_selected_itemids(itemids integer);
+
+		-- only get the selected itemids (not used anymore, filtering&selection of itemids/labels will be done in python) 
+		FOREACH v_selected_itemid IN ARRAY selected_itemids_list LOOP
+			INSERT INTO temp_selected_itemids (itemids)
+			VALUES (v_selected_itemid);
+		END LOOP;
 	end if;
-	
-	CREATE TABLE public.temp_selected_itemids(itemids integer);
-	
-	FOREACH v_selected_itemid IN ARRAY selected_itemids_list LOOP
-		INSERT INTO temp_selected_itemids (itemids)
-		VALUES (v_selected_itemid);
-	END LOOP;
 
 	-- 1. step: merge/join different event types into 'all_events_view'
 	CREATE OR REPLACE VIEW public.all_events_view
@@ -131,36 +134,42 @@ begin
 	DROP TABLE IF EXISTS public.temp_single_patient_DUMMY;				
     CREATE TABLE public.temp_single_patient_DUMMY AS
     SELECT * FROM all_events_view WHERE all_events_view.icustay_id = input_icustay_id;
-	
+	-- add labitems to single_patient
 	UPDATE public.temp_single_patient_DUMMY
 	SET label = (SELECT d_labitems.label FROM mimiciii.d_labitems WHERE d_labitems.itemid = temp_single_patient_DUMMY.itemid)
 	WHERE temp_single_patient_DUMMY.itemid IN (SELECT d_labitems.itemid FROM mimiciii.d_labitems);
 
-	-- TODO: maybe remove this dummy, approach and export all available labels, then do the filtering in python
-	-- step 3: add a dummy value 
+	-- step 3: add a dummy value for every selected label, if some were selected (this is not used anymore, label selection will be inside Python)
 	-- with charttime 'today' for each label, so the label "exists" and will be turned into a column when doing crosstable
-	-- will be removed after doing crossable	
-	FOREACH v_selected_itemid IN ARRAY selected_itemids_list LOOP
-	
-		if v_selected_itemid IN (SELECT d_items.itemid FROM mimiciii.d_items) then
-			Select d_items.label from mimiciii.d_items where d_items.itemid = v_selected_itemid INTO temp_related_label;
-		elsif v_selected_itemid IN (SELECT d_labitems.itemid FROM mimiciii.d_labitems) then
-			Select d_labitems.label from mimiciii.d_labitems where d_labitems.itemid = v_selected_itemid INTO temp_related_label;
-		else
-			temp_related_label = 'unknown';
-		end if;
-		
-		INSERT INTO temp_single_patient_DUMMY (icustay_id, itemid, charttime, label, value)
-		VALUES (input_icustay_id, 
-				v_selected_itemid,
-				'0001-01-01 00:00:01', 			
-				temp_related_label,
-				'-1');
-	END LOOP;
+	-- will be removed after doing crossable
+	if array_length(selected_itemids_list, 1) > 0 then
+		FOREACH v_selected_itemid IN ARRAY selected_itemids_list LOOP
+
+			if v_selected_itemid IN (SELECT d_items.itemid FROM mimiciii.d_items) then
+				Select d_items.label from mimiciii.d_items where d_items.itemid = v_selected_itemid INTO temp_related_label;
+			elsif v_selected_itemid IN (SELECT d_labitems.itemid FROM mimiciii.d_labitems) then
+				Select d_labitems.label from mimiciii.d_labitems where d_labitems.itemid = v_selected_itemid INTO temp_related_label;
+			else
+				temp_related_label = 'unknown_label';
+			end if;
+
+			INSERT INTO temp_single_patient_DUMMY (icustay_id, itemid, charttime, label, value)
+			VALUES (input_icustay_id, 
+					v_selected_itemid,
+					'0001-01-01 00:00:01', 			
+					temp_related_label,
+					'-1');
+		END LOOP;
+	end if;
 	
 	-- step 4: return the events for selected icustay_id and filtered itemids
-	RETURN QUERY
-	SELECT * FROM temp_single_patient_DUMMY
-	WHERE temp_single_patient_DUMMY.itemid IN (SELECT itemids FROM temp_selected_itemids);	-- only use relevant item_ids, otherwise 12.000 different possible chart_events
-		
+	if array_length(selected_itemids_list, 1) > 0 then
+		RETURN QUERY
+		SELECT * FROM temp_single_patient_DUMMY
+		WHERE temp_single_patient_DUMMY.itemid IN (SELECT itemids FROM temp_selected_itemids);	-- only use relevant item_ids, otherwise 12.000 different possible chart_events
+	else
+		RETURN QUERY
+		SELECT * FROM temp_single_patient_DUMMY;
+	end if;
+
 end; $body$

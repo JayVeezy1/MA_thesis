@@ -1,154 +1,24 @@
-# This file can be used to manually select itemids (features).
+# This file is used to manually select itemids (features).
+# The lists below are used to mark the selected features in the table 'all_features_table'
 
-# Selected itemids for use-case: stroke
-selected_itemids_stroke = [
-    220045,  # "Heart Rate",            # should always keep this in, because every patient has it.
-    227342,  # "Secondary diagnosis",
-    220181,
-    220210,
-    227428,
-    228130,
-    50879,  # labevent test
-    50912,  # labevent test
-    226559  # outputevent test
-    ]
+# selected for scores:
+# useful labels: acute physiology score (APS)-III,8 simplified acute physiology score (SAPS),9 SAPS-II,10 and the
 
-potential_itemids_stroke = [
-    220003,     # "ICU Admission date",
-    220045,     # "Heart Rate",
-    220050,     # "Arterial Blood Pressure systolic",
-    220051,     # "Arterial Blood Pressure diastolic",
-    220052,     # "Arterial Blood Pressure mean",
-    220179,     # "Non Invasive Blood Pressure systolic",
-    220180,     # "Non Invasive Blood Pressure diastolic",
-    220181,     # "Non Invasive Blood Pressure mean",
-    220210,     # "Respiratory Rate",
-    220218,     # "Vital Capacity",
-    220224,     # "Arterial O2 pressure",
-    220227,     # "Arterial O2 Saturation",
-    220228,     # "Hemoglobin",
-    220235,     # "Arterial CO2 Pressure",
-    220245,     # "CO2 production",
-    220274,     # "PH (Venous)",
-    220603,     # "Cholesterol",
-    223760,     # "Health Care Proxy",
-    223762,     # "Temperature Celsius",
-    223763,     # "Bladder Pressure",
-    223764,     # "Orthostatic HR lying",
-    223765,     # "Orthostatic HR sitting",
-    223766,     # "Orthostatic BPs standing",
-    223767,     # "Intra Cranial Pressure Alarm - High",
-    223768,     # "Intra Cranial Pressure Alarm - Low",
-    223769,     # "O2 Saturation Pulseoxymetry Alarm - High",
-    223770,     # "O2 Saturation Pulseoxymetry Alarm - Low",
-    223797,     # "Sensory Level",
-    223800,     # "Epidural Appearance",
-    223801,     # "NMB Medication",
-    223802,     # "Nerve Stimulated",
-    223804,     # "TOF Response/Twitch",
-    223805,     # "Nausea and Vomiting (CIWA)",
-    223806,     # "Tremor (CIWA)",
-    223810,     # "Paroxysmal Sweats",
-    223814,     # "Auditory Disturbance",
-    223817,     # "Agitation",
-    223818,     # "Tactile Disturbances",
-    223819,     # "Visual Disturbances",
-    223820,     # "Headache",
-    223821,     # "Orient/Clouding Sensory",
-    223823,     # "Insomnia",
-    223824,     # "Seizure",
-    223825,     # "Sustained Nystagmus",
-    223827,     # "Ataxia",
-    223828,     # "Slurred Speech",
-    223829,     # "Drowsiness"
-    223849,     # "Ventilator Mode",
-    223851,     # "Rate",
-    223898,     # "Orientation",
-    223900,     # "GCS - Verbal Response",
-    223901,     # "GCS - Motor Response",
-    223902,     # "Speech",
-    223903,     # "Communication",
-    223904,     # "Gag Reflex",
-    223905,     # "Cough Reflex",
-    223907,     # "Pupil Size Right",
-    223910,     # "Follows Commands",
-    223911,     # "Spontaneous Movement",
-    223916,     # "Response to Stimuli (Type)",
-    223917,     # "RU Strength/Movement",
-    223918,     # "RL Strength/Movement",
-    223919,     # "LU Strength/Movement",
-    223920,     # "LL Strength/Movement",
-    223921,     # "Neuro Symptoms",
-    223923,     # "Seizure Activity",
-    223924,     # "RLE Sensation",
-    223925,     # "Seizure Duration",
-    223926,     # "Neuro Drain #1 Type",
-    223930,     # "Neuro Drain #1 Level",
-    223931,     # "Neuro Drain #1 Status",
-    223932,     # "Neuro Drain #1 Drainage",
-    223933,     # "Heat Sounds",
-    224023,     # "Support Systems",
-    224024,     # "Family Communication",
-    224025,     # "Spiritual Support",
-    224144,     # "Blood Flow (ml/min)",
-    224447,     # "Family Meeting",
-    224688,     # "Respiratory Rate (Set)",
-    224689,     # "Respiratory Rate (spontaneous)",
-    224690,     # "Respiratory Rate (Total)",
-    224691,     # "Flow Rate (L/min)",
-    224692,     # "Flow Pattern",
-    224695,     # "Peak Insp. Pressure",
-    224696,     # "Plateau Pressure",
-    224697,     # "Mean Airway Pressure",
-    225059,     # "Past medical history",
-    225067,     # "Is the spokesperson the Health Care Proxy",
-    225070,     # "Unable to assess psychological",
-    225072,     # "Living situation",
-    225074,     # "Any fear in relationships",
-    225078,     # "Social work consult",
-    225082,     # "Pregnant",
-    225083,     # "Pregnancy due date",
-    225085,     # "Post menopausal",
-    225086,     # "Unable to assess cognitive / perceptual",
-    225087,     # "Visual / hearing deficit",
-    225090,     # "Interpreter",
-    225091,     # "Unable to assess activity / mobility",
-    225118,     # "Difficulty swallowing",
-    225120,     # "Appetite",
-    225122,     # "Special diet",
-    225124,     # "Unintentional weight loss >10 lbs.",
-    225126,     # "Dialysis patient",
-    225128,     # "Last dialysis",
-    225318,     # "Dialysis Catheter Cap Change",
-    225319,     # "Dialysis Catheter Change over Wire Date",
-    225321,     # "Dialysis Catheter Dressing Change",
-    225322,     # "Dialysis Catheter Insertion Date",
-    225323,     # "Dialysis Catheter Site Appear",
-    225324,     # "Dialysis CatheterTubing Change",
-    225465,     # "Chest Pain",
-    225466,     # "Cardiac Arrest",
-    227007,     # "Diabetes",
-    227040,     # "Post-Operative Cardiovascular (CARDIOVASC)",
-    227041,     # "Post-Operative Gastrointestinal (GI)",
-    227042,     # "Post-Operative Genitourinary (GENITOURIN)",
-    227043,     # "Post-Operative Hematology (HEMATO)",
-    227044,     # "Post-Operative Metabolic/Endocrine (METAB/ENDO)",
-    227045,     # "Post-Operative Musculoskeletal/Skin (MUSKELSKIN)",
-    227046,     # "Post-Operative Neurologic (NEUROLOGIC)",
-    227047,     # "Post-Operative Respiratory (RESPIRAT)",
-    227048,     # "Post-Operative Transplant (TRANSPLANT)",
-    227049,     # "Post-Operative Trauma (TRAUMA)",
-    227119,     # "Epidural Location",
-    227120,     # "Motor Deficit",
-    227121,     # "Pupil Response Right",
-    227122,     # "Neuro Drain Landmark",
-    227124,     # "Dialysis Catheter Type",
-    227342,     # "Secondary diagnosis",
-    227428     # "SOFA Score"
-]
+# Oxford acute severity of illness score (OASIS)
 
 
-# OLD: An overview of all available itemids for metavision
+# selected because recommended by research:
+# compare to 'a novel nomogram...' paper
+
+# selected because general patient information
+
+
+
+
+
+
+#######################################################################################################################
+# OLD: A dictionary overview of all available itemids for metavision
 # NEW: The file 'events_dictionary' offers an even more precise source to join itemids to respective labels and also the unit-of-measurement
 itemids_metavision_dict: dict = {  # "itemid","label"
     220003: "ICU Admission date",

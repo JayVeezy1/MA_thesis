@@ -4,14 +4,14 @@
 
 SELECT 
 	icd9_code, 
-	short_title, 
-	long_title, 
+	REPLACE(REPLACE(d_icd_diagnoses.short_title, ';', '&'), ',' , '-') as short_title,
+	REPLACE(REPLACE(d_icd_diagnoses.long_title, ';', '&'), ',' , '-') as long_title,
 	'diagnose' as source
 FROM mimiciii.d_icd_diagnoses
-UNION ALL SELECT 
-	icd9_code, 
-	short_title, 
-	long_title, 
-	'procedure' as source
-FROM mimiciii.d_icd_procedures
+-- UNION ALL SELECT 					-- removed procedure icd9_codes, because they are sometimes the same as diagnosis, and not really needed
+--	icd9_code, 
+--	REPLACE(REPLACE(d_icd_procedures.short_title, ';', '&'), ',' , '-') as short_title,
+--	REPLACE(REPLACE(d_icd_procedures.long_title, ';', '&'), ',' , '-') as long_title,
+--	'procedure' as source
+-- FROM mimiciii.d_icd_procedures
 ORDER BY icd9_code;

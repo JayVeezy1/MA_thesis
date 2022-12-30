@@ -50,7 +50,7 @@ labevents as (
 	select * from chartevents
 	UNION ALL SELECT * FROM inputevents_mv
 	UNION ALL SELECT * FROM outputevents
-	UNION ALL SELECT * FROM procedureevents_mv
+	-- UNION ALL SELECT * FROM procedureevents_mv			-- procedures sometimes have same code as diagnosis -> not really needed, removed
 	UNION ALL SELECT * FROM labevents
 	-- UNION ALL SELECT * FROM datetimeevents				-- can be added, but not yet in current analysis
 	-- UNION ALL SELECT * FROM microbiologyevents
@@ -59,7 +59,7 @@ labevents as (
 d_items as(
 	Select 
 		d_items.itemid,
-		d_items.label,
+		REPLACE(REPLACE(d_items.label, ';', '&'), ',' , '-') as label,
 		d_items.category,
 		d_items.dbsource
 	from mimiciii.d_items
@@ -67,7 +67,7 @@ d_items as(
 ), d_labitems as(
 	Select 
 		d_labitems.itemid,
-		d_labitems.label,
+		REPLACE(REPLACE(d_labitems.label, ';', '&'), ',' , '-') as label,
 		d_labitems.category,
 		'labitem' as dbsource						-- labitems have no column dbsource
 	from mimiciii.d_labitems

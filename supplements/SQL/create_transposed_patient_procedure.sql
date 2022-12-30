@@ -14,7 +14,7 @@ begin
 -- Step 1: Get all_events_view temporarily into temp_single_patient table
 	DROP TABLE IF EXISTS public.temp_single_patient;				
     CREATE TABLE public.temp_single_patient AS
-    SELECT * FROM public.get_all_events_view(input_icustay_id, selected_itemids_list);
+    SELECT * FROM public.get_all_events_view(input_icustay_id, selected_itemids_list);		-- selected_itemids_list can be '{}', then all available itemids will be selected
 
 	str := ' "charttime" timestamp without time zone, ';			-- text = field type , not icustay_id in here, because it would group all rows
    	FOR rec IN SELECT DISTINCT label								-- looping to get column heading string
@@ -38,7 +38,7 @@ begin
     AS final_result ('|| str ||')';
 	
 -- Setp 3: Join the chart_events data with the general patient data
-	DELETE FROM temp_transposed_patient WHERE temp_transposed_patient.charttime = '0001-01-01 00:00:01';	-- remove DUMMY values
+	DELETE FROM temp_transposed_patient WHERE temp_transposed_patient.charttime = '0001-01-01 00:00:01';	-- remove DUMMY values, those were added in get_all_events_view
 	
 	-- check if not exists (should never be the case, always call single transposed_patient after having created temp_filtered_patient_cohort)
 	if not (SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'temp_filtered_patient_cohort')) then	
@@ -48,12 +48,13 @@ begin
 	end if;
 	
 	SELECT * FROM temp_filtered_patient_cohort WHERE temp_filtered_patient_cohort.icustay_id = input_icustay_id INTO v_patient_record;
-	ALTER TABLE public.temp_transposed_patient	
+	ALTER TABLE public.temp_transposed_patient
+		ADD COLUMN icustay_id					integer,
 		ADD COLUMN hadm_id						integer, 
-		ADD COLUMN icustay_id					integer, 
+		ADD COLUMN subject_id						integer, 
 		ADD COLUMN intime						timestamp without time zone, 
 		ADD COLUMN outtime						timestamp without time zone, 
-		ADD COLUMN los 							double precision,
+		ADD COLUMN los_hours 					numeric,
 		ADD COLUMN icustays_count				bigint,
 		ADD COLUMN age							numeric,
 		ADD COLUMN patientweight				double precision,
@@ -65,23 +66,25 @@ begin
 		ADD COLUMN language 					varchar(10),
 		ADD COLUMN religion						varchar(50),
 		ADD COLUMN marital_status				varchar(50),
-		ADD COLUMN diagnosis_text				varchar(255),
+		ADD COLUMN diagnosis_text				text,
 		ADD COLUMN dob 							date,
 		ADD COLUMN dod 							date,
 		ADD COLUMN death_in_hosp 				int,
 		ADD COLUMN death_3_days 				int,
 		ADD COLUMN death_30_days 				int,
+		ADD COLUMN death_180_days 				int,
 		ADD COLUMN death_365_days 				int,
-		ADD COLUMN subject_id					int,
 		ADD COLUMN icd9_code					varchar(10),
+		ADD COLUMN stroke_type					text,
 		ADD COLUMN all_icd9_codes 				varchar[];											
 	UPDATE public.temp_transposed_patient 
 	SET 
-		hadm_id = v_patient_record.hadm_id,
 		icustay_id = input_icustay_id,
+		hadm_id = v_patient_record.hadm_id,
+		subject_id = v_patient_record.subject_id,
 		intime = v_patient_record.intime,
 		outtime = v_patient_record.outtime,
-		los = v_patient_record.los,
+		los_hours = v_patient_record.los_hours,
 		icustays_count = v_patient_record.icustays_count,
 		age = v_patient_record.age,
 		patientweight = v_patient_record.patientweight,
@@ -98,10 +101,11 @@ begin
 		dod = v_patient_record.dod,						
 		death_in_hosp = v_patient_record.death_in_hosp, 				
 		death_3_days = v_patient_record.death_3_days, 				
-		death_30_days = v_patient_record.death_30_days, 				
+		death_30_days = v_patient_record.death_30_days,  
+		death_180_days = v_patient_record.death_180_days, 
 		death_365_days = v_patient_record.death_365_days, 				
-		subject_id = v_patient_record.subject_id,
 		icd9_code = v_patient_record.icd9_code,
+		stroke_type = v_patient_record.stroke_type,
 		all_icd9_codes = v_patient_record.all_icd9_codes;
 
 end; $body$

@@ -1,11 +1,12 @@
 create or replace procedure public.create_basic_patient_cohort_view()		
 /*
 returns view (
-		hadm_id						integer,
 		icustay_id					integer,
+		hadm_id						integer,
+		subject_id					integer,
 		intime						timestamp without time zone,
 		outtime						timestamp without time zone,
-		los 						double precision,
+		los_hours 					numeric,				
 		icustays_count				bigint,
 		age 						numeric,
 		patientweight				double precision,
@@ -14,6 +15,7 @@ returns view (
 		death_in_hosp 				int,
 		death_3_days 				int,
 		death_30_days 				int,
+		death_180_days 				int,
 		death_365_days 				int,				
 		gender						varchar(5),
 		ethnicity					varchar(200),
@@ -67,8 +69,12 @@ begin
 		) 
 		, t1 as
 		(
-		select ie.icustay_id, ie.hadm_id
-			, ie.intime, ie.outtime, ie.los
+		select ie.icustay_id
+			, ie.hadm_id
+			, ie.subject_id
+			, ie.intime
+			, ie.outtime
+			, ROUND(EXTRACT(epoch FROM (outtime-intime))/3600, 2) as los_hours			-- ie.los was not a good column! better to calculate it here
 			, round((cast(ie.intime as date) - cast(pat.dob as date)) / 365.242, 4) as age
 			, input_weight.patientweight
 			-- adding death related features
@@ -77,6 +83,7 @@ begin
 			, case when (cast(ie.outtime as date) - cast(pat.dod as date)) >= 0 then 1 else 0 end as death_in_hosp			-- flag for in_hosp date exists
 			, case when (cast(pat.dod as date) - cast(ie.intime as date)) <= 3 then 1 else 0 end as death_3_days			-- flag for 3 days after admission
 			, case when (cast(pat.dod as date) - cast(ie.intime as date)) <= 30 then 1 else 0 end as death_30_days			-- flag for 30 days after admission
+			, case when (cast(pat.dod as date) - cast(ie.intime as date)) <= 180 then 1 else 0 end as death_180_days		-- flag for 180 days after admission
 			, case when (cast(pat.dod as date) - cast(ie.intime as date)) <= 365 then 1 else 0 end as death_365_days		-- flag for 365 days after admission
 			, pat.gender
 			, adm.ethnicity
@@ -86,7 +93,7 @@ begin
 			, adm.language
 			, adm.religion
 			, adm.marital_status
-			, adm.diagnosis as diagnosis_text
+			, REPLACE(REPLACE(adm.diagnosis, ';', '&'), ',' , '-') as diagnosis_text			-- semicolon and comma need to be removed, otherwise problems with .csv
 			, ie.dbsource
 			-- used to get first ICUSTAY_ID
 			, ROW_NUMBER() over (partition by ie.subject_id order by ie.intime) as rn
@@ -94,7 +101,6 @@ begin
 			, s.curr_service as first_service
 			, adm.HAS_CHARTEVENTS_DATA
 			, counter.icustays_count
-
 		from mimiciii.icustays ie
 		inner join mimiciii.admissions adm
 			on ie.hadm_id = adm.hadm_id
@@ -110,11 +116,12 @@ begin
 		)
 		-- FINAL SELECT FOR TABLE --
 		select
-		    t1.hadm_id
-		  , t1.icustay_id
+		  t1.icustay_id
+		  , t1.hadm_id
+		  , t1.subject_id
 		  , t1.intime
 		  , t1.outtime
-		  , t1.los
+		  , t1.los_hours
 		  , t1.icustays_count
 		  -- set de-identified ages to median of 91.4
 		  , case when t1.age > 89 then 91.4 else t1.age end as age
@@ -124,6 +131,7 @@ begin
 		  , t1.death_in_hosp
 		  , t1.death_3_days
 		  , t1.death_30_days
+		  , t1.death_180_days
 		  , t1.death_365_days
 		  , t1.gender
 		  , t1.ethnicity
@@ -138,7 +146,7 @@ begin
 		  , t1.dbsource
 		  -- exclusions
 		  , case when t1.rn = 1 then 0 else 1 end as exclusion_secondarystay
-		  , case when t1.age <= 16 then 1 else 0 end as exclusion_nonadult
+		  , case when t1.age <= 18 then 1 else 0 end as exclusion_nonadult
 		  -- , case when t1.first_service in ('CSURG','VSURG','TSURG') then 1 else 0 end as exclusion_csurg
 		  , case when t1.dbsource != 'metavision' then 1 else 0 end as exclusion_carevue
 		  , case when t1.HAS_CHARTEVENTS_DATA = 0 then 1
@@ -149,7 +157,7 @@ begin
 		  -- below flag is used to actually exclude patients in future queries
 		  , case when
 					 t1.rn != 1
-				  or t1.age <= 16
+				  or t1.age <= 18											-- remove patients under 18
 				  -- or t1.first_service in ('CSURG','VSURG','TSURG')		-- surgery patients should not be considered
 				  or t1.HAS_CHARTEVENTS_DATA = 0
 				  or t1.intime is null
@@ -158,7 +166,7 @@ begin
 				then 1
 				else 0 end as excluded
 		from t1
-		order by t1.icustay_id;
+		order by t1.icustay_id;	
 			
 end; $body$
 

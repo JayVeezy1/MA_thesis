@@ -10,33 +10,40 @@ from mimic_to_csv_folder import SQL_queries
 from mimic_to_csv_folder.db_setup import config
 
 
-def export_patients_to_csv(use_case_icd_list=None, use_case_itemids=None, use_case_name=None, ) -> None:
+def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_itemids=None, use_case_name=None) -> None:
     """
     This function exports a .csv file per unique-admission (each patient once).
     The files are saved inside /export/use_case_name/
     The function does not return anything.
     Analysis of the selection can be conducted on the .csv file created by export_basic_statistics
+    :param project_path: local directory where files are stored, must be defined by the user
     :param use_case_icd_list: recommended to use this list of all icd_9 codes that should be selected for this use-case
     :param use_case_itemids:
     :param use_case_name: the title for this use-case e.g. stroke, heart_failure, sepsis
     :return: None
     """
+    if project_path is None:
+        print('ERROR: project_path must be defined by the user.')
+        return None
     if use_case_icd_list is None:
         use_case_icd_list = []
         use_case_name = 'all_cases'
         print('NOTICE: No icd9 codes were selected. Not recommended, but query will be run for all available use-cases.')
     if use_case_itemids is None:
-        print('Error: Mandatory to choose "use_case_itemids". Otherwise too many available chart_events.')
-        return None
+        use_case_itemids = []
+        print('NOTICE: No itemids were selected. Query will be run for all available itemids.')
     if use_case_name is None:
         use_case_name = 'no_use_case_name'
         print('NOTICE: No use-case name was chosen. Export files will be saved in folder "no_use_case_name".')
 
     # Setup itemids Filter
-    selected_itemids_string: str = '\'{'
-    for itemid in use_case_itemids:
-        selected_itemids_string = selected_itemids_string + str(itemid) + ', '
-    selected_itemids_string = selected_itemids_string[:-2] + '}\''
+    if len(use_case_itemids) == 0:
+        selected_itemids_string: str = '\'{}\''
+    else:
+        selected_itemids_string: str = '\'{'
+        for itemid in use_case_itemids:
+            selected_itemids_string = selected_itemids_string + str(itemid) + ', '
+        selected_itemids_string = selected_itemids_string[:-2] + '}\''
     # print('CHECK: itemid Filter:', len(use_case_itemids))
 
     # Setup connection to PostGre MIMIC-III Database
@@ -53,7 +60,7 @@ def export_patients_to_csv(use_case_icd_list=None, use_case_itemids=None, use_ca
         cohort_header: list = SQL_queries.query_header_patient_cohort(cursor_1)
 
         # create new directory for this use-case if it does not exist yet
-        directory: str = f'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/exports/{use_case_name}'
+        directory: str = f'{project_path}exports/{use_case_name}'
         try:
             os.mkdir(directory)
         except FileExistsError:
