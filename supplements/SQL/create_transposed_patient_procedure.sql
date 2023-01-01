@@ -76,6 +76,11 @@ begin
 		ADD COLUMN death_365_days 				int,
 		ADD COLUMN icd9_code					varchar(10),
 		ADD COLUMN stroke_type					text,
+		ADD COLUMN hypertension_flag			int,
+		ADD COLUMN diabetes_flag				int,
+		ADD COLUMN cancer_flag					int,
+		ADD COLUMN obesity_flag					int,
+		ADD COLUMN drug_abuse_flag				int,
 		ADD COLUMN all_icd9_codes 				varchar[];											
 	UPDATE public.temp_transposed_patient 
 	SET 
@@ -105,6 +110,11 @@ begin
 		death_180_days = v_patient_record.death_180_days, 
 		death_365_days = v_patient_record.death_365_days, 				
 		icd9_code = v_patient_record.icd9_code,
+		hypertension_flag = v_patient_record.hypertension_flag,
+		diabetes_flag = v_patient_record.diabetes_flag,
+		cancer_flag = v_patient_record.cancer_flag,
+		obesity_flag = v_patient_record.obesity_flag,
+		drug_abuse_flag = v_patient_record.drug_abuse_flag,
 		stroke_type = v_patient_record.stroke_type,
 		all_icd9_codes = v_patient_record.all_icd9_codes;
 

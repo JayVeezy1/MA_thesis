@@ -28,13 +28,25 @@ returns table (
 		seq_num						int,
 		icd9_code					varchar(10),
 		stroke_type					text,
-		all_icd9_codes 				varchar[]
+		all_icd9_codes 				varchar[],
+		hypertension_flag			int,				-- flag columns must be listed here at the end, but can be moved further to the front in create_transposed_patient
+		diabetes_flag				int,
+		cancer_flag					int,
+		obesity_flag				int,
+		drug_abuse_flag				int
 ) 
 
 language plpgsql
 as $body$
 declare
-v_selected_code varchar(10);
+v_selected_code 		varchar(10);
+v_patient_record 		RECORD;
+v_hypertension_flag		int := 0;
+v_diabetes_flag		  	int := 0;
+v_cancer_flag			int := 0;
+v_obesity_flag 			int := 0;
+v_drug_abuse_flag 		int := 0;
+v_icd9_code				varchar(10);
 	
 begin
 	-- 1. step create list from input string
@@ -167,6 +179,57 @@ begin
 				WHERE public.patient_cohort_with_icd.icd9_code IN (SELECT icd9_codes FROM public.temp_icd9_codes_selected)
 				GROUP BY patient_cohort_with_icd.icustay_id);		-- only keep the first fitting diagnoses, no duplicate icustays
 	END IF;
+	
+	-- 4. step add comorbidities to the temp_filtered_patient_cohort
+		-- add the flags as new columns into the final cohort table
+	ALTER TABLE public.temp_filtered_patient_cohort
+		ADD COLUMN hypertension_flag			integer,
+		ADD COLUMN diabetes_flag				integer,
+		ADD COLUMN cancer_flag					integer,
+		ADD COLUMN obesity_flag					integer,
+		ADD COLUMN drug_abuse_flag				integer;
+	UPDATE public.temp_filtered_patient_cohort 
+	SET 
+		hypertension_flag = 0,
+		diabetes_flag = 0,
+		cancer_flag = 0,
+		obesity_flag = 0,
+		drug_abuse_flag = 0;
+	
+ 	FOR v_patient_record in (select temp_filtered_patient_cohort.icustay_id from public.temp_filtered_patient_cohort) LOOP
+		-- reset _flags to 0
+		v_hypertension_flag := 0;
+		v_diabetes_flag := 0;
+		v_cancer_flag := 0;
+		v_obesity_flag := 0;
+		v_drug_abuse_flag := 0;
+			-- get the flags for each patient
+			FOREACH v_icd9_code in array (select temp_filtered_patient_cohort.all_icd9_codes 
+								from public.temp_filtered_patient_cohort 
+								where temp_filtered_patient_cohort.icustay_id = v_patient_record.icustay_id) LOOP
+				if (SELECT v_icd9_code = ANY ('{4011, 4019, 40210, 40290, 40410, 40490, 4051, 4059}'::varchar[])) then			-- hypertension_icd9_list = '{430,412,413}'
+					v_hypertension_flag := 1;
+				elsif (SELECT v_icd9_code = ANY ('{25000, 25010, 25020, 25030, 25040, 25050, 25060, 25070, 25090}'::varchar[])) then			-- diabetes_icd9_list = '{510,512,513}'
+					v_diabetes_flag := 1;
+				elsif (SELECT v_icd9_code = ANY ('{abc, 123}'::varchar[])) then			-- TEST: cancer_icd9_list = '{abc}'
+					v_cancer_flag := 1;
+				elsif (SELECT v_icd9_code = ANY ('{abc, 123}'::varchar[])) then			-- TEST -- TODO: add correct flag icd9 codes
+					v_obesity_flag := 1;
+				elsif (SELECT v_icd9_code = ANY ('{abc, 123}'::varchar[])) then			-- TEST -- TODO: add correct flag icd9 codes
+					v_drug_abuse_flag := 1;
+				end if;	
+			END LOOP;	
+
+		-- change the flag values for the patient								
+		UPDATE public.temp_filtered_patient_cohort 
+		SET 
+			hypertension_flag = v_hypertension_flag,
+			diabetes_flag = v_diabetes_flag,
+			cancer_flag = v_cancer_flag,
+			obesity_flag = v_obesity_flag,
+			drug_abuse_flag = v_drug_abuse_flag
+		WHERE temp_filtered_patient_cohort.icustay_id = v_patient_record.icustay_id;
+	END LOOP;
 	
 	RETURN QUERY SELECT * FROM temp_filtered_patient_cohort;
 
