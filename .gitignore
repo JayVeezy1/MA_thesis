@@ -1,7 +1,7 @@
 # created by virtualenv automatically
 venv/Lib
-mimic_to_csv_folder/database.ini
-/mimic_to_csv_folder/database.ini
+step_1_setup_data/database.ini
+/step_1_setup_data/database.ini
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

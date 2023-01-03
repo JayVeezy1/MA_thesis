@@ -2,14 +2,14 @@ itemid,label,category,dbsource,valueuom
 50800,SPECIMEN TYPE,BLOOD GAS,labitem,
 50801,Alveolar-arterial Gradient,Blood Gas,labitem,mm Hg
 50802,Base Excess,Blood Gas,labitem,mEq/L
-50803,"Calculated Bicarbonate, Whole Blood",Blood Gas,labitem,mEq/L
+50803,Calculated Bicarbonate- Whole Blood,Blood Gas,labitem,mEq/L
 50804,Calculated Total CO2,Blood Gas,labitem,mEq/L
 50805,Carboxyhemoglobin,Blood Gas,labitem,%
-50806,"Chloride, Whole Blood",Blood Gas,labitem,mEq/L
+50806,Chloride- Whole Blood,Blood Gas,labitem,mEq/L
 50807,Comments,Blood Gas,labitem,
 50808,Free Calcium,Blood Gas,labitem,mmol/L
 50809,Glucose,Blood Gas,labitem,mg/dL
-50810,"Hematocrit, Calculated",Blood Gas,labitem,%
+50810,Hematocrit- Calculated,Blood Gas,labitem,%
 50811,Hemoglobin,Blood Gas,labitem,g/dL
 50812,Intubated,Blood Gas,labitem,
 50813,Lactate,Blood Gas,labitem,mmol/L
@@ -21,36 +21,36 @@ itemid,label,category,dbsource,valueuom
 50819,PEEP,Blood Gas,labitem,
 50820,pH,Blood Gas,labitem,units
 50821,pO2,Blood Gas,labitem,mm Hg
-50822,"Potassium, Whole Blood",Blood Gas,labitem,mEq/L
+50822,Potassium- Whole Blood,Blood Gas,labitem,mEq/L
 50823,Required O2,Blood Gas,labitem,
-50824,"Sodium, Whole Blood",Blood Gas,labitem,mEq/L
+50824,Sodium- Whole Blood,Blood Gas,labitem,mEq/L
 50825,Temperature,Blood Gas,labitem,
 50826,Tidal Volume,Blood Gas,labitem,
 50827,Ventilation Rate,Blood Gas,labitem,
 50828,Ventilator,Blood Gas,labitem,
 50829,Fluid Type,Blood Gas,labitem,
-50830,"pCO2, Body Fluid",Blood Gas,labitem,mm Hg
+50830,pCO2- Body Fluid,Blood Gas,labitem,mm Hg
 50831,pH,Blood Gas,labitem,units
-50832,"pO2, Body Fluid",Blood Gas,labitem,mm Hg
+50832,pO2- Body Fluid,Blood Gas,labitem,mm Hg
 50833,Potassium,Blood Gas,labitem,mEq/L
-50834,"Sodium, Body Fluid",Blood Gas,labitem,mEq/L
-50835,"Albumin, Ascites",Chemistry,labitem,g/dL
-50836,"Amylase, Ascites",Chemistry,labitem,IU/L
-50837,"Bicarbonate, Ascites",Chemistry,labitem,mEq/L
-50838,"Bilirubin, Total, Ascites",Chemistry,labitem,mg/dL
-50839,"Chloride, Ascites",Chemistry,labitem,mEq/L
-50840,"Cholesterol, Ascites",Chemistry,labitem,mg/dL
-50841,"Creatinine, Ascites",Chemistry,labitem,mg/dL
-50842,"Glucose, Ascites",Chemistry,labitem,mg/dL
-50843,"Lactate Dehydrogenase, Ascites",Chemistry,labitem,IU/L
-50844,"Lipase, Ascites",Chemistry,labitem,U/L
-50845,"Miscellaneous, Ascites",Chemistry,labitem,
-50846,"Osmolality, Ascites",Chemistry,labitem,mOsm/kg
-50847,"Potassium, Ascites",Chemistry,labitem,mEq/L
-50848,"Sodium, Ascites",Chemistry,labitem,mEq/L
-50849,"Total Protein, Ascites",Chemistry,labitem,g/dL
-50850,"Triglycerides, Ascites",Chemistry,labitem,mg/dL
-50851,"Urea Nitrogen, Ascites",Chemistry,labitem,mg/dL
+50834,Sodium- Body Fluid,Blood Gas,labitem,mEq/L
+50835,Albumin- Ascites,Chemistry,labitem,g/dL
+50836,Amylase- Ascites,Chemistry,labitem,IU/L
+50837,Bicarbonate- Ascites,Chemistry,labitem,mEq/L
+50838,Bilirubin- Total- Ascites,Chemistry,labitem,mg/dL
+50839,Chloride- Ascites,Chemistry,labitem,mEq/L
+50840,Cholesterol- Ascites,Chemistry,labitem,mg/dL
+50841,Creatinine- Ascites,Chemistry,labitem,mg/dL
+50842,Glucose- Ascites,Chemistry,labitem,mg/dL
+50843,Lactate Dehydrogenase- Ascites,Chemistry,labitem,IU/L
+50844,Lipase- Ascites,Chemistry,labitem,U/L
+50845,Miscellaneous- Ascites,Chemistry,labitem,
+50846,Osmolality- Ascites,Chemistry,labitem,mOsm/kg
+50847,Potassium- Ascites,Chemistry,labitem,mEq/L
+50848,Sodium- Ascites,Chemistry,labitem,mEq/L
+50849,Total Protein- Ascites,Chemistry,labitem,g/dL
+50850,Triglycerides- Ascites,Chemistry,labitem,mg/dL
+50851,Urea Nitrogen- Ascites,Chemistry,labitem,mg/dL
 50852,% Hemoglobin A1c,Chemistry,labitem,%
 50853,25-OH Vitamin D,Chemistry,labitem,ng/mL
 50854,Absolute A1c,Chemistry,labitem,
@@ -58,8 +58,8 @@ itemid,label,category,dbsource,valueuom
 50856,Acetaminophen,Chemistry,labitem,ug/mL
 50857,Acetone,Chemistry,labitem,
 50858,Acid Phosphatase,Chemistry,labitem,IU/L
-50859,"Acid Phosphatase, Non-Prostatic",Chemistry,labitem,IU/L
-50860,"AFP, Maternal Screen",Chemistry,labitem,ng/mL
+50859,Acid Phosphatase- Non-Prostatic,Chemistry,labitem,IU/L
+50860,AFP- Maternal Screen,Chemistry,labitem,ng/mL
 50861,Alanine Aminotransferase (ALT),Chemistry,labitem,IU/L
 50862,Albumin,Chemistry,labitem,g/dL
 50863,Alkaline Phosphatase,Chemistry,labitem,IU/L
@@ -69,11 +69,11 @@ itemid,label,category,dbsource,valueuom
 50867,Amylase,Chemistry,labitem,IU/L
 50868,Anion Gap,Chemistry,labitem,mEq/L
 50869,Anti-DGP (IgA/IgG),Chemistry,labitem,units
-50870,"Anti-Gliadin Antibody, IgA",Chemistry,labitem,units
+50870,Anti-Gliadin Antibody- IgA,Chemistry,labitem,units
 50871,Anti-Mitochondrial Antibody,Chemistry,labitem,
 50872,Anti-Neutrophil Cytoplasmic Antibody,Chemistry,labitem,
 50873,Anti-Nuclear Antibody,Chemistry,labitem,
-50874,"Anti-Nuclear Antibody, Titer",Chemistry,labitem,
+50874,Anti-Nuclear Antibody- Titer,Chemistry,labitem,
 50875,Anti-Parietal Cell Antibody,Chemistry,labitem,
 50876,Anti-Smooth Muscle Antibody,Chemistry,labitem,
 50877,Anti-Thyroglobulin Antibodies,Chemistry,labitem,IU/mL
@@ -82,9 +82,9 @@ itemid,label,category,dbsource,valueuom
 50880,Benzodiazepine Screen,Chemistry,labitem,
 50881,Beta-2 Microglobulin,Chemistry,labitem,mg/L
 50882,Bicarbonate,Chemistry,labitem,mEq/L
-50883,"Bilirubin, Direct",Chemistry,labitem,mg/dL
-50884,"Bilirubin, Indirect",Chemistry,labitem,mg/dL
-50885,"Bilirubin, Total",Chemistry,labitem,mg/dL
+50883,Bilirubin- Direct,Chemistry,labitem,mg/dL
+50884,Bilirubin- Indirect,Chemistry,labitem,mg/dL
+50885,Bilirubin- Total,Chemistry,labitem,mg/dL
 50886,Blood Culture Hold,Chemistry,labitem,
 50887,Blue Top Hold,Chemistry,labitem,
 50888,Blue Top Hold Frozen,Chemistry,labitem,
@@ -92,7 +92,7 @@ itemid,label,category,dbsource,valueuom
 50890,C3,Chemistry,labitem,mg/dL
 50891,C4,Chemistry,labitem,mg/dL
 50892,CA-125,Chemistry,labitem,U/mL
-50893,"Calcium, Total",Chemistry,labitem,mg/dL
+50893,Calcium- Total,Chemistry,labitem,mg/dL
 50894,Calculated Free Testosterone,Chemistry,labitem,pg/mL
 50895,Calculated TBG,Chemistry,labitem,Ratio
 50896,Calculated Thyroxine (T4) Index,Chemistry,labitem,ug/dL
@@ -103,14 +103,14 @@ itemid,label,category,dbsource,valueuom
 50901,Centromere,Chemistry,labitem,
 50902,Chloride,Chemistry,labitem,mEq/L
 50903,Cholesterol Ratio (Total/HDL),Chemistry,labitem,Ratio
-50904,"Cholesterol, HDL",Chemistry,labitem,mg/dL
-50905,"Cholesterol, LDL, Calculated",Chemistry,labitem,mg/dL
-50906,"Cholesterol, LDL, Measured",Chemistry,labitem,mg/dL
-50907,"Cholesterol, Total",Chemistry,labitem,mg/dL
+50904,Cholesterol- HDL,Chemistry,labitem,mg/dL
+50905,Cholesterol- LDL- Calculated,Chemistry,labitem,mg/dL
+50906,Cholesterol- LDL- Measured,Chemistry,labitem,mg/dL
+50907,Cholesterol- Total,Chemistry,labitem,mg/dL
 50908,CK-MB Index,Chemistry,labitem,%
 50909,Cortisol,Chemistry,labitem,ug/dL
 50910,Creatine Kinase (CK),Chemistry,labitem,IU/L
-50911,"Creatine Kinase, MB Isoenzyme",Chemistry,labitem,ng/mL
+50911,Creatine Kinase- MB Isoenzyme,Chemistry,labitem,ng/mL
 50912,Creatinine,Chemistry,labitem,mg/dL
 50913,Cryoglobulin,Chemistry,labitem,
 50914,Cyclosporin,Chemistry,labitem,ng/mL
@@ -135,10 +135,10 @@ itemid,label,category,dbsource,valueuom
 50933,Green Top Hold (plasma),Chemistry,labitem,
 50934,H,Chemistry,labitem,U
 50935,Haptoglobin,Chemistry,labitem,mg/dL
-50936,"HCG, Maternal Screen",Chemistry,labitem,IU/mL
+50936,HCG- Maternal Screen,Chemistry,labitem,IU/mL
 50937,Hepatitis A Virus Antibody,Chemistry,labitem,Pos/Neg
 50938,Hepatitis A Virus IgM Antibody,Chemistry,labitem,
-50939,"Hepatitis B Core Antibody, IgM",Chemistry,labitem,
+50939,Hepatitis B Core Antibody- IgM,Chemistry,labitem,
 50940,Hepatitis B Surface Antibody,Chemistry,labitem,
 50941,Hepatitis B Surface Antigen,Chemistry,labitem,
 50942,Hepatitis B Virus Core Antibody,Chemistry,labitem,
@@ -152,7 +152,7 @@ itemid,label,category,dbsource,valueuom
 50950,Immunoglobulin G,Chemistry,labitem,mg/dL
 50951,Immunoglobulin M,Chemistry,labitem,mg/dL
 50952,Iron,Chemistry,labitem,ug/dL
-50953,"Iron Binding Capacity, Total",Chemistry,labitem,ug/dL
+50953,Iron Binding Capacity- Total,Chemistry,labitem,ug/dL
 50954,Lactate Dehydrogenase (LD),Chemistry,labitem,IU/L
 50955,Light Green Top Hold,Chemistry,labitem,
 50956,Lipase,Chemistry,labitem,IU/L
@@ -163,19 +163,19 @@ itemid,label,category,dbsource,valueuom
 50961,Methotrexate,Chemistry,labitem,umol/L
 50962,N-Acetylprocainamide (NAPA),Chemistry,labitem,ug/mL
 50963,NTproBNP,Chemistry,labitem,pg/mL
-50964,"Osmolality, Measured",Chemistry,labitem,mOsm/kg
+50964,Osmolality- Measured,Chemistry,labitem,mOsm/kg
 50965,Parathyroid Hormone,Chemistry,labitem,pg/mL
 50966,Phenobarbital,Chemistry,labitem,ug/mL
 50967,Phenytoin,Chemistry,labitem,ug/mL
-50968,"Phenytoin, Free",Chemistry,labitem,ug/mL
-50969,"Phenytoin, Percent Free",Chemistry,labitem,%
+50968,Phenytoin- Free,Chemistry,labitem,ug/mL
+50969,Phenytoin- Percent Free,Chemistry,labitem,%
 50970,Phosphate,Chemistry,labitem,mg/dL
 50971,Potassium,Chemistry,labitem,mEq/L
 50972,Procainamide,Chemistry,labitem,ug/mL
-50973,Prolactin,Chemistry,labitem,nG/mL
+50973,Prolactin,Chemistry,labitem,ng/mL
 50974,Prostate Specific Antigen,Chemistry,labitem,ng/mL
 50975,Protein Electrophoresis,Chemistry,labitem,
-50976,"Protein, Total",Chemistry,labitem,g/dL
+50976,Protein- Total,Chemistry,labitem,g/dL
 50977,Quinidine,Chemistry,labitem,ug/mL
 50978,Rapamycin,Chemistry,labitem,ng/mL
 50979,Red Top Hold,Chemistry,labitem,
@@ -187,14 +187,14 @@ itemid,label,category,dbsource,valueuom
 50985,Study Tubes,Chemistry,labitem,
 50986,tacroFK,Chemistry,labitem,ng/mL
 50988,Testosterone,Chemistry,labitem,ng/dL
-50989,"Testosterone, Free",Chemistry,labitem,ng/dL
+50989,Testosterone- Free,Chemistry,labitem,ng/dL
 50990,Theophylline,Chemistry,labitem,ug/mL
 50991,Thyroglobulin,Chemistry,labitem,ng/mL
 50992,Thyroid Peroxidase Antibodies,Chemistry,labitem,IU/mL
-50993,Thyroid Stimulating Hormone,Chemistry,labitem,
+50993,Thyroid Stimulating Hormone,Chemistry,labitem,uU/ML
 50994,Thyroxine (T4),Chemistry,labitem,ug/dL
-50995,"Thyroxine (T4), Free",Chemistry,labitem,
-50996,"Tissue Transglutaminase Ab, IgA",Chemistry,labitem,
+50995,Thyroxine (T4)- Free,Chemistry,labitem,ng/dL
+50996,Tissue Transglutaminase Ab- IgA,Chemistry,labitem,
 50997,Tobramycin,Chemistry,labitem,ug/mL
 50998,Transferrin,Chemistry,labitem,mg/dL
 50999,Tricyclic Antidepressant Screen,Chemistry,labitem,
@@ -202,7 +202,7 @@ itemid,label,category,dbsource,valueuom
 51001,Triiodothyronine (T3),Chemistry,labitem,ng/dL
 51002,Troponin I,Chemistry,labitem,ng/ml
 51003,Troponin T,Chemistry,labitem,ng/mL
-51004,"UE3, Maternal Screen",Chemistry,labitem,ng/mL
+51004,UE3- Maternal Screen,Chemistry,labitem,ng/mL
 51005,Uptake Ratio,Chemistry,labitem,Ratio
 51006,Urea Nitrogen,Chemistry,labitem,mg/dL
 51007,Uric Acid,Chemistry,labitem,
@@ -210,110 +210,110 @@ itemid,label,category,dbsource,valueuom
 51009,Vancomycin,Chemistry,labitem,ug/mL
 51010,Vitamin B12,Chemistry,labitem,pg/mL
 51011,<Albumin>,Chemistry,labitem,mg/dL
-51012,"Bilirubin, Total, CSF",Chemistry,labitem,mg/dL
-51013,"Chloride, CSF",Chemistry,labitem,
-51014,"Glucose, CSF",Chemistry,labitem,mg/dL
-51015,"Lactate Dehydrogenase, CSF",Chemistry,labitem,IU/L
-51016,"Miscellaneous, CSF",Chemistry,labitem,
-51017,"PEP, CSF",Chemistry,labitem,
-51018,"Total Protein, CSF",Chemistry,labitem,mg/dL
-51019,"Albumin, Joint Fluid",Chemistry,labitem,g/dL
-51020,"Amylase, Joint Fluid",Chemistry,labitem,IU/L
-51021,"Creatinine, Joint Fluid",Chemistry,labitem,mg/dL
-51022,"Glucose, Joint Fluid",Chemistry,labitem,mg/dL
-51023,"LD, Joint Fluid",Chemistry,labitem,IU/L
-51024,"Total Protein, Joint Fluid",Chemistry,labitem,g/dL
-51025,"Albumin, Body Fluid",Chemistry,labitem,g/dL
-51026,"Amylase, Body Fluid",Chemistry,labitem,IU/L
-51027,"Bicarbonate, Other Fluid",Chemistry,labitem,mEq/L
-51028,"Bilirubin, Total, Body Fluid",Chemistry,labitem,mg/dL
-51029,"Calcium, Body Fluid",Chemistry,labitem,mg/dL
-51030,"Chloride, Body Fluid",Chemistry,labitem,mEq/L
-51031,"Cholesterol, Body Fluid",Chemistry,labitem,mg/dL
-51032,"Creatinine, Body Fluid",Chemistry,labitem,mg/dL
+51012,Bilirubin- Total- CSF,Chemistry,labitem,mg/dL
+51013,Chloride- CSF,Chemistry,labitem,
+51014,Glucose- CSF,Chemistry,labitem,mg/dL
+51015,Lactate Dehydrogenase- CSF,Chemistry,labitem,IU/L
+51016,Miscellaneous- CSF,Chemistry,labitem,
+51017,PEP- CSF,Chemistry,labitem,
+51018,Total Protein- CSF,Chemistry,labitem,mg/dL
+51019,Albumin- Joint Fluid,Chemistry,labitem,g/dL
+51020,Amylase- Joint Fluid,Chemistry,labitem,IU/L
+51021,Creatinine- Joint Fluid,Chemistry,labitem,mg/dL
+51022,Glucose- Joint Fluid,Chemistry,labitem,mg/dL
+51023,LD- Joint Fluid,Chemistry,labitem,IU/L
+51024,Total Protein- Joint Fluid,Chemistry,labitem,g/dL
+51025,Albumin- Body Fluid,Chemistry,labitem,g/dL
+51026,Amylase- Body Fluid,Chemistry,labitem,IU/L
+51027,Bicarbonate- Other Fluid,Chemistry,labitem,mEq/L
+51028,Bilirubin- Total- Body Fluid,Chemistry,labitem,mg/dL
+51029,Calcium- Body Fluid,Chemistry,labitem,mg/dL
+51030,Chloride- Body Fluid,Chemistry,labitem,mEq/L
+51031,Cholesterol- Body Fluid,Chemistry,labitem,mg/dL
+51032,Creatinine- Body Fluid,Chemistry,labitem,mg/dL
 51033,FetalFN,Chemistry,labitem,
-51034,"Glucose, Body Fluid",Chemistry,labitem,mg/dL
-51035,"LD, Body Fluid",Chemistry,labitem,IU/L
-51036,"Lipase, Body Fluid",Chemistry,labitem,U/L
-51037,"Magnesium, Body Fluid",Chemistry,labitem,mg/dL
-51038,"Miscellaneous, Body Fluid",Chemistry,labitem,
-51039,"Osmolality, Body Fluid",Chemistry,labitem,mOsm/kg
-51040,"Phosphate, Body Fluid",Chemistry,labitem,mg/dL
-51041,"Potassium, Body Fluid",Chemistry,labitem,mEq/L
-51042,"Sodium, Body Fluid",Chemistry,labitem,mEq/L
-51043,"Total Protein, Body Fluid",Chemistry,labitem,g/dL
+51034,Glucose- Body Fluid,Chemistry,labitem,mg/dL
+51035,LD- Body Fluid,Chemistry,labitem,IU/L
+51036,Lipase- Body Fluid,Chemistry,labitem,U/L
+51037,Magnesium- Body Fluid,Chemistry,labitem,mg/dL
+51038,Miscellaneous- Body Fluid,Chemistry,labitem,
+51039,Osmolality- Body Fluid,Chemistry,labitem,mOsm/kg
+51040,Phosphate- Body Fluid,Chemistry,labitem,mg/dL
+51041,Potassium- Body Fluid,Chemistry,labitem,mEq/L
+51042,Sodium- Body Fluid,Chemistry,labitem,mEq/L
+51043,Total Protein- Body Fluid,Chemistry,labitem,g/dL
 51044,Triglycer,Chemistry,labitem,mg/dL
-51045,"Urea Nitrogen, Body Fluid",Chemistry,labitem,mg/dL
-51046,"Albumin, Pleural",Chemistry,labitem,g/dL
-51047,"Amylase, Pleural",Chemistry,labitem,IU/L
-51048,"Bicarbonate, Pleural",Chemistry,labitem,mEq/L
-51049,"Bilirubin, Total, Pleural",Chemistry,labitem,mg/dL
-51050,"Chloride, Pleural",Chemistry,labitem,mEq/L
-51051,"Cholesterol, Pleural",Chemistry,labitem,mg/dL
-51052,"Creatinine, Pleural",Chemistry,labitem,mg/dL
-51053,"Glucose, Pleural",Chemistry,labitem,mg/dL
-51054,"Lactate Dehydrogenase, Pleural",Chemistry,labitem,IU/L
-51055,"Lipase, Pleural",Chemistry,labitem,U/L
-51056,"Miscellaneous, Pleural",Chemistry,labitem,
-51057,"Potassium, Pleural",Chemistry,labitem,mEq/L
-51058,"Sodium, Pleural",Chemistry,labitem,mEq/L
-51059,"Total Protein, Pleural",Chemistry,labitem,g/dL
-51060,"Triglycerides, Pleural",Chemistry,labitem,mg/dL
-51061,"Bicarbonate, Stool",Chemistry,labitem,mEq/L
-51062,"Chloride, Stool",Chemistry,labitem,mEq/L
-51063,"Osmolality, Stool",Chemistry,labitem,mOsm/kg
-51064,"Potassium, Stool",Chemistry,labitem,mEq/L
-51065,"Sodium, Stool",Chemistry,labitem,mEq/L
+51045,Urea Nitrogen- Body Fluid,Chemistry,labitem,mg/dL
+51046,Albumin- Pleural,Chemistry,labitem,g/dL
+51047,Amylase- Pleural,Chemistry,labitem,IU/L
+51048,Bicarbonate- Pleural,Chemistry,labitem,mEq/L
+51049,Bilirubin- Total- Pleural,Chemistry,labitem,mg/dL
+51050,Chloride- Pleural,Chemistry,labitem,mEq/L
+51051,Cholesterol- Pleural,Chemistry,labitem,mg/dL
+51052,Creatinine- Pleural,Chemistry,labitem,mg/dL
+51053,Glucose- Pleural,Chemistry,labitem,mg/dL
+51054,Lactate Dehydrogenase- Pleural,Chemistry,labitem,IU/L
+51055,Lipase- Pleural,Chemistry,labitem,U/L
+51056,Miscellaneous- Pleural,Chemistry,labitem,
+51057,Potassium- Pleural,Chemistry,labitem,mEq/L
+51058,Sodium- Pleural,Chemistry,labitem,mEq/L
+51059,Total Protein- Pleural,Chemistry,labitem,g/dL
+51060,Triglycerides- Pleural,Chemistry,labitem,mg/dL
+51061,Bicarbonate- Stool,Chemistry,labitem,mEq/L
+51062,Chloride- Stool,Chemistry,labitem,mEq/L
+51063,Osmolality- Stool,Chemistry,labitem,mOsm/kg
+51064,Potassium- Stool,Chemistry,labitem,mEq/L
+51065,Sodium- Stool,Chemistry,labitem,mEq/L
 51066,24 hr Calcium,Chemistry,labitem,mg/24hr
 51067,24 hr Creatinine,Chemistry,labitem,mg/24hours
-51068,24 hr Protein,Chemistry,labitem,mg/24hours
-51069,"Albumin, Urine",Chemistry,labitem,mg/dL
-51070,"Albumin/Creatinine, Urine",Chemistry,labitem,
-51071,"Amphetamine Screen, Urine",Chemistry,labitem,
-51072,"Amylase, Urine",Chemistry,labitem,U/L
-51073,"Amylase/Creatinine Ratio, Urine",Chemistry,labitem,Ratio
-51074,"Barbiturate Screen, Urine",Chemistry,labitem,
-51075,"Benzodiazepine Screen, Urine",Chemistry,labitem,
-51076,"Bicarbonate, Urine",Chemistry,labitem,
-51077,"Calcium, Urine",Chemistry,labitem,mg/dL
-51078,"Chloride, Urine",Chemistry,labitem,
-51079,"Cocaine, Urine",Chemistry,labitem,
+51068,24 hr Protein,Chemistry,labitem,mg/24hr
+51069,Albumin- Urine,Chemistry,labitem,mg/dL
+51070,Albumin/Creatinine- Urine,Chemistry,labitem,mg/g
+51071,Amphetamine Screen- Urine,Chemistry,labitem,
+51072,Amylase- Urine,Chemistry,labitem,U/L
+51073,Amylase/Creatinine Ratio- Urine,Chemistry,labitem,Ratio
+51074,Barbiturate Screen- Urine,Chemistry,labitem,
+51075,Benzodiazepine Screen- Urine,Chemistry,labitem,
+51076,Bicarbonate- Urine,Chemistry,labitem,
+51077,Calcium- Urine,Chemistry,labitem,mg/dL
+51078,Chloride- Urine,Chemistry,labitem,
+51079,Cocaine- Urine,Chemistry,labitem,
 51080,Creatinine Clearance,Chemistry,labitem,mL/min
-51081,"Creatinine, Serum",Chemistry,labitem,mg/dL
-51082,"Creatinine, Urine",Chemistry,labitem,
-51083,"Ethanol, Urine",Chemistry,labitem,
-51084,"Glucose, Urine",Chemistry,labitem,mg/dL
-51085,"HCG, Urine, Qualitative",Chemistry,labitem,+/-
-51086,"Immunofixation, Urine",Chemistry,labitem,
+51081,Creatinine- Serum,Chemistry,labitem,mg/dL
+51082,Creatinine- Urine,Chemistry,labitem,
+51083,Ethanol- Urine,Chemistry,labitem,
+51084,Glucose- Urine,Chemistry,labitem,mg/dL
+51085,HCG- Urine- Qualitative,Chemistry,labitem,+/-
+51086,Immunofixation- Urine,Chemistry,labitem,
 51087,Length of Urine Collection,Chemistry,labitem,
-51088,"Magnesium, Urine",Chemistry,labitem,mg/dL
+51088,Magnesium- Urine,Chemistry,labitem,mg/dL
 51089,Marijuana,Chemistry,labitem,
-51090,"Methadone, Urine",Chemistry,labitem,
-51091,"Myoglobin, Urine",Chemistry,labitem,
-51092,"Opiate Screen, Urine",Chemistry,labitem,
-51093,"Osmolality, Urine",Chemistry,labitem,
+51090,Methadone- Urine,Chemistry,labitem,
+51091,Myoglobin- Urine,Chemistry,labitem,
+51092,Opiate Screen- Urine,Chemistry,labitem,
+51093,Osmolality- Urine,Chemistry,labitem,
 51094,pH,Chemistry,labitem,
-51095,"Phosphate, Urine",Chemistry,labitem,mg/dL
+51095,Phosphate- Urine,Chemistry,labitem,mg/dL
 51096,Porphobilinogen Screen,Chemistry,labitem,+/-
-51097,"Potassium, Urine",Chemistry,labitem,mEq/L
-51098,"Prot. Electrophoresis, Urine",Chemistry,labitem,
+51097,Potassium- Urine,Chemistry,labitem,mEq/L
+51098,Prot. Electrophoresis- Urine,Chemistry,labitem,
 51099,Protein/Creatinine Ratio,Chemistry,labitem,Ratio
-51100,"Sodium, Urine",Chemistry,labitem,mEq/L
+51100,Sodium- Urine,Chemistry,labitem,mEq/L
 51101,Total Collection Time,Chemistry,labitem,hrs
-51102,"Total Protein, Urine",Chemistry,labitem,mg/dL
+51102,Total Protein- Urine,Chemistry,labitem,mg/dL
 51103,Uhold,Chemistry,labitem,
-51104,"Urea Nitrogen, Urine",Chemistry,labitem,mg/dL
-51105,"Uric Acid, Urine",Chemistry,labitem,mg/dL
+51104,Urea Nitrogen- Urine,Chemistry,labitem,mg/dL
+51105,Uric Acid- Urine,Chemistry,labitem,mg/dL
 51106,Urine Creatinine,Chemistry,labitem,mg/dL
-51107,"Urine tube, held",Chemistry,labitem,
+51107,Urine tube- held,Chemistry,labitem,
 51108,Urine Volume,Chemistry,labitem,mL
-51109,"Urine Volume, Total",Chemistry,labitem,mL
+51109,Urine Volume- Total,Chemistry,labitem,mL
 51110,Atypical Lymphocytes,Hematology,labitem,%
 51111,Bands,Hematology,labitem,%
 51112,Basophils,Hematology,labitem,%
 51113,Blasts,Hematology,labitem,%
 51114,Eosinophils,Hematology,labitem,%
-51115,"Hematocrit, Ascites",Hematology,labitem,%
+51115,Hematocrit- Ascites,Hematology,labitem,%
 51116,Lymphocytes,Hematology,labitem,%
 51117,Macrophage,Hematology,labitem,%
 51118,Mesothelial Cell,Hematology,labitem,%
@@ -325,8 +325,8 @@ itemid,label,category,dbsource,valueuom
 51124,Plasma,Hematology,labitem,%
 51125,Polys,Hematology,labitem,%
 51126,Promyelocytes,Hematology,labitem,%
-51127,"RBC, Ascites",Hematology,labitem,#/CU MM
-51128,"WBC, Ascites",Hematology,labitem,#/CU MM
+51127,RBC- Ascites,Hematology,labitem,#/CU MM
+51128,WBC- Ascites,Hematology,labitem,#/CU MM
 51129,Young,Hematology,labitem,%
 51130,Absolute CD3 Count,Hematology,labitem,#/uL
 51131,Absolute CD4 Count,Hematology,labitem,#/uL
@@ -374,11 +374,11 @@ itemid,label,category,dbsource,valueuom
 51173,CD25,Hematology,labitem,
 51174,CD3 %,Hematology,labitem,%
 51175,CD3 Absolute Count,Hematology,labitem,#/uL
-51176,"CD3 Cells, Percent",Hematology,labitem,%
+51176,CD3 Cells- Percent,Hematology,labitem,%
 51177,CD33,Hematology,labitem,
 51178,CD34,Hematology,labitem,%
 51179,CD38,Hematology,labitem,
-51180,"CD4 Cells, Percent",Hematology,labitem,%
+51180,CD4 Cells- Percent,Hematology,labitem,%
 51181,CD4/CD8 Ratio,Hematology,labitem,Ratio
 51182,CD41,Hematology,labitem,
 51183,CD45,Hematology,labitem,
@@ -392,7 +392,7 @@ itemid,label,category,dbsource,valueuom
 51191,CD64,Hematology,labitem,
 51192,CD7,Hematology,labitem,
 51193,CD71,Hematology,labitem,
-51194,"CD8 Cells, Percent",Hematology,labitem,%
+51194,CD8 Cells- Percent,Hematology,labitem,%
 51195,Collagen,Hematology,labitem,
 51196,D-Dimer,Hematology,labitem,
 51197,Elliptocytes,Hematology,labitem,
@@ -412,14 +412,14 @@ itemid,label,category,dbsource,valueuom
 51211,Factor XIII,Hematology,labitem,
 51212,Fetal Hemoglobin,Hematology,labitem,%
 51213,Fibrin Degradation Products,Hematology,labitem,ug/mL
-51214,"Fibrinogen, Functional",Hematology,labitem,mg/dL
+51214,Fibrinogen- Functional,Hematology,labitem,mg/dL
 51215,FMC-7,Hematology,labitem,
 51216,Fragmented Cells,Hematology,labitem,
 51217,Glyco A,Hematology,labitem,
 51218,Granulocyte Count,Hematology,labitem,#/uL
 51219,H/O Smear,Hematology,labitem,
 51220,Heinz Body Prep,Hematology,labitem,
-51221,Hematocrit,Hematology,labitem,
+51221,Hematocrit,Hematology,labitem,%
 51222,Hemoglobin,Hematology,labitem,g/dL
 51223,Hemoglobin A2,Hematology,labitem,%
 51224,Hemoglobin C,Hematology,labitem,%
@@ -427,7 +427,7 @@ itemid,label,category,dbsource,valueuom
 51226,Hemogloblin A,Hematology,labitem,%
 51227,Hemogloblin S,Hematology,labitem,%
 51228,Heparin,Hematology,labitem,U/mL
-51229,"Heparin, LMW",Hematology,labitem,U/mL
+51229,Heparin- LMW,Hematology,labitem,U/mL
 51230,HLA-DR,Hematology,labitem,
 51231,Howell-Jolly Bodies,Hematology,labitem,
 51232,Hypersegmented Neutrophils,Hematology,labitem,%
@@ -443,18 +443,18 @@ itemid,label,category,dbsource,valueuom
 51242,LUC,Hematology,labitem,%
 51243,Lupus Anticoagulant,Hematology,labitem,
 51244,Lymphocytes,Hematology,labitem,%
-51245,"Lymphocytes, Percent",Hematology,labitem,%
+51245,Lymphocytes- Percent,Hematology,labitem,%
 51246,Macrocytes,Hematology,labitem,
 51247,MacroOvalocytes,Hematology,labitem,
 51248,MCH,Hematology,labitem,pg
 51249,MCHC,Hematology,labitem,%
-51250,MCV,Hematology,labitem,fL
+51250,MCV,Hematology,labitem,
 51251,Metamyelocytes,Hematology,labitem,%
 51252,Microcytes,Hematology,labitem,
 51253,Monocyte Count,Hematology,labitem,#/uL
 51254,Monocytes,Hematology,labitem,%
-51255,Myelocytes,Hematology,labitem,%
-51256,Neutrophils,Hematology,labitem,
+51255,Myelocytes,Hematology,labitem,
+51256,Neutrophils,Hematology,labitem,%
 51257,Nucleated Red Cells,Hematology,labitem,%
 51258,Osmotic Fragility,Hematology,labitem,
 51259,Other Cells,Hematology,labitem,%
@@ -468,22 +468,22 @@ itemid,label,category,dbsource,valueuom
 51267,Poikilocytosis,Hematology,labitem,
 51268,Polychromasia,Hematology,labitem,
 51269,Promyelocytes,Hematology,labitem,%
-51270,"Protein C, Antigen",Hematology,labitem,%
-51271,"Protein C, Functional",Hematology,labitem,%
-51272,"Protein S, Antigen",Hematology,labitem,%
-51273,"Protein S, Functional",Hematology,labitem,%
-51274,PT,Hematology,labitem,SECONDS
-51275,PTT,Hematology,labitem,
+51270,Protein C- Antigen,Hematology,labitem,%
+51271,Protein C- Functional,Hematology,labitem,%
+51272,Protein S- Antigen,Hematology,labitem,%
+51273,Protein S- Functional,Hematology,labitem,%
+51274,PT,Hematology,labitem,sec
+51275,PTT,Hematology,labitem,sec
 51276,Quantitative G6PD,Hematology,labitem,U/g/Hb
-51277,RDW,Hematology,labitem,
+51277,RDW,Hematology,labitem,%
 51278,Red Blood Cell Fragments,Hematology,labitem,
-51279,Red Blood Cells,Hematology,labitem,
+51279,Red Blood Cells,Hematology,labitem,m/uL
 51280,Reptilase Time,Hematology,labitem,sec
 51281,Reptilase Time Control,Hematology,labitem,sec
-51282,"Reticulocyte Count, Absolute",Hematology,labitem,/mm3
-51283,"Reticulocyte Count, Automated",Hematology,labitem,%
-51284,"Reticulocyte Count, Manual",Hematology,labitem,%
-51285,"Reticulocyte, Cellular Hemoglobin",Hematology,labitem,pg
+51282,Reticulocyte Count- Absolute,Hematology,labitem,/mm3
+51283,Reticulocyte Count- Automated,Hematology,labitem,%
+51284,Reticulocyte Count- Manual,Hematology,labitem,%
+51285,Reticulocyte- Cellular Hemoglobin,Hematology,labitem,pg
 51286,Ristocetin,Hematology,labitem,
 51287,Schistocytes,Hematology,labitem,
 51288,Sedimentation Rate,Hematology,labitem,mm/hr
@@ -499,7 +499,7 @@ itemid,label,category,dbsource,valueuom
 51298,Von Willebrand Factor Activity,Hematology,labitem,%
 51299,Von Willebrand Factor Antigen,Hematology,labitem,%
 51300,WBC Count,Hematology,labitem,K/uL
-51301,White Blood Cells,Hematology,labitem,
+51301,White Blood Cells,Hematology,labitem,K/uL
 51302,Young Cells,Hematology,labitem,%
 51303,CD10,Hematology,labitem,
 51304,CD103,Hematology,labitem,
@@ -546,7 +546,7 @@ itemid,label,category,dbsource,valueuom
 51345,Basophils,Hematology,labitem,%
 51346,Blasts,Hematology,labitem,%
 51347,Eosinophils,Hematology,labitem,%
-51348,"Hematocrit, CSF",Hematology,labitem,%
+51348,Hematocrit- CSF,Hematology,labitem,%
 51349,Hypersegmented Neutrophils,Hematology,labitem,%
 51350,Immunophenotyping,Hematology,labitem,
 51351,Lymphs,Hematology,labitem,%
@@ -560,19 +560,19 @@ itemid,label,category,dbsource,valueuom
 51359,Plasma,Hematology,labitem,%
 51360,Polys,Hematology,labitem,%
 51361,Promyelocytes,Hematology,labitem,%
-51362,"RBC, CSF",Hematology,labitem,#/uL
-51363,"WBC, CSF",Hematology,labitem,#/uL
+51362,RBC- CSF,Hematology,labitem,#/uL
+51363,WBC- CSF,Hematology,labitem,#/uL
 51364,Young,Hematology,labitem,%
 51365,Atypical Lymphocytes,Hematology,labitem,%
 51366,Bands,Hematology,labitem,%
 51367,Basophils,Hematology,labitem,%
 51368,Eosinophils,Hematology,labitem,%
-51369,"Hematocrit, Joint Fluid",Hematology,labitem,%
-51370,"Joint Crystals, Birefringence",Hematology,labitem,
-51371,"Joint Crystals, Comment",Hematology,labitem,
-51372,"Joint Crystals, Location",Hematology,labitem,
-51373,"Joint Crystals, Number",Hematology,labitem,
-51374,"Joint Crystals, Shape",Hematology,labitem,
+51369,Hematocrit- Joint Fluid,Hematology,labitem,%
+51370,Joint Crystals- Birefringence,Hematology,labitem,
+51371,Joint Crystals- Comment,Hematology,labitem,
+51372,Joint Crystals- Location,Hematology,labitem,
+51373,Joint Crystals- Number,Hematology,labitem,
+51374,Joint Crystals- Shape,Hematology,labitem,
 51375,Lymphocytes,Hematology,labitem,%
 51376,Macrophage,Hematology,labitem,%
 51377,Mesothelial Cells,Hematology,labitem,%
@@ -581,8 +581,8 @@ itemid,label,category,dbsource,valueuom
 51380,NRBC,Hematology,labitem,%
 51381,Other,Hematology,labitem,%
 51382,Polys,Hematology,labitem,%
-51383,"RBC, Joint Fluid",Hematology,labitem,#/uL
-51384,"WBC, Joint Fluid",Hematology,labitem,#/uL
+51383,RBC- Joint Fluid,Hematology,labitem,#/uL
+51384,WBC- Joint Fluid,Hematology,labitem,#/uL
 51385,Atypical Lymphocytes,Hematology,labitem,%
 51386,Bands,Hematology,labitem,%
 51387,Basophils,Hematology,labitem,%
@@ -620,7 +620,7 @@ itemid,label,category,dbsource,valueuom
 51419,Eosinophils,Hematology,labitem,%
 51420,FMC-7,Hematology,labitem,
 51421,Glyco A,Hematology,labitem,
-51422,"Hematocrit, Other Fluid",Hematology,labitem,%
+51422,Hematocrit- Other Fluid,Hematology,labitem,%
 51423,HLA-DR,Hematology,labitem,
 51424,Immunophenotyping,Hematology,labitem,
 51425,Kappa,Hematology,labitem,
@@ -636,14 +636,14 @@ itemid,label,category,dbsource,valueuom
 51435,Plasma,Hematology,labitem,%
 51436,Polys,Hematology,labitem,%
 51437,Promyelocytes,Hematology,labitem,%
-51438,"RBC, Other Fluid",Hematology,labitem,#/uL
-51439,"WBC, Other Fluid",Hematology,labitem,#/uL
+51438,RBC- Other Fluid,Hematology,labitem,#/uL
+51439,WBC- Other Fluid,Hematology,labitem,#/uL
 51440,Atypical Lymphocytes,Hematology,labitem,%
 51441,Bands,Hematology,labitem,%
 51442,Basophils,Hematology,labitem,%
 51443,Blasts,Hematology,labitem,%
 51444,Eosinophils,Hematology,labitem,%
-51445,"Hematocrit, Pleural",Hematology,labitem,%
+51445,Hematocrit- Pleural,Hematology,labitem,%
 51446,Lymphocytes,Hematology,labitem,%
 51447,Macrophages,Hematology,labitem,%
 51448,Mesothelial Cells,Hematology,labitem,%
@@ -655,10 +655,10 @@ itemid,label,category,dbsource,valueuom
 51454,Plasma Cells,Hematology,labitem,%
 51455,Polys,Hematology,labitem,%
 51456,Promyelocytes,Hematology,labitem,%
-51457,"RBC, Pleural",Hematology,labitem,#/uL
-51458,"WBC, Pleural",Hematology,labitem,#/uL
+51457,RBC- Pleural,Hematology,labitem,#/uL
+51458,WBC- Pleural,Hematology,labitem,#/uL
 51459,Young Cells,Hematology,labitem,%
-51460,"Blood, Occult",Hematology,labitem,
+51460,Blood- Occult,Hematology,labitem,
 51461,Ammonium Biurate,Hematology,labitem,
 51462,Amorphous Crystals,Hematology,labitem,
 51463,Bacteria,Hematology,labitem,
@@ -676,7 +676,7 @@ itemid,label,category,dbsource,valueuom
 51475,Epithelial Casts,Hematology,labitem,#/lpf
 51476,Epithelial Cells,Hematology,labitem,#/hpf
 51477,Free Fat,Hematology,labitem,
-51478,Glucose,Hematology,labitem,mg/dL
+51478,Glucose,Hematology,labitem,
 51479,Granular Casts,Hematology,labitem,#/lpf
 51480,Hematocrit,Hematology,labitem,%
 51481,Hemosiderin,Hematology,labitem,
@@ -690,13 +690,13 @@ itemid,label,category,dbsource,valueuom
 51489,NonSquamous Epithelial Cell,Hematology,labitem,#/hpf
 51490,Oval Fat Body,Hematology,labitem,
 51491,pH,Hematology,labitem,units
-51492,Protein,Hematology,labitem,
+51492,Protein,Hematology,labitem,mg/dL
 51493,RBC,Hematology,labitem,#/hpf
 51494,RBC Casts,Hematology,labitem,#/lpf
 51495,RBC Clumps,Hematology,labitem,
-51496,"Reducing Substances, Urine",Hematology,labitem,%
+51496,Reducing Substances- Urine,Hematology,labitem,%
 51497,Renal Epithelial Cells,Hematology,labitem,#/hpf
-51498,Specific Gravity,Hematology,labitem, 
+51498,Specific Gravity,Hematology,labitem,
 51499,Sperm,Hematology,labitem,
 51500,Sulfonamides,Hematology,labitem,
 51501,Transitional Epithelial Cells,Hematology,labitem,#/hpf
@@ -705,21 +705,21 @@ itemid,label,category,dbsource,valueuom
 51504,Tyrosine Crystals,Hematology,labitem,
 51505,Uric Acid Crystals,Hematology,labitem,
 51506,Urine Appearance,Hematology,labitem,
-51507,"Urine Casts, Other",Hematology,labitem,#/lpf
+51507,Urine Casts- Other,Hematology,labitem,#/lpf
 51508,Urine Color,Hematology,labitem,
 51509,Urine Comments,Hematology,labitem,
-51510,"Urine Crystals, Other",Hematology,labitem,
+51510,Urine Crystals- Other,Hematology,labitem,
 51511,Urine Fat Bodies,Hematology,labitem,
 51512,Urine Mucous,Hematology,labitem,
 51513,Urine Specimen Type,Hematology,labitem,
-51514,Urobilinogen,Hematology,labitem,mg/dL
+51514,Urobilinogen,Hematology,labitem,EU/dL
 51515,Waxy Casts,Hematology,labitem,#/lpf
-51516,WBC,Hematology,labitem,
+51516,WBC,Hematology,labitem,#/hpf
 51517,WBC Casts,Hematology,labitem,#/lpf
 51518,WBC Clumps,Hematology,labitem,
 51519,Yeast,Hematology,labitem,
 51520,ANTI-MC,CHEMISTRY,labitem,
-51521,"ACID PHOSPHATASE, PROSTATIC",CHEMISTRY,labitem,IU/L
+51521,ACID PHOSPHATASE- PROSTATIC,CHEMISTRY,labitem,IU/L
 51522,PG,CHEMISTRY,labitem,
 51523,GR HOLD,CHEMISTRY,labitem,
 51524,FATTY,HEMATOLOGY,labitem,
@@ -777,7 +777,7 @@ itemid,label,category,dbsource,valueuom
 70023,CATHETER TIP-IV,SPECIMEN,hospital,
 70024,VIRAL CULTURE: R/O CYTOMEGALOVIRUS,SPECIMEN,hospital,
 70025,CRE Screen,SPECIMEN,hospital,
-70026,CSF;SPINAL FLUID,SPECIMEN,hospital,
+70026,CSF&SPINAL FLUID,SPECIMEN,hospital,
 70027,CORNEAL EYE SCRAPINGS,SPECIMEN,hospital,
 70028,Direct Antigen Test for Herpes Simplex Virus Types 1 & 2,SPECIMEN,hospital,
 70029,DIALYSIS FLUID,SPECIMEN,hospital,
@@ -786,7 +786,7 @@ itemid,label,category,dbsource,valueuom
 70032,Blood (EBV),SPECIMEN,hospital,
 70033,EYE,SPECIMEN,hospital,
 70034,FOREIGN BODY,SPECIMEN,hospital,
-70035,"FLUID,OTHER",SPECIMEN,hospital,
+70035,FLUID-OTHER,SPECIMEN,hospital,
 70036,FLUID WOUND,SPECIMEN,hospital,
 70037,FOOT CULTURE,SPECIMEN,hospital,
 70038,FECAL SWAB,SPECIMEN,hospital,
@@ -802,7 +802,7 @@ itemid,label,category,dbsource,valueuom
 70048,NAIL SCRAPINGS,SPECIMEN,hospital,
 70049,NEOPLASTIC BLOOD,SPECIMEN,hospital,
 70050,NOSE,SPECIMEN,hospital,
-70051,"FLUID,OTHER",SPECIMEN,hospital,
+70051,FLUID-OTHER,SPECIMEN,hospital,
 70052,PERIPHERAL BLOOD LYMPHOCYTES,SPECIMEN,hospital,
 70053,PERITONEAL FLUID,SPECIMEN,hospital,
 70054,PLEURAL FLUID,SPECIMEN,hospital,
@@ -829,11 +829,11 @@ itemid,label,category,dbsource,valueuom
 70075,THROAT CULTURE,SPECIMEN,hospital,
 70076,TISSUE,SPECIMEN,hospital,
 70077,URINE,SPECIMEN,hospital,
-70078,"URINE,PROSTATIC MASSAGE",SPECIMEN,hospital,
+70078,URINE-PROSTATIC MASSAGE,SPECIMEN,hospital,
 70079,URINE,SPECIMEN,hospital,
-70080,"URINE,KIDNEY",SPECIMEN,hospital,
+70080,URINE-KIDNEY,SPECIMEN,hospital,
 70081,URINE,SPECIMEN,hospital,
-70082,"URINE,SUPRAPUBIC ASPIRATE",SPECIMEN,hospital,
+70082,URINE-SUPRAPUBIC ASPIRATE,SPECIMEN,hospital,
 70083,VARICELLA-ZOSTER CULTURE,SPECIMEN,hospital,
 70084,SWAB,SPECIMEN,hospital,
 70085,WORM,SPECIMEN,hospital,
@@ -843,7 +843,7 @@ itemid,label,category,dbsource,valueuom
 70089,Blood (Malaria),SPECIMEN,hospital,
 70090,Mini-BAL,SPECIMEN,hospital,
 70091,MRSA SCREEN,SPECIMEN,hospital,
-70092,"SWAB, R/O GC",SPECIMEN,hospital,
+70092,SWAB- R/O GC,SPECIMEN,hospital,
 70093,Blood (Toxo),SPECIMEN,hospital,
 80001,,ORGANISM,hospital,
 80002,ESCHERICHIA COLI,ORGANISM,hospital,
@@ -999,7 +999,7 @@ itemid,label,category,dbsource,valueuom
 80152,ESCHERICHIA FERGUSONII,ORGANISM,hospital,
 80153,MORAXELLA OSLOENSIS,ORGANISM,hospital,
 80154,RHIZOMUCOR SPECIES,ORGANISM,hospital,
-80155,"STAPHYLOCOCCUS, COAGULASE NEGATIVE",ORGANISM,hospital,
+80155,STAPHYLOCOCCUS- COAGULASE NEGATIVE,ORGANISM,hospital,
 80156,CORYNEBACTERIUM STRIATUM,ORGANISM,hospital,
 80157,ACREMONIUM SPECIES,ORGANISM,hospital,
 80158,MYCOBACTERIUM AVIUM COMPLEX,ORGANISM,hospital,
@@ -1035,8 +1035,8 @@ itemid,label,category,dbsource,valueuom
 80188,SCEDOSPORIUM APIOSPERMUM,ORGANISM,hospital,
 80189,PEDIOCOCCUS SPECIES,ORGANISM,hospital,
 80190,SYNCEPHALASTRUM SPECIES,ORGANISM,hospital,
-80191,"HAEMOPHILUS INFLUENZAE, BETA-LACTAMASE POSITIVE",ORGANISM,hospital,
-80192,"HAEMOPHILUS INFLUENZAE, BETA-LACTAMASE NEGATIVE",ORGANISM,hospital,
+80191,HAEMOPHILUS INFLUENZAE- BETA-LACTAMASE POSITIVE,ORGANISM,hospital,
+80192,HAEMOPHILUS INFLUENZAE- BETA-LACTAMASE NEGATIVE,ORGANISM,hospital,
 80193,CORYNEBACTERIUM UREALYTICUM SP. NOV.,ORGANISM,hospital,
 80194,ACINETOBACTER BAUMANNII,ORGANISM,hospital,
 80195,AEROMONAS SPECIES,ORGANISM,hospital,
@@ -1057,19 +1057,19 @@ itemid,label,category,dbsource,valueuom
 80210,CAPNOCYTOPHAGA SPECIES,ORGANISM,hospital,
 80211,STACHYBOTRYS SPP.,ORGANISM,hospital,
 80212,PORPHYROMONAS SPECIES,ORGANISM,hospital,
-80213,"BETA STREPTOCOCCI, NOT GROUP A",ORGANISM,hospital,
+80213,BETA STREPTOCOCCI- NOT GROUP A,ORGANISM,hospital,
 80214,PREVOTELLA (BACTEROIDES) BUCCAE,ORGANISM,hospital,
 80215,ASPERGILLUS NIDULANS,ORGANISM,hospital,
 80216,ACINETOBACTER SP.,ORGANISM,hospital,
 80217,ENTAMOEBA HISTOLYTICA/DISPAR,ORGANISM,hospital,
 80218,ENTEROBACTERIACEAE,ORGANISM,hospital,
 80219,2ND ISOLATE,ORGANISM,hospital,
-80220,AFB GROWN IN CULTURE; ADDITIONAL INFORMATION TO FOLLOW,ORGANISM,hospital,
+80220,AFB GROWN IN CULTURE& ADDITIONAL INFORMATION TO FOLLOW,ORGANISM,hospital,
 80221,CORYNEBCATERIUM AMYCOLATUM,ORGANISM,hospital,
 80222,POSITIVE FOR GROUP B BETA STREP,ORGANISM,hospital,
 80223,PROBABLE ENTEROCOCCUS,ORGANISM,hospital,
 80224,BETA STREPTOCOCCUS NOT GROUP A OR B,ORGANISM,hospital,
-80225,"NON-FERMENTER, NOT PSEUDOMONAS AERUGINOSA",ORGANISM,hospital,
+80225,NON-FERMENTER- NOT PSEUDOMONAS AERUGINOSA,ORGANISM,hospital,
 80226,PROBABLE LACTOBACILLUS SPECIES,ORGANISM,hospital,
 80227,PROBABLE GARDNERELLA VAGINALIS,ORGANISM,hospital,
 80228,CANDIDA (TORULOPSIS) GLABRATA,ORGANISM,hospital,
@@ -1083,7 +1083,7 @@ itemid,label,category,dbsource,valueuom
 80236,PRESUMPTIVE CLOSTRIDIUM PERFRINGENS,ORGANISM,hospital,
 80237,PRESUMPTIVE CLOSTRIDIUM SEPTICUM,ORGANISM,hospital,
 80238,CLOSTRIDIUM SPECIES NOT C. PERFRINGENS OR C. SEPTICUM,ORGANISM,hospital,
-80239,"ASPERGILLUS SP. NOT FUMIGATUS, FLAVUS OR NIGER",ORGANISM,hospital,
+80239,ASPERGILLUS SP. NOT FUMIGATUS- FLAVUS OR NIGER,ORGANISM,hospital,
 80240,PRESUMPTIVE FUSOBACTERIUM MORTIFERUM/VARIUM GROUP,ORGANISM,hospital,
 80241,PROBABLE MICROCOCCUS SPECIES,ORGANISM,hospital,
 80242,RESEMBLING MICROCOCCUS/STOMATOCOCCUS SPECIES,ORGANISM,hospital,
@@ -1097,16 +1097,16 @@ itemid,label,category,dbsource,valueuom
 80250,MODERATE BLASTOCYSTIS HOMINIS,ORGANISM,hospital,
 80251,MANY BLASTOCYSTIS HOMINIS,ORGANISM,hospital,
 80252,ALCALIGENES XYLOSOXIDANS,ORGANISM,hospital,
-80253,"YEAST, PRESUMPTIVELY NOT C. ALBICANS",ORGANISM,hospital,
-80254,"CANDIDA ALBICANS, PRESUMPTIVE IDENTIFICATION",ORGANISM,hospital,
-80255,"STAPHYLOCOCCUS SAPROPHYTICUS, PRESUMPTIVE IDENTIFICATION",ORGANISM,hospital,
+80253,YEAST- PRESUMPTIVELY NOT C. ALBICANS,ORGANISM,hospital,
+80254,CANDIDA ALBICANS- PRESUMPTIVE IDENTIFICATION,ORGANISM,hospital,
+80255,STAPHYLOCOCCUS SAPROPHYTICUS- PRESUMPTIVE IDENTIFICATION,ORGANISM,hospital,
 80256,HAEMOPHILUS SPECIES NOT INFLUENZAE,ORGANISM,hospital,
 80257,POSITIVE FOR INFLUENZA B VIRAL ANTIGEN,ORGANISM,hospital,
 80258,MICROSPORIDIUM SPECIES SEEN,ORGANISM,hospital,
 80259,POSITIVE FOR M. TUBERCULOSIS BY MTD,ORGANISM,hospital,
 80260,POSITIVE FOR PNEUMOCYSTIS CARINII,ORGANISM,hospital,
 80261,POSITIVE FOR UREAPLASMA UREALYTICUM,ORGANISM,hospital,
-80262,"STAPHYLOCOCCUS, COAGULASE NEGATIVE, PRESUMPTIVELY NOT S. SAPROPHYTICUS",ORGANISM,hospital,
+80262,STAPHYLOCOCCUS- COAGULASE NEGATIVE- PRESUMPTIVELY NOT S. SAPROPHYTICUS,ORGANISM,hospital,
 80263,ORGANISM,ORGANISM,hospital,
 80264,ACTINOMYCETE,ORGANISM,hospital,
 80265,2ND ISOLATE,ORGANISM,hospital,
@@ -1117,7 +1117,7 @@ itemid,label,category,dbsource,valueuom
 80270,CANDIDA DUBLINIENSIS,ORGANISM,hospital,
 80271,STREPTOCOCCUS ORALIS,ORGANISM,hospital,
 80272,STREPTOCOCCUS VESTIBULARIS,ORGANISM,hospital,
-80273,"MORAXELLA CATARRHALIS, PRESUMPTIVE IDENTIFICATION",ORGANISM,hospital,
+80273,MORAXELLA CATARRHALIS- PRESUMPTIVE IDENTIFICATION,ORGANISM,hospital,
 80274,NO GROWTH,ORGANISM,hospital,
 80275,TRICHOSPORON ASAHII,ORGANISM,hospital,
 80276,RALSTONIA PICKETTII,ORGANISM,hospital,
@@ -1125,7 +1125,7 @@ itemid,label,category,dbsource,valueuom
 80278,DEMATIACEOUS MOLD,ORGANISM,hospital,
 80279,STREPTOCOCCUS MILLERI GROUP,ORGANISM,hospital,
 80280,VIRIDANS STREPTOCOCCI,ORGANISM,hospital,
-80281,BACILLUS SPECIES; NOT ANTHRACIS,ORGANISM,hospital,
+80281,BACILLUS SPECIES& NOT ANTHRACIS,ORGANISM,hospital,
 80282,FONSECAEA PEDROSOI,ORGANISM,hospital,
 80283,ZYGOMYCETES,ORGANISM,hospital,
 80284,ACHROMOBACTER (ALCALIGENES) XYLOSOXIDANS SS DENTRIFICANS,ORGANISM,hospital,
@@ -1136,7 +1136,7 @@ itemid,label,category,dbsource,valueuom
 80289,MORAXELLA CATARRHALIS,ORGANISM,hospital,
 80290,SHEWANELLA SPECIES,ORGANISM,hospital,
 80291,BASIDIOMYCETE,ORGANISM,hospital,
-80292,"NEISSERIA SPECIES, NOT GONORRHOEAE",ORGANISM,hospital,
+80292,NEISSERIA SPECIES- NOT GONORRHOEAE,ORGANISM,hospital,
 80293,POSITIVE FOR METHICILLIN RESISTANT STAPH AUREUS,ORGANISM,hospital,
 80294,BURKHOLDERIA CEPACIA GROUP,ORGANISM,hospital,
 80295,PRESUMPTIVE GARDNERELLA VAGINALIS,ORGANISM,hospital,
@@ -1236,23 +1236,23 @@ itemid,label,category,dbsource,valueuom
 220561,ZINR,Labs,metavision,
 220562,ZPTT,Labs,metavision,
 220574,ZAlbumin,Labs,metavision,
-220580,Ammonia,Labs,metavision,
-220581,Amylase,Labs,metavision,
-220587,AST,Labs,metavision,IU/L
+220580,Ammonia,Labs,metavision,umol/L
+220581,Amylase,Labs,metavision,IU/L
+220587,AST,Labs,metavision,
 220602,Chloride (serum),Labs,metavision,mEq/L
 220603,Cholesterol,Labs,metavision,mg/dL
 220611,ZCortisol,Labs,metavision,
 220612,ZC Reactive Protein (CRP),Labs,metavision,
 220615,Creatinine,Labs,metavision,mg/dL
-220621,Glucose (serum),Labs,metavision,mg/dL
+220621,Glucose (serum),Labs,metavision,
 220624,HDL,Labs,metavision,mg/dL
-220632,LDH,Labs,metavision,
-220635,Magnesium,Labs,metavision,
+220632,LDH,Labs,metavision,IU/L
+220635,Magnesium,Labs,metavision,mg/dL
 220640,ZPotassium (serum),Labs,metavision,
-220644,ALT,Labs,metavision,IU/L
-220645,Sodium (serum),Labs,metavision,mEq/L
-220650,Total Protein,Labs,metavision,g/dL
-220734,PH (dipstick),Labs,metavision,units
+220644,ALT,Labs,metavision,
+220645,Sodium (serum),Labs,metavision,
+220650,Total Protein,Labs,metavision,
+220734,PH (dipstick),Labs,metavision,
 220739,GCS - Eye Opening,Neurological,metavision,
 220765,Intra Cranial Pressure,Hemodynamics,metavision,mmHg
 220799,ZSpecific Gravity (urine),Labs,metavision,
@@ -1267,18 +1267,18 @@ itemid,label,category,dbsource,valueuom
 220951,Dextrose 20.%,Fluids - Other (Not In Use),metavision,
 220952,Dextrose 50%,Fluids/Intake,metavision,ml
 220953,Ringers,Fluids - Other (Not In Use),metavision,
-220954,"Saline 0,9%",Fluids - Other (Not In Use),metavision,
+220954,Saline 0-9%,Fluids - Other (Not In Use),metavision,
 220955,Ringers Lactate,Fluids - Other (Not In Use),metavision,
 220956,Ringers Acetate,Fluids - Other (Not In Use),metavision,
-220958,"Saline 0,255%",Fluids - Other (Not In Use),metavision,
-220959,"Saline 0,3%",Fluids - Other (Not In Use),metavision,
-220960,"Saline 0,45%",Fluids - Other (Not In Use),metavision,
-220961,"Saline 0,65%",Fluids - Other (Not In Use),metavision,
+220958,Saline 0-255%,Fluids - Other (Not In Use),metavision,
+220959,Saline 0-3%,Fluids - Other (Not In Use),metavision,
+220960,Saline 0-45%,Fluids - Other (Not In Use),metavision,
+220961,Saline 0-65%,Fluids - Other (Not In Use),metavision,
 220962,Saline 3%,Fluids - Other (Not In Use),metavision,
-220963,"Dextrose 4,3% / Saline 0,18%",Fluids - Other (Not In Use),metavision,
-220964,"Dextrose 5% / Saline 0,9%",Fluids - Other (Not In Use),metavision,
-220965,"Dextrose 5% / Saline 0,45%",Fluids - Other (Not In Use),metavision,
-220966,"Dextrose 2,5% / Saline 0,45%",Fluids - Other (Not In Use),metavision,
+220963,Dextrose 4-3% / Saline 0-18%,Fluids - Other (Not In Use),metavision,
+220964,Dextrose 5% / Saline 0-9%,Fluids - Other (Not In Use),metavision,
+220965,Dextrose 5% / Saline 0-45%,Fluids - Other (Not In Use),metavision,
+220966,Dextrose 2-5% / Saline 0-45%,Fluids - Other (Not In Use),metavision,
 220967,Dextrose 5% / Ringers Lactate,Fluids - Other (Not In Use),metavision,
 220968,Dextrose 10% / Ringers Lactate,Fluids - Other (Not In Use),metavision,
 220969,Filtered erytrocytes,Fluids - Other (Not In Use),metavision,
@@ -1286,9 +1286,9 @@ itemid,label,category,dbsource,valueuom
 220971,ESDEP (Solvent / Detergent Virus-Inactivated Plasma),Fluids - Other (Not In Use),metavision,
 220972,Octoplas,Fluids - Other (Not In Use),metavision,
 220973,Gelofusine,Fluids - Other (Not In Use),metavision,
-220975,"Pentastarch 6% (HAES, Hemohes)",Fluids - Other (Not In Use),metavision,
-220977,"Pentastarch 10% (HAES, Hemohes)",Fluids - Other (Not In Use),metavision,
-220979,"Hetastarch 6% (Saline 0,9%)",Fluids - Other (Not In Use),metavision,
+220975,Pentastarch 6% (HAES- Hemohes),Fluids - Other (Not In Use),metavision,
+220977,Pentastarch 10% (HAES- Hemohes),Fluids - Other (Not In Use),metavision,
+220979,Hetastarch 6% (Saline 0-9%),Fluids - Other (Not In Use),metavision,
 220980,Hextend (Hetastarch 6% in Lactate),Fluids - Other (Not In Use),metavision,
 220984,Intralipid 10%,Fluids - Other (Not In Use),metavision,
 220985,Intralipid 20%,Fluids - Other (Not In Use),metavision,
@@ -1301,9 +1301,9 @@ itemid,label,category,dbsource,valueuom
 220995,Sodium Bicarbonate 8.4%,Medications,metavision,mEq
 220996,Packed Red Cells,Fluids - Other (Not In Use),metavision,
 221000,Dextran 40 / Dextrose 5% (Gentran - Rheomacrodex),Fluids - Other (Not In Use),metavision,
-221001,"Dextran 40 / Saline 0,9% (Gentran - Rheomacrodex)",Fluids - Other (Not In Use),metavision,
+221001,Dextran 40 / Saline 0-9% (Gentran - Rheomacrodex),Fluids - Other (Not In Use),metavision,
 221002,Dextran 70 / Dextrose 5% (Gentran - Macrodex - RescueFlow),Fluids - Other (Not In Use),metavision,
-221003,"Dextran 70 / Saline 0,9% (Gentran - Macrodex - RescueFlow)",Fluids - Other (Not In Use),metavision,
+221003,Dextran 70 / Saline 0-9% (Gentran - Macrodex - RescueFlow),Fluids - Other (Not In Use),metavision,
 221004,Thrombocyte suspension,Fluids - Other (Not In Use),metavision,
 221005,Vamin 14 Electrolyte free,Fluids - Other (Not In Use),metavision,
 221006,Vamin 18 Electrolyte free,Fluids - Other (Not In Use),metavision,
@@ -1316,7 +1316,7 @@ itemid,label,category,dbsource,valueuom
 221014,Dextrose 19%,Fluids - Other (Not In Use),metavision,
 221015,Ensure,Fluids - Other (Not In Use),metavision,
 221016,Ensure Plus,Fluids - Other (Not In Use),metavision,
-221017,"Dextrose 2,5%",Fluids - Other (Not In Use),metavision,
+221017,Dextrose 2-5%,Fluids - Other (Not In Use),metavision,
 221018,Nutrison Standard,Fluids - Other (Not In Use),metavision,
 221020,Nutrison concentrated,Fluids - Other (Not In Use),metavision,
 221021,Nutrison Energy,Fluids - Other (Not In Use),metavision,
@@ -1330,7 +1330,7 @@ itemid,label,category,dbsource,valueuom
 221037,Jevity 1.2,Fluids - Other (Not In Use),metavision,
 221038,Jevity,Fluids - Other (Not In Use),metavision,
 221193,Auto transfusion,Fluids - Other (Not In Use),metavision,
-221195,"Hexastarch 6% (Elohaes) / Saline 0,9%",Fluids - Other (Not In Use),metavision,
+221195,Hexastarch 6% (Elohaes) / Saline 0-9%,Fluids - Other (Not In Use),metavision,
 221196,Fresubin Original,Fluids - Other (Not In Use),metavision,
 221197,Fresubin Original Fibre,Fluids - Other (Not In Use),metavision,
 221198,Fresubin Energy,Fluids - Other (Not In Use),metavision,
@@ -1346,18 +1346,18 @@ itemid,label,category,dbsource,valueuom
 221208,Normosol,Fluids - Other (Not In Use),metavision,
 221209,Peptisorb,Fluids - Other (Not In Use),metavision,
 221210,Suplena,Fluids - Other (Not In Use),metavision,
-221211,"Sodium Bicarbonate 1,4%",Fluids - Other (Not In Use),metavision,
-221212,"Saline 0,18%",Fluids - Other (Not In Use),metavision,
+221211,Sodium Bicarbonate 1-4%,Fluids - Other (Not In Use),metavision,
+221212,Saline 0-18%,Fluids - Other (Not In Use),metavision,
 221213,Saline 30%,Fluids - Other (Not In Use),metavision,
-221214,CT scan,5-Imaging,metavision,None
-221216,X-ray,5-Imaging,metavision,None
-221217,Ultrasound,5-Imaging,metavision,None
-221219,Venogram,5-Imaging,metavision,None
-221223,EEG,4-Procedures,metavision,None
-221255,Trans Esophageal Echo,5-Imaging,metavision,None
+221214,CT scan,5-Imaging,metavision,
+221216,X-ray,5-Imaging,metavision,
+221217,Ultrasound,5-Imaging,metavision,
+221219,Venogram,5-Imaging,metavision,
+221223,EEG,4-Procedures,metavision,
+221255,Trans Esophageal Echo,5-Imaging,metavision,
 221261,Abciximab (Reopro),Medications,metavision,mg
 221282,Adenosine,Medications,metavision,mg
-221289,Epinephrine,Medications,metavision,mg
+221289,Epinephrine,Medications,metavision,mcg
 221319,Alteplase (TPA),Medications,metavision,mg
 221342,Aminophylline,Medications,metavision,mg
 221347,Amiodarone,Medications,metavision,mg
@@ -1366,7 +1366,7 @@ itemid,label,category,dbsource,valueuom
 221429,Esmolol,Medications,metavision,mg
 221456,Calcium Gluconate,Medications,metavision,grams
 221468,Diltiazem,Medications,metavision,mcg
-221555,Cisatracurium,Medications,metavision,mcg
+221555,Cisatracurium,Medications,metavision,mg
 221623,Diazepam (Valium),Medications,metavision,mg
 221653,Dobutamine,Medications,metavision,mg
 221662,Dopamine,Medications,metavision,mg
@@ -1374,7 +1374,7 @@ itemid,label,category,dbsource,valueuom
 221689,Drotrecogin (Xigris),Medications,metavision,mg
 221712,Ketamine,Medications,metavision,mg
 221733,Factor VIII,Blood Products/Colloids,metavision,International Units
-221744,Fentanyl,Medications,metavision,mcg
+221744,Fentanyl,Medications,metavision,mg
 221749,Phenylephrine,Medications,metavision,mg
 221794,Furosemide (Lasix),Medications,metavision,dose
 221824,Haloperidol (Haldol),Medications,metavision,mg
@@ -1389,23 +1389,23 @@ itemid,label,category,dbsource,valueuom
 222042,Nicardipine,Medications,metavision,mg
 222051,Nitroprusside,Medications,metavision,mg
 222056,Nitroglycerin,Medications,metavision,mg
-222062,Vecuronium,Medications,metavision,mcg
+222062,Vecuronium,Medications,metavision,mg
 222139,Potassium ACEtate,Nutrition - Supplements,metavision,
 222151,Procainamide,Medications,metavision,mg
-222168,Propofol,Medications,metavision,mcg
+222168,Propofol,Medications,metavision,mg
 222190,Ranitidine,Nutrition - Parenteral,metavision,mg
 222315,Vasopressin,Medications,metavision,units
 222318,Verapamil,Medications,metavision,mg
 222871,Mallampati classification (Intubation),Intubation,metavision,
 223059,Intubation - Details,Respiratory,metavision,
-223253,Magnetic Resonance Imaging,5-Imaging,metavision,None
+223253,Magnetic Resonance Imaging,5-Imaging,metavision,
 223257,Insulin - 70/30,Medications,metavision,units
 223258,Insulin - Regular,Medications,metavision,units
 223259,Insulin - NPH,Medications,metavision,units
 223260,Insulin - Glargine,Medications,metavision,units
 223261,Insulin - Humalog 75/25,Medications,metavision,units
 223262,Insulin - Humalog,Medications,metavision,units
-223679,TCO2 (calc) Venous,Labs,metavision,mEq/L
+223679,TCO2 (calc) Venous,Labs,metavision,
 223751,Non-Invasive Blood Pressure Alarm - High,Alarms,metavision,mmHg
 223752,Non-Invasive Blood Pressure Alarm - Low,Alarms,metavision,mmHg
 223753,Riker-SAS Scale,Pain/Sedation,metavision,
@@ -1673,18 +1673,18 @@ itemid,label,category,dbsource,valueuom
 224259,Impaired Skin Drainage #1,Skin - Impairment,metavision,
 224261,Multi Lumen Cap Change,Access Lines - Invasive,metavision,
 224262,Multi Lumen Change over Wire Date,Access Lines - Invasive,metavision,
-224263,Multi Lumen,Access Lines - Invasive,metavision,day
-224264,PICC Line,Access Lines - Invasive,metavision,day
-224267,Cordis/Introducer,Access Lines - Invasive,metavision,day
-224268,Trauma line,Access Lines - Invasive,metavision,day
-224269,CCO PAC,Access Lines - Invasive,metavision,day
-224270,Dialysis Catheter,Access Lines - Invasive,metavision,day
-224272,IABP line,Access Lines - Invasive,metavision,day
-224273,Presep Catheter,Access Lines - Invasive,metavision,min
-224274,22 Gauge,Access Lines - Peripheral,metavision,day
-224275,20 Gauge,Access Lines - Peripheral,metavision,day
-224276,16 Gauge,Access Lines - Peripheral,metavision,day
-224277,18 Gauge,Access Lines - Peripheral,metavision,day
+224263,Multi Lumen,Access Lines - Invasive,metavision,
+224264,PICC Line,Access Lines - Invasive,metavision,
+224267,Cordis/Introducer,Access Lines - Invasive,metavision,
+224268,Trauma line,Access Lines - Invasive,metavision,
+224269,CCO PAC,Access Lines - Invasive,metavision,
+224270,Dialysis Catheter,Access Lines - Invasive,metavision,
+224272,IABP line,Access Lines - Invasive,metavision,
+224273,Presep Catheter,Access Lines - Invasive,metavision,
+224274,22 Gauge,Access Lines - Peripheral,metavision,
+224275,20 Gauge,Access Lines - Peripheral,metavision,
+224276,16 Gauge,Access Lines - Peripheral,metavision,
+224277,18 Gauge,Access Lines - Peripheral,metavision,
 224279,Multi Lumen Dressing Change,Access Lines - Invasive,metavision,
 224280,Multi Lumen Insertion Date,Access Lines - Invasive,metavision,
 224281,Multi Lumen Site Appear,Access Lines - Invasive,metavision,
@@ -1740,7 +1740,7 @@ itemid,label,category,dbsource,valueuom
 224375,Cont Neb - Med,Respiratory,metavision,
 224379,PCA cleared,Pain/Sedation,metavision,
 224380,Neuro Waveform Appearance,Neurological,metavision,
-224385,Intubation,1-Intubation/Extubation,metavision,None
+224385,Intubation,1-Intubation/Extubation,metavision,
 224389,Heart Sounds,Cardiovascular,metavision,
 224390,Temporary Atrial Sens,Cardiovascular (Pacer Data),metavision,
 224391,ETT Mark (location),Respiratory,metavision,
@@ -1815,13 +1815,13 @@ itemid,label,category,dbsource,valueuom
 224512,Insertion site (PICC),PICC Line Insertion,metavision,
 224515,Timeout performed by (PICC),PICC Line Insertion,metavision,
 224517,Patient identified correctly (PICC),PICC Line Insertion,metavision,
-224560,PA Catheter,Access Lines - Invasive,metavision,hour
+224560,PA Catheter,Access Lines - Invasive,metavision,
 224561,Impaired Skin Type #1,Skin - Impairment,metavision,
 224562,Impaired Skin Length #1,Skin - Impairment,metavision,cm
 224563,Impaired Skin Depth #1,Skin - Impairment,metavision,cm
 224564,Impaired Skin Odor #1,Skin - Impairment,metavision,
 224565,Surrounding Tissue #1,Skin - Impairment,metavision,
-224566,14 Gauge,Access Lines - Peripheral,metavision,min
+224566,14 Gauge,Access Lines - Peripheral,metavision,
 224568,Barrier precautions in place (PICC),PICC Line Insertion,metavision,
 224571,Guidewire exchange (PICC),PICC Line Insertion,metavision,
 224577,Side (PICC),PICC Line Insertion,metavision,
@@ -2186,8 +2186,8 @@ itemid,label,category,dbsource,valueuom
 225150,Dexmedetomidine (Precedex),Medications,metavision,mcg
 225151,Eptifibatide (Integrilin),Medications,metavision,mg
 225152,Heparin Sodium,Medications,metavision,units
-225153,Labetalol,Medications,metavision,mg
-225154,Morphine Sulfate,Medications,metavision,mcg
+225153,Labetalol,Medications,metavision,dose
+225154,Morphine Sulfate,Medications,metavision,mg
 225155,Octreotide,Medications,metavision,mg
 225156,Pentobarbital,Medications,metavision,mg
 225157,Tirofiban (Aggrastat),Medications,metavision,mg
@@ -2220,11 +2220,11 @@ itemid,label,category,dbsource,valueuom
 225192,Collar Care,Treatments,metavision,
 225194,PT Splint Status #3,Treatments,metavision,
 225196,PT Splint Status #4,Treatments,metavision,
-225199,Triple Introducer,Access Lines - Invasive,metavision,day
-225202,Indwelling Port (PortaCath),Access Lines - Invasive,metavision,day
-225203,Pheresis Catheter,Access Lines - Invasive,metavision,min
-225204,Midline,Access Lines - Invasive,metavision,day
-225205,RIC,Access Lines - Peripheral,metavision,min
+225199,Triple Introducer,Access Lines - Invasive,metavision,
+225202,Indwelling Port (PortaCath),Access Lines - Invasive,metavision,
+225203,Pheresis Catheter,Access Lines - Invasive,metavision,
+225204,Midline,Access Lines - Invasive,metavision,
+225205,RIC,Access Lines - Peripheral,metavision,
 225206,Multi Lumen Zero/Calibrate,Access Lines - Invasive,metavision,
 225209,Cash amount,Adm History/FHPA,metavision,
 225210,Arterial Line Zero/Calibrate,Access Lines - Invasive,metavision,
@@ -2294,7 +2294,7 @@ itemid,label,category,dbsource,valueuom
 225310,ART BP Diastolic,Routine Vital Signs,metavision,mmHg
 225312,ART BP mean,Routine Vital Signs,metavision,mmHg
 225313,Bed Bath,Treatments,metavision,
-225315,Tunneled (Hickman) Line,Access Lines - Invasive,metavision,day
+225315,Tunneled (Hickman) Line,Access Lines - Invasive,metavision,
 225316,CCO PAC Insertion Date,Access Lines - Invasive,metavision,
 225317,Trauma Line Insertion Date,Access Lines - Invasive,metavision,
 225318,Dialysis Catheter Cap Change,Access Lines - Invasive,metavision,
@@ -2359,10 +2359,10 @@ itemid,label,category,dbsource,valueuom
 225396,Triple Introducer Tubing Change,Access Lines - Invasive,metavision,
 225397,Triple Introducer Waveform Appear,Access Lines - Invasive,metavision,
 225398,Triple Introducer Zero/Calibrate,Access Lines - Invasive,metavision,
-225399,Lumbar Puncture,4-Procedures,metavision,None
-225400,Bronchoscopy,4-Procedures,metavision,None
-225401,Blood Cultured,6-Cultures,metavision,None
-225402,EKG,4-Procedures,metavision,None
+225399,Lumbar Puncture,4-Procedures,metavision,
+225400,Bronchoscopy,4-Procedures,metavision,
+225401,Blood Cultured,6-Cultures,metavision,
+225402,EKG,4-Procedures,metavision,
 225406,Transferred to Floor,3-Significant Events,metavision,
 225409,VNA / home infusion,Case Management,metavision,
 225410,Acute rehab,Case Management,metavision,
@@ -2379,50 +2379,50 @@ itemid,label,category,dbsource,valueuom
 225422,Transportation,Case Management,metavision,
 225423,Free care pharmacy ,Case Management,metavision,
 225424,Patient/family/team understand & agree with plan,Case Management,metavision,
-225427,Angiography,5-Imaging,metavision,None
-225428,Blakemore D/C,4-Procedures,metavision,None
-225429,Blakemore Inserted,4-Procedures,metavision,None
-225430,Cardiac Cath,4-Procedures,metavision,None
-225432,Transthoracic Echo,5-Imaging,metavision,None
-225433,Chest Tube Placed,4-Procedures,metavision,None
-225434,Colonoscopy,4-Procedures,metavision,None
-225436,CRRT Filter Change,Dialysis,metavision,None
-225437,CSF Culture,6-Cultures,metavision,None
-225439,Endoscopy,4-Procedures,metavision,None
-225440,Fluoroscopy,3-Significant Events,metavision,None
-225441,Hemodialysis,4-Procedures,metavision,day
-225442,Liver Biopsy,4-Procedures,metavision,None
-225443,Nuclear Medicine,3-Significant Events,metavision,None
-225444,Pan Culture,6-Cultures,metavision,None
-225445,Paracentesis,4-Procedures,metavision,None
-225446,PEG Insertion,4-Procedures,metavision,None
-225447,Percutaneous Drain Insertion,4-Procedures,metavision,None
-225448,Percutaneous Tracheostomy,1-Intubation/Extubation,metavision,None
-225449,Pericardiocentesis,4-Procedures,metavision,None
-225450,Radiation Therapy,4-Procedures,metavision,None
-225451,Sputum Culture,6-Cultures,metavision,None
-225454,Urine Culture,6-Cultures,metavision,None
+225427,Angiography,5-Imaging,metavision,
+225428,Blakemore D/C,4-Procedures,metavision,
+225429,Blakemore Inserted,4-Procedures,metavision,
+225430,Cardiac Cath,4-Procedures,metavision,
+225432,Transthoracic Echo,5-Imaging,metavision,
+225433,Chest Tube Placed,4-Procedures,metavision,
+225434,Colonoscopy,4-Procedures,metavision,
+225436,CRRT Filter Change,Dialysis,metavision,
+225437,CSF Culture,6-Cultures,metavision,
+225439,Endoscopy,4-Procedures,metavision,
+225440,Fluoroscopy,3-Significant Events,metavision,
+225441,Hemodialysis,4-Procedures,metavision,
+225442,Liver Biopsy,4-Procedures,metavision,
+225443,Nuclear Medicine,3-Significant Events,metavision,
+225444,Pan Culture,6-Cultures,metavision,
+225445,Paracentesis,4-Procedures,metavision,
+225446,PEG Insertion,4-Procedures,metavision,
+225447,Percutaneous Drain Insertion,4-Procedures,metavision,
+225448,Percutaneous Tracheostomy,1-Intubation/Extubation,metavision,
+225449,Pericardiocentesis,4-Procedures,metavision,
+225450,Radiation Therapy,4-Procedures,metavision,
+225451,Sputum Culture,6-Cultures,metavision,
+225454,Urine Culture,6-Cultures,metavision,
 225456,Ventricular Drain,3-Significant Events,metavision,
-225457,Abdominal X-Ray,5-Imaging,metavision,None
-225459,Chest X-Ray,5-Imaging,metavision,None
-225460,Cervical Spine,5-Imaging,metavision,None
-225461,Pelvis,5-Imaging,metavision,None
-225462,Interventional Radiology,5-Imaging,metavision,None
-225463,TLS Spine,5-Imaging,metavision,None
-225464,Cardioversion/Defibrillation,3-Significant Events,metavision,None
-225465,Chest Pain,3-Significant Events,metavision,None
-225466,Cardiac Arrest,3-Significant Events,metavision,None
-225467,Chest Opened,3-Significant Events,metavision,None
-225468,Unplanned Extubation (patient-initiated),1-Intubation/Extubation,metavision,None
-225469,OR Received,3-Significant Events,metavision,None
-225470,OR Sent,3-Significant Events,metavision,None
-225472,Pneumothorax,3-Significant Events,metavision,None
-225474,Fall,3-Significant Events,metavision,None
-225475,Respiratory Arrest,3-Significant Events,metavision,None
-225476,Unplanned Line/Catheter Removal (Non-Patient initated),3-Significant Events,metavision,None
-225477,Unplanned Extubation (non-patient initiated),1-Intubation/Extubation,metavision,None
+225457,Abdominal X-Ray,5-Imaging,metavision,
+225459,Chest X-Ray,5-Imaging,metavision,
+225460,Cervical Spine,5-Imaging,metavision,
+225461,Pelvis,5-Imaging,metavision,
+225462,Interventional Radiology,5-Imaging,metavision,
+225463,TLS Spine,5-Imaging,metavision,
+225464,Cardioversion/Defibrillation,3-Significant Events,metavision,
+225465,Chest Pain,3-Significant Events,metavision,
+225466,Cardiac Arrest,3-Significant Events,metavision,
+225467,Chest Opened,3-Significant Events,metavision,
+225468,Unplanned Extubation (patient-initiated),1-Intubation/Extubation,metavision,
+225469,OR Received,3-Significant Events,metavision,
+225470,OR Sent,3-Significant Events,metavision,
+225472,Pneumothorax,3-Significant Events,metavision,
+225474,Fall,3-Significant Events,metavision,
+225475,Respiratory Arrest,3-Significant Events,metavision,
+225476,Unplanned Line/Catheter Removal (Non-Patient initated),3-Significant Events,metavision,
+225477,Unplanned Extubation (non-patient initiated),1-Intubation/Extubation,metavision,
 225478,Operation,3-Significant Events,metavision,
-225479,Thoracentesis,4-Procedures,metavision,None
+225479,Thoracentesis,4-Procedures,metavision,
 225485,Insertion kit used (THCEN),Thoracentesis,metavision,
 225486,Hand cleansing prior to procedure (THCEN),Thoracentesis,metavision,
 225487,Barrier precautions in place (THCEN),Thoracentesis,metavision,
@@ -2490,29 +2490,29 @@ itemid,label,category,dbsource,valueuom
 225615,Location (PA line),PA Line Insertion,metavision,
 225622,ZBrain Natiuretic Peptide (BNP),Labs,metavision,
 225623,Number of attempts require to place line (PA line),PA Line Insertion,metavision,
-225624,BUN,Labs,metavision,mg/dL
+225624,BUN,Labs,metavision,
 225625,Calcium non-ionized,Labs,metavision,mg/dL
-225628,CK-MB fraction (%),Labs,metavision,
+225628,CK-MB fraction (%),Labs,metavision,%
 225629,Guidewire (PA Line),PA Line Insertion,metavision,
 225630,Ultrasound (PA line),PA Line Insertion,metavision,
 225631,Side (PA line),PA Line Insertion,metavision,
 225632,ZCK-MB,Labs,metavision,
 225633,Acuity (PA line),PA Line Insertion,metavision,
-225634,CK (CPK),Labs,metavision,IU/L
+225634,CK (CPK),Labs,metavision,
 225636,D-Dimer,Labs,metavision,ng/mL
 225637,Differential-Atyps,Labs,metavision,%
 225638,Differential-Bands,Labs,metavision,%
 225639,Differential-Basos,Labs,metavision,%
-225640,Differential-Eos,Labs,metavision,%
+225640,Differential-Eos,Labs,metavision,
 225641,Differential-Lymphs,Labs,metavision,%
-225642,Differential-Monos,Labs,metavision,%
+225642,Differential-Monos,Labs,metavision,
 225643,Differential-Neuts,Labs,metavision,%
 225644,ZDigoxin,Labs,metavision,
 225645,ZPhenytoin (Dilantin),Labs,metavision,
 225646,Transparent dressing applied and dated (PA line),PA Line Insertion,metavision,
 225647,PA line ordered on POE,PA Line Insertion,metavision,
 225648,Follow-up X-RAYordered (PA Line),PA Line Insertion,metavision,
-225651,Direct Bilirubin,Labs,metavision,mg/dL
+225651,Direct Bilirubin,Labs,metavision,
 225655,ZFK506,Labs,metavision,
 225656,Freeform Chemistry,Labs,metavision,
 225657,Freeform Coags,Labs,metavision,
@@ -2521,8 +2521,8 @@ itemid,label,category,dbsource,valueuom
 225660,Freeform Hematology,Labs,metavision,
 225662,ZGentamicin (Peak),Labs,metavision,
 225664,Glucose finger stick,Labs,metavision,
-225667,Ionized Calcium,Labs,metavision,mmol/L
-225668,Lactic Acid,Labs,metavision,mmol/L
+225667,Ionized Calcium,Labs,metavision,
+225668,Lactic Acid,Labs,metavision,
 225670,ZLDL measured,Labs,metavision,
 225671,LDL calculated,Labs,metavision,mg/dL
 225672,Lipase,Labs,metavision,IU/L
@@ -2533,18 +2533,18 @@ itemid,label,category,dbsource,valueuom
 225679,ZProcan,Labs,metavision,
 225680,ZProcan Napa,Labs,metavision,
 225683,ZSed Rate,Labs,metavision,
-225684,Serum Osmolality,Labs,metavision,mOsm/kg
+225684,Serum Osmolality,Labs,metavision,
 225685,Thiocynate,Labs,metavision,
 225686,ZThrombin,Labs,metavision,
 225688,ZTobramycin (Peak),Labs,metavision,
 225689,Insertion kit used (PICC Line),PICC Line Insertion,metavision,
-225690,Total Bilirubin,Labs,metavision,mg/dL
+225690,Total Bilirubin,Labs,metavision,
 225692,Total Granulocyte Count (TGC),Labs,metavision,#/uL
 225693,Triglyceride,Labs,metavision,mg/dL
 225694,ZTropinin - T,Labs,metavision,
 225695,Uric Acid,Labs,metavision,mg/dL
 225697,ZVancomycin (Peak),Labs,metavision,
-225698,TCO2 (calc) Arterial,Labs,metavision,mEq/L
+225698,TCO2 (calc) Arterial,Labs,metavision,
 225700,Immediate complications (CVL),CVL Insertion,metavision,
 225701,Transparent dressing applied and dated (CVL),CVL Insertion,metavision,
 225702,Follow-up chest X-RAY ordered (CVL),CVL Insertion,metavision,
@@ -2588,7 +2588,7 @@ itemid,label,category,dbsource,valueuom
 225749,Presep Catheter Discontinued,Access Lines - Invasive,metavision,
 225750,Trauma Line Discontinued,Access Lines - Invasive,metavision,
 225751,Triple Introducer Discontinued,Access Lines - Invasive,metavision,
-225752,Arterial Line,Access Lines - Invasive,metavision,min
+225752,Arterial Line,Access Lines - Invasive,metavision,
 225753,22 Gauge Insertion Date,Access Lines - Peripheral,metavision,
 225754,20 Gauge Insertion Date,Access Lines - Peripheral,metavision,
 225755,18 Gauge Insertion Date,Access Lines - Peripheral,metavision,
@@ -2623,39 +2623,39 @@ itemid,label,category,dbsource,valueuom
 225786,Sheath Dressing Type,Access Lines - Invasive,metavision,
 225787,Trauma Line Dressing Type,Access Lines - Invasive,metavision,
 225788,Triple Introducer Dressing Type,Access Lines - Invasive,metavision,
-225789,Sheath,Access Lines - Invasive,metavision,hour
+225789,Sheath,Access Lines - Invasive,metavision,
 225790,Site cleaned with ChloraPrep(TM) (PICC),PICC Line Insertion,metavision,
-225792,Invasive Ventilation,2-Ventilation,metavision,day
-225794,Non-invasive Ventilation,2-Ventilation,metavision,hour
+225792,Invasive Ventilation,2-Ventilation,metavision,
+225794,Non-invasive Ventilation,2-Ventilation,metavision,
 225795,Dextran 40,Blood Products/Colloids,metavision,ml
 225796,Dextran 70,Blood Products/Colloids,metavision,
 225797,Free Water,Fluids/Intake,metavision,ml
-225798,Vancomycin,Antibiotics,metavision,mcg
+225798,Vancomycin,Antibiotics,metavision,dose
 225799,Gastric Meds,Fluids/Intake,metavision,ml
 225801,Lipids 20%,Nutrition - Parenteral,metavision,ml
-225802,Dialysis - CRRT,Dialysis,metavision,hour
+225802,Dialysis - CRRT,Dialysis,metavision,
 225803,Dialysis - CVVHD,Dialysis,metavision,
-225805,Peritoneal Dialysis,Dialysis,metavision,day
+225805,Peritoneal Dialysis,Dialysis,metavision,
 225806,Volume In (PD),Dialysis,metavision,mL
 225807,Volume Out (PD),Dialysis,metavision,mL
 225809,Dialysis - CVVHDF,Dialysis,metavision,
 225810,Dwell Time (Peritoneal Dialysis),Dialysis,metavision,hour
 225811,CV - past medical history,Adm History/FHPA,metavision,
 225813,Baseline pain level,Adm History/FHPA,metavision,
-225814,Stool Culture,6-Cultures,metavision,None
+225814,Stool Culture,6-Cultures,metavision,
 225815,Peritoneal Fluid,3-Significant Events,metavision,
-225816,Wound Culture,6-Cultures,metavision,None
-225817,BAL Fluid Culture,6-Cultures,metavision,None
+225816,Wound Culture,6-Cultures,metavision,
+225817,BAL Fluid Culture,6-Cultures,metavision,
 225818,Pleural Fluid Culture,6-Cultures,metavision,
-225819,Brain Death,3-Significant Events,metavision,None
-225820,C-Spine Clearance,3-Significant Events,metavision,None
-225821,Unplanned Line/Catheter Removal (Patient Initiated),3-Significant Events,metavision,None
+225819,Brain Death,3-Significant Events,metavision,
+225820,C-Spine Clearance,3-Significant Events,metavision,
+225821,Unplanned Line/Catheter Removal (Patient Initiated),3-Significant Events,metavision,
 225823,D5 1/2NS,Fluids/Intake,metavision,ml
 225825,D5NS,Fluids/Intake,metavision,ml
 225827,D5LR,Fluids/Intake,metavision,ml
 225828,LR,Fluids/Intake,metavision,L
 225830,Multivitamins,Fluids/Intake,metavision,ml
-225832,Folic Acid,Medications,metavision,mg
+225832,Folic Acid,Medications,metavision,dose
 225833,Thiamine,Medications,metavision,dose
 225834,K Phos,Medications,metavision,mmol
 225835,Na Phos,Medications,metavision,mmol
@@ -2673,49 +2673,49 @@ itemid,label,category,dbsource,valueuom
 225853,Ceftazidime,Antibiotics,metavision,dose
 225855,Ceftriaxone,Antibiotics,metavision,dose
 225857,Chloroquine,Antibiotics,metavision,
-225859,Ciprofloxacin,Antibiotics,metavision,mg
+225859,Ciprofloxacin,Antibiotics,metavision,dose
 225860,Clindamycin,Antibiotics,metavision,dose
 225862,Colistin,Antibiotics,metavision,dose
-225863,Daptomycin,Antibiotics,metavision,mg
+225863,Daptomycin,Antibiotics,metavision,dose
 225865,Doxycycline,Antibiotics,metavision,dose
-225866,Erythromycin,Antibiotics,metavision,mg
+225866,Erythromycin,Antibiotics,metavision,dose
 225868,Ethambutol,Antibiotics,metavision,dose
-225869,Fluconazole,Antibiotics,metavision,mg
+225869,Fluconazole,Antibiotics,metavision,dose
 225871,Foscarnet,Antibiotics,metavision,dose
 225873,Gancyclovir,Antibiotics,metavision,dose
 225875,Gentamicin,Antibiotics,metavision,dose
-225876,Imipenem/Cilastatin,Antibiotics,metavision,mg
+225876,Imipenem/Cilastatin,Antibiotics,metavision,dose
 225877,Isoniazid,Antibiotics,metavision,dose
 225879,Levofloxacin,Antibiotics,metavision,dose
-225881,Linezolid,Antibiotics,metavision,mg
+225881,Linezolid,Antibiotics,metavision,dose
 225882,Mefloquine,Antibiotics,metavision,
-225883,Meropenem,Antibiotics,metavision,mg
-225884,Metronidazole,Antibiotics,metavision,mg
+225883,Meropenem,Antibiotics,metavision,dose
+225884,Metronidazole,Antibiotics,metavision,dose
 225885,Micafungin,Antibiotics,metavision,dose
 225886,Moxifloxacin,Antibiotics,metavision,dose
 225888,Nafcillin,Antibiotics,metavision,dose
 225889,Oxacillin,Antibiotics,metavision,dose
 225890,Penicillin G potassium,Antibiotics,metavision,dose
-225892,Piperacillin,Antibiotics,metavision,grams
-225893,Piperacillin/Tazobactam (Zosyn),Antibiotics,metavision,grams
+225892,Piperacillin,Antibiotics,metavision,mg
+225893,Piperacillin/Tazobactam (Zosyn),Antibiotics,metavision,mg
 225895,Pyrazinamide,Antibiotics,metavision,dose
 225896,Quinine,Antibiotics,metavision,dose
 225897,Ribavirin,Antibiotics,metavision,
 225898,Rifampin,Antibiotics,metavision,mg
 225899,Bactrim (SMX/TMP),Antibiotics,metavision,dose
 225900,Dalfopristin/Quinupristin (Synercid),Antibiotics,metavision,
-225902,Tobramycin,Antibiotics,metavision,mg
+225902,Tobramycin,Antibiotics,metavision,dose
 225903,Valgancyclovir,Antibiotics,metavision,dose
-225905,Voriconazole,Antibiotics,metavision,mg
+225905,Voriconazole,Antibiotics,metavision,dose
 225906,Enoxaparin (Lovenox),Medications,metavision,dose
-225907,Famotidine (Pepcid),Medications,metavision,mg
+225907,Famotidine (Pepcid),Medications,metavision,dose
 225908,Fondaparinux,Medications,metavision,dose
-225909,Lansoprazole (Prevacid),Medications,metavision,dose
-225910,Pantoprazole (Protonix),Medications,metavision,dose
+225909,Lansoprazole (Prevacid),Medications,metavision,mg
+225910,Pantoprazole (Protonix),Medications,metavision,mg
 225911,Ranitidine (Prophylaxis),Medications,metavision,mg
-225912,Carafate (Sucralfate),Medications,metavision,dose
-225913,Coumadin (Warfarin),Medications,metavision,dose
-225914,Factor VIIa,Blood Products/Colloids,metavision,mg
+225912,Carafate (Sucralfate),Medications,metavision,grams
+225913,Coumadin (Warfarin),Medications,metavision,mg
+225914,Factor VIIa,Blood Products/Colloids,metavision,dose
 225915,Profilnine,Blood Products/Colloids,metavision,units
 225916,TPN w/ Lipids,Nutrition - Parenteral,metavision,ml
 225917,TPN without Lipids,Nutrition - Parenteral,metavision,ml
@@ -2755,14 +2755,14 @@ itemid,label,category,dbsource,valueuom
 225961,Medication Added Units #1 (Peritoneal Dialysis),Dialysis,metavision,
 225963,Peritoneal Dialysis Catheter Type,Dialysis,metavision,
 225965,Peritoneal Dialysis Catheter Status,Dialysis,metavision,
-225966,Nasal Swab,6-Cultures,metavision,None
-225967,Rectal Swab,6-Cultures,metavision,None
+225966,Nasal Swab,6-Cultures,metavision,
+225967,Rectal Swab,6-Cultures,metavision,
 225969,Lipids (additive),Nutrition - Parenteral,metavision,grams
 225970,Beneprotein,Nutrition - Enteral,metavision,grams
 225972,Fentanyl (Push),Medications,metavision,
 225973,Meperidine (Demerol),Medications,metavision,mg
-225974,Metoprolol,Medications,metavision,mcg
-225975,Heparin Sodium (Prophylaxis),Medications,metavision,dose
+225974,Metoprolol,Medications,metavision,mg
+225975,Heparin Sodium (Prophylaxis),Medications,metavision,mcg
 225976,Replacement Fluid,Dialysis,metavision,
 225977,Dialysate Fluid,Dialysis,metavision,
 225978,Slope,Respiratory,metavision,
@@ -2858,7 +2858,7 @@ itemid,label,category,dbsource,valueuom
 226120,Triple Introducer placed in outside facility,Access Lines - Invasive,metavision,
 226121,Tunneled (Hickman) placed in outside facility,Access Lines - Invasive,metavision,
 226122,Pheresis Catheter placed in outside facility,Access Lines - Invasive,metavision,
-226124,ICP Catheter,Access Lines - Invasive,metavision,hour
+226124,ICP Catheter,Access Lines - Invasive,metavision,
 226125,ICP Line Discontinued,Access Lines - Invasive,metavision,
 226126,ICP Line Dressing Change,Access Lines - Invasive,metavision,
 226127,ICP Line Dressing Type,Access Lines - Invasive,metavision,
@@ -2897,8 +2897,8 @@ itemid,label,category,dbsource,valueuom
 226228,Gender,ADT,metavision,
 226230,Attending/Supervisor is Clinician Operator (CVL),CVL Insertion,metavision,
 226232,Present duirng key moments and agree with checklist (CVL),CVL Insertion,metavision,
-226236,Temporary Pacemaker Wires Discontinued,4-Procedures,metavision,None
-226237,Open Tracheostomy,1-Intubation/Extubation,metavision,None
+226236,Temporary Pacemaker Wires Discontinued,4-Procedures,metavision,
+226237,Open Tracheostomy,1-Intubation/Extubation,metavision,
 226239,Number of operators (PICC),PICC Line Insertion,metavision,
 226253,SpO2 Desat Limit,Alarms,metavision,%
 226259,ZOn Pressors,General,metavision,
@@ -2908,9 +2908,9 @@ itemid,label,category,dbsource,valueuom
 226361,Pre-Admission Intake,Fluids/Intake,metavision,L
 226362,ZGastric/TF Residual Intake,Fluids/Intake,metavision,
 226363,Cath Lab Intake,Fluids/Intake,metavision,ml
-226364,OR Crystalloid Intake,Fluids/Intake,metavision,ml
+226364,OR Crystalloid Intake,Fluids/Intake,metavision,L
 226365,OR Colloid Intake,Blood Products/Colloids,metavision,ml
-226367,OR FFP Intake,Blood Products/Colloids,metavision,uL
+226367,OR FFP Intake,Blood Products/Colloids,metavision,ml
 226368,OR Packed RBC Intake,Blood Products/Colloids,metavision,ml
 226369,OR Platelet Intake,Blood Products/Colloids,metavision,ml
 226370,OR Autologous Blood Intake,Blood Products/Colloids,metavision,ml
@@ -2933,10 +2933,10 @@ itemid,label,category,dbsource,valueuom
 226453,GT Flush,Fluids/Intake,metavision,ml
 226457,Ultrafiltrate Output,Dialysis,metavision,mL
 226473,Blood Transfusion Consent,General,metavision,
-226474,ICP Bolt Inserted,4-Procedures,metavision,None
-226475,Intraventricular Drain Inserted,4-Procedures,metavision,None
-226476,Esophogeal Balloon,4-Procedures,metavision,None
-226477,Temporary Pacemaker Wires Inserted,4-Procedures,metavision,None
+226474,ICP Bolt Inserted,4-Procedures,metavision,
+226475,Intraventricular Drain Inserted,4-Procedures,metavision,
+226476,Esophogeal Balloon,4-Procedures,metavision,
+226477,Temporary Pacemaker Wires Inserted,4-Procedures,metavision,
 226479,Ectopy Type 2,Routine Vital Signs,metavision,
 226480,Ectopy Frequency 2,Routine Vital Signs,metavision,
 226482,Blood Clot Outdates,Labs,metavision,
@@ -2954,7 +2954,7 @@ itemid,label,category,dbsource,valueuom
 226528,Verification of (A-Line),Arterial Line Insertion,metavision,
 226531,Admission Weight (lbs.),General,metavision,
 226532,Organ Bank Notified,General,metavision,
-226534,Sodium (whole blood),Labs,metavision,mEq/L
+226534,Sodium (whole blood),Labs,metavision,
 226535,ZPotassium (whole blood),Labs,metavision,
 226536,Chloride (whole blood),Labs,metavision,
 226537,Glucose (whole blood),Labs,metavision,
@@ -3225,7 +3225,7 @@ itemid,label,category,dbsource,valueuom
 227133,Small Volume Neb Drug #2,Respiratory,metavision,
 227134,ATC Tube #,Respiratory,metavision,
 227187,Pinsp (Draeger only),Respiratory,metavision,cmH2O
-227194,Extubation,1-Intubation/Extubation,metavision,None
+227194,Extubation,1-Intubation/Extubation,metavision,
 227197,Indwelling (PortaCath) Port #2 Date Accessed,Access Lines - Invasive,metavision,
 227198,Indwelling (PortaCath) Port #1 Date De-accessed,Access Lines - Invasive,metavision,
 227199,Indwelling (PortaCath) Port #2 Date De-accessed,Access Lines - Invasive,metavision,
@@ -3286,12 +3286,12 @@ itemid,label,category,dbsource,valueuom
 227429,Troponin-T,Labs,metavision,ng/mL
 227438,Volume not removed,Dialysis,metavision,
 227439,Ndwelling Port (PortaCath) placed in outside facility,Access Lines - Invasive,metavision,
-227440,Digoxin,Labs,metavision,
+227440,Digoxin,Labs,metavision,ng/mL
 227441,LDL measured,Labs,metavision,mg/dL
-227442,Potassium (serum),Labs,metavision,
+227442,Potassium (serum),Labs,metavision,mEq/L
 227443,HCO3 (serum),Labs,metavision,mEq/L
 227444,C Reactive Protein (CRP),Labs,metavision,mg/L
-227445,CK-MB,Labs,metavision,
+227445,CK-MB,Labs,metavision,ng/mL
 227446,Brain Natiuretic Peptide (BNP),Labs,metavision,pg/mL
 227447,Gentamicin (Random),Labs,metavision,ug/mL
 227448,Gentamicin (Peak),Labs,metavision,ug/mL
@@ -3300,8 +3300,8 @@ itemid,label,category,dbsource,valueuom
 227451,Tobramycin (Random),Labs,metavision,ug/mL
 227452,Tobramycin (Trough),Labs,metavision,ug/mL
 227453,Vancomycin (Peak),Labs,metavision,ug/mL
-227454,Vancomycin (Random),Labs,metavision,
-227455,Vancomycin (Trough),Labs,metavision,
+227454,Vancomycin (Random),Labs,metavision,ug/mL
+227455,Vancomycin (Trough),Labs,metavision,ug/mL
 227456,Albumin,Labs,metavision,g/dL
 227457,Platelet Count,Labs,metavision,
 227458,Procan,Labs,metavision,ug/mL
@@ -3309,12 +3309,12 @@ itemid,label,category,dbsource,valueuom
 227460,Phenobarbital,Labs,metavision,ug/mL
 227461,Phenytoin (Dilantin),Labs,metavision,ug/mL
 227462,FK506,Labs,metavision,ng/mL
-227463,Cortisol,Labs,metavision,
-227464,Potassium (whole blood),Labs,metavision,mEq/L
+227463,Cortisol,Labs,metavision,ug/dL
+227464,Potassium (whole blood),Labs,metavision,
 227465,Prothrombin time,Labs,metavision,sec
-227466,PTT,Labs,metavision,
+227466,PTT,Labs,metavision,sec
 227467,INR,Labs,metavision,
-227468,Fibrinogen,Labs,metavision,
+227468,Fibrinogen,Labs,metavision,mg/dL
 227469,Thrombin,Labs,metavision,sec
 227470,Sed Rate,Labs,metavision,mm/hr
 227471,Specific Gravity (urine),Labs,metavision,
@@ -3361,8 +3361,8 @@ itemid,label,category,dbsource,valueuom
 227546,SVV (Arterial),Hemodynamics,metavision,%
 227547,SV (Arterial),Hemodynamics,metavision,mL/beat
 227549,ScvO2 (Presep),Hemodynamics,metavision,%
-227550,ERCP,4-Procedures,metavision,None
-227551,Plasma Pheresis.,4-Procedures,metavision,min
+227550,ERCP,4-Procedures,metavision,
+227551,Plasma Pheresis.,4-Procedures,metavision,
 227565,Ventilator Tank #1,Respiratory,metavision,
 227566,Ventilator Tank #2,Respiratory,metavision,
 227567,Airway Location,Respiratory,metavision,
@@ -3466,10 +3466,10 @@ itemid,label,category,dbsource,valueuom
 227687,Tobacco Use History,Adm History/FHPA,metavision,
 227688,Smoking Cessation Info Offered through BIDMC Inpatient Guide,Adm History/FHPA,metavision,
 227689,Dilantin,Medications,metavision,mg
-227690,Fosphenytoin,Medications,metavision,grams
+227690,Fosphenytoin,Medications,metavision,mg
 227691,Keflex,Antibiotics,metavision,mg
 227692,Isuprel,Medications,metavision,mg
-227694,Omeprazole (Prilosec),Medications,metavision,mg
+227694,Omeprazole (Prilosec),Medications,metavision,dose
 227695,Fibersource HN (Full),Nutrition - Enteral,metavision,ml
 227696,Fibersource HN (3/4),Nutrition - Enteral,metavision,ml
 227697,Fibersource HN (2/3),Nutrition - Enteral,metavision,
@@ -3477,14 +3477,14 @@ itemid,label,category,dbsource,valueuom
 227699,Fibersource HN (1/4),Nutrition - Enteral,metavision,ml
 227700,Safety Measures,Restraint/Support Systems,metavision,
 227701,Drainage Bag,Drains,metavision,mL
-227711,Drain Removed,4-Procedures,metavision,None
-227712,Chest Tube Removed,4-Procedures,metavision,None
-227713,Epidural Placement,4-Procedures,metavision,None
-227714,Pericardial Drain Removed,4-Procedures,metavision,None
-227715,TLS Clearance,3-Significant Events,metavision,None
+227711,Drain Removed,4-Procedures,metavision,
+227712,Chest Tube Removed,4-Procedures,metavision,
+227713,Epidural Placement,4-Procedures,metavision,
+227714,Pericardial Drain Removed,4-Procedures,metavision,
+227715,TLS Clearance,3-Significant Events,metavision,
 227716,Cerebral Perfusion Pressure Alarm - High,Alarms,metavision,mmHg
 227717,Cerebral Perfusion Pressure Alarm - Low,Alarms,metavision,mmHg
-227719,AVA Line,Access Lines - Invasive,metavision,min
+227719,AVA Line,Access Lines - Invasive,metavision,
 227720,AVA Cap Change,Access Lines - Invasive,metavision,
 227721,AVA Change over Wire Date,Access Lines - Invasive,metavision,
 227722,AVA Dressing Change,Access Lines - Invasive,metavision,
@@ -3569,7 +3569,7 @@ itemid,label,category,dbsource,valueuom
 227849,Toilet,OT Notes,metavision,
 227850,Commode,OT Notes,metavision,
 227851,Shower / Tub,OT Notes,metavision,
-227853,Other (Activity); Specify,OT Notes,metavision,
+227853,Other (Activity)& Specify,OT Notes,metavision,
 227854,Weight Bearing Status,OT Notes,metavision,
 227855,Assistive Device,OT Notes,metavision,
 227858,Rest HR - Aerobic Capacity,OT Notes,metavision,
@@ -3759,18 +3759,18 @@ itemid,label,category,dbsource,valueuom
 228122,Follow-up X-RAYordered (PA Line),PA Line Insertion,metavision,
 228123,The Attending/Supervisor is the Clinical Operator (PA Line),PA Line Insertion,metavision,
 228124,I was present during the above procedure and agree with the checklist (PA Line),PA Line Insertion,metavision,
-228125,Family meeting held,7-Communication,metavision,None
-228126,Family met with Case Manager,7-Communication,metavision,None
-228127,Family met with Social Worker,7-Communication,metavision,None
-228128,Family updated by MD,7-Communication,metavision,None
-228129,Family updated by RN,7-Communication,metavision,None
-228130,NEOB notified,7-Communication,metavision,None
+228125,Family meeting held,7-Communication,metavision,
+228126,Family met with Case Manager,7-Communication,metavision,
+228127,Family met with Social Worker,7-Communication,metavision,
+228128,Family updated by MD,7-Communication,metavision,
+228129,Family updated by RN,7-Communication,metavision,
+228130,NEOB notified,7-Communication,metavision,
 228131,Isosource 1.5 (1/2),Nutrition - Enteral,metavision,ml
 228132,Isosource 1.5 (1/4),Nutrition - Enteral,metavision,ml
 228133,Isosource 1.5 (2/3),Nutrition - Enteral,metavision,ml
 228134,Isosource 1.5 (3/4),Nutrition - Enteral,metavision,ml
 228135,Isosource 1.5 (Full),Nutrition - Enteral,metavision,ml
-228136,Family notified of transfer,7-Communication,metavision,None
+228136,Family notified of transfer,7-Communication,metavision,
 228137,CHG Bath,Treatments,metavision,
 228140,Dextrose 20%,Fluids/Intake,metavision,ml
 228141,Dextrose 30%,Fluids/Intake,metavision,ml
@@ -3795,7 +3795,7 @@ itemid,label,category,dbsource,valueuom
 228166,Impella Dressing Change,Access Lines - Invasive,metavision,
 228167,Impella Dressing Occlusive,Access Lines - Invasive,metavision,
 228168,Impella Insertion Date,Access Lines - Invasive,metavision,
-228169,Impella Line,Access Lines - Invasive,metavision,min
+228169,Impella Line,Access Lines - Invasive,metavision,
 228170,Impella Line Discontinued,Access Lines - Invasive,metavision,
 228171,Impella Placement Confirmed,Access Lines - Invasive,metavision,
 228172,Impella Postion Confirmed,Access Lines - Invasive,metavision,
@@ -3826,8 +3826,8 @@ itemid,label,category,dbsource,valueuom
 228198,Tandem Heart Flow,Tandem Heart,metavision,L/min
 228199,Type (Tandem Heart),Tandem Heart,metavision,
 228200,Vibration in Line,Tandem Heart,metavision,
-228201,Tandem Heart Access Line,Access Lines - Invasive,metavision,min
-228202,Tandem Heart Return Line,Access Lines - Invasive,metavision,min
+228201,Tandem Heart Access Line,Access Lines - Invasive,metavision,
+228202,Tandem Heart Return Line,Access Lines - Invasive,metavision,
 228203,Tandem Heart Access Line Cannula Site,Access Lines - Invasive,metavision,
 228204,Tandem Heart Access Line Catheter Length,Access Lines - Invasive,metavision,cm
 228206,Tandem Heart Access Line Discontinued,Access Lines - Invasive,metavision,
@@ -3851,7 +3851,7 @@ itemid,label,category,dbsource,valueuom
 228225,Tandem Heart Return Cannula Site,Access Lines - Invasive,metavision,
 228226,Tandem Heart Return Cannula Site Appear,Access Lines - Invasive,metavision,
 228227,Tandem Heart Return Cannula Size,Access Lines - Invasive,metavision,
-228228,"Family meeting attempted, unable",7-Communication,metavision,None
+228228,Family meeting attempted- unable,7-Communication,metavision,
 228229,PAR-Activity,Routine Vital Signs,metavision,
 228230,PAR-Circulation,Routine Vital Signs,metavision,
 228231,PAR-Consciousness,Routine Vital Signs,metavision,
@@ -3883,7 +3883,7 @@ itemid,label,category,dbsource,valueuom
 228283,FM Sx controlled,Family Mtg Note,metavision,
 228284,FM Time spent,Family Mtg Note,metavision,
 228285,FM Tx/goals,Family Mtg Note,metavision,
-228286,Intraosseous Device,Access Lines - Invasive,metavision,min
+228286,Intraosseous Device,Access Lines - Invasive,metavision,
 228290,IO Dressing,Access Lines - Invasive,metavision,
 228291,IO Insertion Date,Access Lines - Invasive,metavision,
 228292,IO Placed in outside facility,Access Lines - Invasive,metavision,
@@ -3927,7 +3927,7 @@ itemid,label,category,dbsource,valueuom
 228340,Furosemide (Lasix) 500/100,Medications,metavision,mg
 228341,NaCl 23.4%,Fluids/Intake,metavision,ml
 228343,OCAT - Lips Tongue Gums Palate,Treatments,metavision,
-228344,"OCAT - Saliva secretions, Voice quality",Treatments,metavision,
+228344,OCAT - Saliva secretions- Voice quality,Treatments,metavision,
 228345,OCAT - Swallow,Treatments,metavision,
 228346,OCAT - Teeth,Treatments,metavision,
 228348,Nepro (1/2),Nutrition - Enteral,metavision,ml

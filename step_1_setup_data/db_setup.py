@@ -1,7 +1,7 @@
 from configparser import ConfigParser
 
 
-def config(filename='mimic_to_csv_folder/database.ini', section='postgresql') -> dict:
+def config(filename='step_1_setup_data/database.ini', section='postgresql') -> dict:
     parser = ConfigParser()
     parser.read(filename)           # use external database.ini file to secure access data
 

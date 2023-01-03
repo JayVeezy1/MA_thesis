@@ -33,7 +33,7 @@ def query_patient_cohort(cur_1, use_case_icd_list=None) -> list:
         icd_array_string = icd_array_string + '}\''
 
     query_check_count: str = f'SELECT COUNT(*) FROM get_filtered_patient_cohort({icd_array_string})'
-    query_with_icd_filter: str = f'SELECT * FROM get_filtered_patient_cohort({icd_array_string})'
+    query_with_icd_filter: str = f'SELECT * FROM get_filtered_patient_cohort({icd_array_string}) ORDER BY icustay_id'
     # print('CHECK: ICD9 Filter QUERY:', query_with_icd_filter)
 
     # Execute Query for patient cohort
@@ -57,7 +57,7 @@ def query_header_patient_cohort(cur_1) -> list:
 
 
 def query_single_icustay(cursor_1, icustay_id: int, selected_itemids_string: str) -> list:
-    query_single: str = f'CALL create_transposed_patient({icustay_id}, {selected_itemids_string}); SELECT * FROM temp_transposed_patient;'         # here two SQL steps, not just one function call because the RETURN table columns can be dynamic
+    query_single: str = f'CALL create_transposed_patient({icustay_id}, {selected_itemids_string}); SELECT * FROM temp_transposed_patient ORDER BY temp_transposed_patient.charttime;'         # here two SQL steps, not just one function call because the RETURN table columns can be dynamic
     cursor_1.execute(query_single)
     return cursor_1.fetchall()
 

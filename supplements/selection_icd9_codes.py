@@ -1,5 +1,7 @@
 # This file can be used to manually select the use-case, more precise all relevant icd9-codes.
 
+# Complete List of icd9-codes: https://www.cms.gov/Medicare/Coding/ICD9ProviderDiagnosticCodes/codes
+
 icd9_00_cerebrovascular_general: list = [430, 431, 432, 4329, 433, 4330, 4331, 4332, 434, 4340, 43400, 43401, 4341, 43410, 43411,
                                          435, 4350, 4351, 4352, 4353, 4359, 436, 437, 4370, 4371, 4372, 4373, 4374, 4375, 4376,
                                          4377, 438, 4380, 4381, 43810, 43811, 43812, 43819, 4382, 43820, 43821, 43822, 4383,

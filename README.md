@@ -98,6 +98,10 @@ Thus, the relevant key shall be the icu-stay, to not use duplicate patients.
 
 3) Feature Selection (Input at the 'export_patients_to_csv()' function):
 
+NOTICE: The features selection will be reworked. It will not be selected inside the SQL Script, but all available
+features for each patient will be exported. And then inside Python the features with the highest relevance
+(depending on occurrence and previous research) will be selected.
+
 The relevant labels/features can be chosen by the user. The complete dataset offers 12.487 itemids (for any kind of chart_event that happened at the ICU). These are too many features for any useful analysis. But as stated in 1), only metavision patients are included. Metavision enables 2.992 itemids. This would still be too many features.
 Thus, a user has to choose, which labels (itemids) will be important for the respective use-case. 
 This can be selected in the supplement file 'selection_itemids_list_mv.py'.
@@ -107,10 +111,28 @@ This file can also be created with the SQL script 'create_events_dictionary.sql'
 
 It is recommended to choose about 40 itemids. This selection naturally requires some medical knowledge, 
 thus it is also recommended to use previous research filtering as a guideline. 
-Patient demographics, secondary diagnosis will always be derived, regardless of this filter. 
+Patient demographics, secondary diagnosis will always be derived, regardless of this filter.
 
 
-4) Notes for Future Research:
+Features that are always included:
+- General Patient information (subject_id, hadm_id, icustay_id, demographics)
+- Patient Vitals -> need to be selected after analysis of relevance
+- OASIS Score and related features (mechanical ventilation, GCS Score)
+
+4) Further Information about the OASIS Score Feature
+
+The OASIS score represents a very common and important index for the patient risk. It is commonly used to compare
+new prediction models with the status quo. The calculation of the score depends on a multitude of factors.
+As these steps have already been implemented by previous research and made available via GitHub, their code for the
+SQL scripts was used for this analysis (source: https://github.com/caisr-hh/Dayly-SAPS-III-and-OASIS-scores-for-MIMIC-III).
+The used scripts can be found in supplements/SQL/Dayly-SAPS-III-and-OASIS-scores-for-MIMIC-III-master 
+They must be loaded manually into the postgres database before running the patient selection. The time needed to execute
+the scripts is about 15 minutes in total (each ranging between 30 seconds and 3 minutes). 
+The created views are saved inside the mimiciii schema, and not inside the public schema, where all the other objects 
+of this thesis were created. This makes it easier to see, which scripts come from where. 
+
+
+5) Notes for Future Research:
 
 There are many labels in the MIMIC-III dataset that have not yet been included into this analysis.
 It is possible to include sources like: transfers, services, microbiology-events, cptevents, prescriptions for further research.

@@ -6,8 +6,9 @@ from os.path import isfile, join
 
 import psycopg2
 
-from mimic_to_csv_folder import SQL_queries
-from mimic_to_csv_folder.db_setup import config
+from step_1_setup_data import SQL_queries
+from step_1_setup_data.db_setup import config
+from supplements import selection_comorbidities_icd9
 
 
 def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_itemids=None, use_case_name=None) -> None:
@@ -90,7 +91,7 @@ def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_i
         # Get chart_events for each icustay and export to .csv
         query_counter = 0
         seconds_cumulated = 0
-        for icustay_id in icu_stay_ids[:1]:             # todo reminder: loop through for all ids, also turn on sorting again
+        for icustay_id in icu_stay_ids[:2]:             # todo reminder: loop through for all ids, also turn on sorting again
             print('STATUS: Executing query_single_icustay for icustay_id', str(icustay_id))
             query_counter += 1
             starting_time = datetime.now()
@@ -112,6 +113,7 @@ def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_i
                 csv_out.writerows(single_icustay)
 
         # cursor_1.execute('DROP TABLE public.temp_filtered_patient_cohort;')       # deleting table temp_filtered_patient_cohort, it should always only exist in DB for the current use-case
+        conn.commit()
         cursor_1.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
@@ -143,6 +145,7 @@ def create_table_all_diagnoses() -> None:
         ##### create the necessary table 'all_diagnoses_icd' #####
         SQL_queries.query_create_table_all_diagnoses_icd(cur_1)
         # close the communication with the database
+        conn.commit()
         cur_1.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print('Error occurred:', error)
@@ -157,6 +160,9 @@ def setup_postgre_files():
     It creates all necessary backend files (functions and views) for the postgre database.
     Sometimes does not create the functions. Then it is easiest to simply copy&paste the SQL Scripts into
     Postgre QueryTool and execute each there.
+
+    IMPORTANT: The OASIS-Score scripts in /supplements/SQL/Dayly-SAPS-III-and-OASIS-scores-for-MIMIC-III-master
+    must also be loaded into the postgres DB manually.
     """
     # Setup connection to PostGre MIMIC-III Database
     db_params: dict = config()
@@ -178,6 +184,7 @@ def setup_postgre_files():
                     time.sleep(2)  # safety to give db time to create files
         print('STATUS: query_setup_postgre_files_string executed.')
         # close the communication with the database
+        conn.commit()
         cur_1.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print('Error occurred:', error)
@@ -186,7 +193,7 @@ def setup_postgre_files():
             conn.close()
 
 
-def create_label_dictionaries():
+def create_supplement_dictionaries():
     """
     This function is optional to create the supplement dictionary files.
     They can also be created by manually copying & pasting the 'create_events_dictionary.sql' script into postgres.
@@ -235,7 +242,69 @@ def create_label_dictionaries():
         print('STATUS: query_create_label_dictionaries executed.')
 
         # close the communication with the database
+        conn.commit()
         cur_1.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print('Error occurred:', error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+def load_comorbidities_into_db():
+    """
+        This function loads the lists selected in supplements/selection_comorbidities_icd9.py into a table in the
+        postgres DB. This table will be used within the creation of the patient.csv files to derive
+        possible comorbidities.
+        """
+    # Setup connection to PostGre MIMIC-III Database
+    db_params: dict = config()
+    conn = None
+    try:
+        # connect to the database
+        print('Connecting to the PostgreSQL database for load_comorbidities_into_db:')
+        conn = psycopg2.connect(**db_params)
+        cur_1 = conn.cursor()
+        print('Connection successful.')
+        ##### run query #####
+        cur_1.execute('SET search_path TO public;')
+        cur_1.execute('DROP TABLE IF EXISTS comorbidity_codes;')
+        cur_1.execute('CREATE TABLE comorbidity_codes (codes varchar(10), category varchar(20));')
+
+        # Loading sepsis_list
+        for icd9_code in selection_comorbidities_icd9.sepsis_list:
+            cur_1.execute(f'INSERT INTO public.comorbidity_codes (codes, category) VALUES (\'{icd9_code}\', \'sepsis\');')
+        print('STATUS: Finished loading sepsis_list into comorbidity_codes table.')
+        # Loading hypertension_list
+        for icd9_code in selection_comorbidities_icd9.hypertension_list:
+            cur_1.execute(f'INSERT INTO public.comorbidity_codes (codes, category) VALUES (\'{icd9_code}\', \'hypertension\');')
+        print('STATUS: Finished loading hypertension_list into comorbidity_codes table.')
+        # Loading obesity_list
+        for icd9_code in selection_comorbidities_icd9.obesity_list:
+            cur_1.execute(
+                f'INSERT INTO public.comorbidity_codes (codes, category) VALUES (\'{icd9_code}\', \'obesity\');')
+        print('STATUS: Finished loading obesity_list into comorbidity_codes table.')
+        # Loading diabetes_list
+        for icd9_code in selection_comorbidities_icd9.diabetes_list:
+            cur_1.execute(
+                f'INSERT INTO public.comorbidity_codes (codes, category) VALUES (\'{icd9_code}\', \'diabetes\');')
+        print('STATUS: Finished loading diabetes_list into comorbidity_codes table.')
+        # Loading drug_abuse_list
+        for icd9_code in selection_comorbidities_icd9.drug_abuse_list:
+            cur_1.execute(
+                f'INSERT INTO public.comorbidity_codes (codes, category) VALUES (\'{icd9_code}\', \'drug_abuse\');')
+        print('STATUS: Finished loading drug_abuse_list into comorbidity_codes table.')
+        # Loading cancer_list
+        for icd9_code in selection_comorbidities_icd9.cancer_list:
+            cur_1.execute(
+                f'INSERT INTO public.comorbidity_codes (codes, category) VALUES (\'{icd9_code}\', \'cancer\');')
+        print('STATUS: Finished loading cancer_list into comorbidity_codes table.')
+
+        # close the communication with the database
+        time.sleep(0.5)
+        conn.commit()
+        cur_1.close()
+        print('STATUS: Finished creating comorbidity_codes table.')
     except (Exception, psycopg2.DatabaseError) as error:
         print('Error occurred:', error)
     finally:

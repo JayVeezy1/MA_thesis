@@ -1,4 +1,4 @@
-from mimic_to_csv_folder import mimic_to_csv
+from step_1_setup_data import mimic_to_csv, select_relevant_features
 import supplements.selection_icd9_codes
 import supplements.selection_of_features
 
@@ -8,38 +8,29 @@ if __name__ == '__main__':
     ### Mimic to CSV Export
     # Step 0) Setup when first time using db:
     # mimic_to_csv.setup_postgre_files()                 # setup all needed background functions and views for postgre. Warning: Sometimes this setup from Python does not work. Then you simply copy&paste each SQL Script into PostGre QueryTool and execute it.
-    # mimic_to_csv.create_label_dictionaries()             # create supplementary dictionary files
     # mimic_to_csv.create_table_all_diagnoses()          # create a necessary table 'all_diagnoses' where for each admission all available diagnoses are saved in the new field 'all_icd_codes' (takes approx. 45 min)
+    # mimic_to_csv.create_supplement_dictionaries()      # create supplementary dictionary files
+    # mimic_to_csv.load_comorbidities_into_db()          # create the necessary table 'comorbidity_codes' where the icd9_codes that are used to find important comorbidities are loaded into the DB
 
-    # Step 1.1) Export the patient data for the specified use_case (icd_list) into .csv files:
+    # Step 1.1) Export the raw patient data for the specified use_case (icd_list) into .csv files, all available features will be exported
+    use_case_name: str = 'testing_stroke_no_selected_labels'
     mimic_to_csv.export_patients_to_csv(project_path=project_path,
                                         use_case_icd_list=supplements.selection_icd9_codes.icd9_00_stroke_selected,
                                         use_case_itemids=[],
-                                        use_case_name='testing_stroke_no_selected_labels')
+                                        use_case_name=use_case_name)
 
-#### Current Tasks
-# todo 0: export dictionaries again, event dictionary still has , or ; in label
+    # Step 1.3) Select only relevant features
+    # TODO: Test feature-selection
+    #feature_selection: list = select_relevant_features.get_feature_selection(project_path=project_path,
+     #                                                                        use_case_name=use_case_name)
 
-# TODO 1: OASIS derive scoring systems (oasis) inside SQL based on code in github
-    # https://github.com/caisr-hh/Dayly-SAPS-III-and-OASIS-scores-for-MIMIC-III/blob/master/oasis-all-day.sql
-    # how does the final view look like, which of the columns do i want to join to my patient_cohort? probably: final oasis score, ventilation, surgery
+    # Step 1.4) Export final patient.csvs only with selected features into 'final_dataset'
+    # TODO: Test export of patient.csvs only with selected features -> this will be the final dataset
+    # select_relevant_features.export_final_dataset(feature_selection)
 
-# TODO 2.1: COMORBIDITIES derive comorbidities (diabetes, cancer) based on paper with icd9 codes
-
-# TODO 2.2: SEPSIS where do i get explicit sepsis from? simply icd9-code in diagnosis? -> like a comorbidity?
-
-
-
-#### Next Step: Export
-# TODO: Export patients with ALL of their available features
-    # time is the same, file-size is huge but ok
-
-# Step 1.2) Derive most relevant features from all raw patient .csv-files
-# TODO: Select features inside python after import depending on occurrence of the itemids
-    # Selection: general patient info & count of features & guided by other research & needed for scoring systems
-    # feature-overview-table (first step for feature-selection):
-    # label | item_id | count | variable_type (categorical(only 1 row) or continuous (average, min, max)) | selected (selected_general_patient_data or selected_because_research or selected_count_over_xx) |  | removed
-    # afterwards save the filtered patients again as 'final-filtered-csvs'
+#### Upcoming TODOS
+# TODO: Export ALL patients
+    # file-size is huge but ok?
 
 
 #### Long Term #########################################################################################################

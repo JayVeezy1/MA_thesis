@@ -33,7 +33,17 @@ returns table (
 		diabetes_flag				int,
 		cancer_flag					int,
 		obesity_flag				int,
-		drug_abuse_flag				int
+		drug_abuse_flag				int,
+		sepsis_flag					int
+	/*
+		, total_days_on_icu			int,
+		OASIS						int,
+		OASIS_PROB					numeric,		-- oasis derive in-hospitality death-probability
+	    preiculos					interval, 
+	    gcs							double precision, 
+	    mechvent					int, 			-- mechanical ventilation
+	    electivesurgery 			int				-- if not elective, then emergency surgery -> bad score
+	*/
 ) 
 
 language plpgsql
@@ -46,13 +56,15 @@ v_diabetes_flag		  	int := 0;
 v_cancer_flag			int := 0;
 v_obesity_flag 			int := 0;
 v_drug_abuse_flag 		int := 0;
+v_sepsis_flag			int := 0;
 v_icd9_code				varchar(10);
-	
+v_icustay_id            int;
+v_days_counter			int;
+v_oasis_record			RECORD;
+
 begin
 	-- 1. step create list from input string
-	if (SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'temp_icd9_codes_selected')) then	
-		DROP TABLE temp_icd9_codes_selected CASCADE;		-- CASCADE needed because view patient_cohort_filtered is related
-	end if;
+	DROP TABLE IF EXISTS temp_icd9_codes_selected CASCADE;		-- CASCADE needed because view patient_cohort_filtered is related
 	CREATE TABLE temp_icd9_codes_selected(icd9_codes varchar(10));
 	
 	FOREACH v_selected_code IN ARRAY icd9_selected_list LOOP
@@ -159,9 +171,7 @@ begin
 
 	-- 3. step depending on filter select icd9_codes and single diagnosis 
 	-- this is actually 'creator' instead of 'getter' function. But it works.
-	if (SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'temp_filtered_patient_cohort')) then	
-		DROP TABLE public.temp_filtered_patient_cohort;		
-	end if;
+	DROP TABLE IF EXISTS public.temp_filtered_patient_cohort;		
 	
 	IF (SELECT COUNT(*) FROM temp_icd9_codes_selected) = 0 THEN	
 		raise notice 'Creating temp_filtered_patient_cohort with no selected icd9_codes.';
@@ -187,7 +197,9 @@ begin
 		ADD COLUMN diabetes_flag				integer,
 		ADD COLUMN cancer_flag					integer,
 		ADD COLUMN obesity_flag					integer,
-		ADD COLUMN drug_abuse_flag				integer;
+		ADD COLUMN drug_abuse_flag				integer,
+		ADD COLUMN sepsis_flag					integer;
+
 	UPDATE public.temp_filtered_patient_cohort 
 	SET 
 		hypertension_flag = 0,
@@ -195,6 +207,7 @@ begin
 		cancer_flag = 0,
 		obesity_flag = 0,
 		drug_abuse_flag = 0;
+		sepsis_flag = 0;
 	
  	FOR v_patient_record in (select temp_filtered_patient_cohort.icustay_id from public.temp_filtered_patient_cohort) LOOP
 		-- reset _flags to 0
@@ -203,20 +216,24 @@ begin
 		v_cancer_flag := 0;
 		v_obesity_flag := 0;
 		v_drug_abuse_flag := 0;
+		v_sepsis_flag := 0;
+		
 			-- get the flags for each patient
 			FOREACH v_icd9_code in array (select temp_filtered_patient_cohort.all_icd9_codes 
 								from public.temp_filtered_patient_cohort 
 								where temp_filtered_patient_cohort.icustay_id = v_patient_record.icustay_id) LOOP
-				if (SELECT v_icd9_code = ANY ('{4011, 4019, 40210, 40290, 40410, 40490, 4051, 4059}'::varchar[])) then			-- hypertension_icd9_list = '{430,412,413}'
+				if (SELECT v_icd9_code = ANY (SELECT codes FROM public.comorbidity_codes WHERE category = 'hypertension')) then			-- hypertension_icd9_list = '{430,412,413}'
 					v_hypertension_flag := 1;
-				elsif (SELECT v_icd9_code = ANY ('{25000, 25010, 25020, 25030, 25040, 25050, 25060, 25070, 25090}'::varchar[])) then			-- diabetes_icd9_list = '{510,512,513}'
+				elsif (SELECT v_icd9_code = ANY (SELECT codes FROM public.comorbidity_codes WHERE category = 'diabetes')) then			-- diabetes_icd9_list = '{510,512,513}'
 					v_diabetes_flag := 1;
-				elsif (SELECT v_icd9_code = ANY ('{abc, 123}'::varchar[])) then			-- TEST: cancer_icd9_list = '{abc}'
+				elsif (SELECT v_icd9_code = ANY (SELECT codes FROM public.comorbidity_codes WHERE category = 'cancer')) then			-- cancer_icd9_list = '{}'
 					v_cancer_flag := 1;
-				elsif (SELECT v_icd9_code = ANY ('{abc, 123}'::varchar[])) then			-- TEST -- TODO: add correct flag icd9 codes
+				elsif (SELECT v_icd9_code = ANY (SELECT codes FROM public.comorbidity_codes WHERE category = 'obesity')) then			-- obesity_icd9_list = '{2780, 27800, 27801, 27802, 2781}'
 					v_obesity_flag := 1;
-				elsif (SELECT v_icd9_code = ANY ('{abc, 123}'::varchar[])) then			-- TEST -- TODO: add correct flag icd9 codes
+				elsif (SELECT v_icd9_code = ANY (SELECT codes FROM public.comorbidity_codes WHERE category = 'drug_abuse')) then		-- drug_abuse_icd9_list = '{}'
 					v_drug_abuse_flag := 1;
+				elsif (SELECT v_icd9_code = ANY (SELECT codes FROM public.comorbidity_codes WHERE category = 'sepsis')) then		-- drug_abuse_icd9_list = '{}'
+					v_sepsis_flag := 1;
 				end if;	
 			END LOOP;	
 
@@ -227,10 +244,55 @@ begin
 			diabetes_flag = v_diabetes_flag,
 			cancer_flag = v_cancer_flag,
 			obesity_flag = v_obesity_flag,
-			drug_abuse_flag = v_drug_abuse_flag
+			drug_abuse_flag = v_drug_abuse_flag,
+			sepsis_flag = v_sepsis_flag
 		WHERE temp_filtered_patient_cohort.icustay_id = v_patient_record.icustay_id;
 	END LOOP;
 	
-	RETURN QUERY SELECT * FROM temp_filtered_patient_cohort;
+	/* Removed because: this step raises the time needed for this function from 30 seconds to 4 minutes, also total_days_on_icu not really needed at all
+	-- 5. step add the columns related to the OASIS Score (the views that were used for this are from a github repository in the references)	
+	ALTER TABLE public.temp_filtered_patient_cohort
+		-- adding oasis related columns here
+		-- but leave out vital signs from the oasis-view because their calculation will be done in Python
+		ADD COLUMN total_days_on_icu			int,
+		ADD COLUMN OASIS						int,
+		ADD COLUMN OASIS_PROB					numeric,		-- oasis derived in-hospitality death-probability
+	    ADD COLUMN preiculos					interval, 
+	    ADD COLUMN gcs							double precision, 
+	    ADD COLUMN mechvent						int, 			-- mechanical ventilation
+	    ADD COLUMN electivesurgery 				int;
+	
+	FOR v_icustay_id IN (SELECT temp_filtered_patient_cohort.icustay_id FROM public.temp_filtered_patient_cohort) LOOP
+		
+		SELECT 
+			count(oasis.icustay_id) 				-- TODO: might not be needed here at all
+		FROM mimiciii.oasis WHERE mimiciii.oasis.icustay_id = v_icustay_id 
+		INTO v_days_counter;
+		
+		SELECT 
+			mimiciii.oasis.OASIS,
+			mimiciii.oasis.OASIS_PROB,
+			mimiciii.oasis.preiculos,
+			mimiciii.oasis.gcs,
+			mimiciii.oasis.mechvent,
+			mimiciii.oasis.electivesurgery 
+		FROM mimiciii.oasis WHERE mimiciii.oasis.icustay_id = v_icustay_id 
+		INTO v_oasis_record;
+		
+		UPDATE public.temp_filtered_patient_cohort 
+			SET 
+				total_days_on_icu = v_days_counter,
+				OASIS = v_oasis_record.OASIS,
+				OASIS_PROB = v_oasis_record.OASIS_PROB,
+				preiculos = v_oasis_record.preiculos,
+				gcs = v_oasis_record.gcs,
+				mechvent = v_oasis_record.mechvent,
+				electivesurgery = v_oasis_record.electivesurgery
+			WHERE public.temp_filtered_patient_cohort.icustay_id = v_icustay_id;
+			
+	END LOOP;
+	*/
+	
+	RETURN QUERY SELECT * FROM public.temp_filtered_patient_cohort;		 
 
 end; $body$
