@@ -1,88 +1,101 @@
-def import_complete_patient_files(project_path: str, use_case_name=None) -> list | None:
-    """
-    This function imports the previously created 'complete_patient.csvs' where for an icustay_id all available
-    features have been exported from the postgres DB into the csv files.
+import csv
+import os
+from operator import countOf
 
-    :param project_path: local directory where files are stored, must be defined by the user
-    :param use_case_name: the title for this use-case e.g. stroke, heart_failure, sepsis, only used to find the folder
-    :return: None
-    """
-    if project_path is None:
-        print('ERROR: project_path must be defined by the user.')
-        return None
-    if use_case_name is None:
-        use_case_name = 'no_use_case_name'
-        print('NOTICE: No use-case name was chosen. Export files will be saved in folder "no_use_case_name".')
+import pandas as pd
+from os.path import isfile
 
-    patient_list: list = []
-
-    # todo: import each file after each other
-
-    # todo: create a patient object or a dataframe?
-
-    print('STATUS: Finished import_complete_patient_files.')
-
-    return patient_list
+from matplotlib import pyplot as plt
 
 
-def get_feature_count_dict(patient_list: list) -> None | dict:
-    """
-    This function imports the previously created 'complete_patient.csvs' where for a icustay_id all available
-    features have been exported from the postgres DB into the csv files.
-
-    :param patient_list: list of all patients (from .csv files)
-    :return: None
-    """
-    if patient_list is None:
-        print('ERROR: project_path must be defined by the user.')
-        return None
-
-    feature_count_dict: dict = {}
-    # create a feature_dictionary to count the occurrence of each feature
-    for patient in patient_list:
-        for feature in patient.column_names:
-            feature_count_dict[feature] += 1            # todo: add count for the feature
-
-    # print out the feature_dictionary to manually check which features are important
-    print('CHECK: The following dictionary offers an overview of the occurrence of features in the dataset.'
-          'It can be used to select relevant features for the following analysis.')
-
-    print(feature_count_dict)
-
-    print('STATUS: Finished export_patients_to_csv.')
-
-    return feature_count_dict
-
-
-def get_feature_selection(project_path, use_case_name) -> list:
+def get_selected_features(project_path, use_case_name) -> list:
     """
     This function selects the features that will be used for the final_dataset
+
     :param project_path:
     :param use_case_name:
     :param patient_list: list of all patients (from .csv files)
     :return: None
     """
-    # TODO 1: Test import of patient-csv files into patient-object with related dataframe
-    patient_list: list = import_complete_patient_files(project_path, use_case_name)
+    # IMPORT
+    raw_feature_count_dict: dict = {}
+    patient_count: int = 0
+    for file in os.listdir(f'{project_path}/exports/{use_case_name}/'):
+        if isfile(f'{project_path}/exports/{use_case_name}/{file}') and not file == '0_patient_cohort.csv':
+            patient_count += 1
+            header = pd.read_csv(f'{project_path}/exports/{use_case_name}/{file}', nrows=0)  # only get header
+
+            for feature in header:
+                if feature in raw_feature_count_dict.keys():
+                    raw_feature_count_dict[feature] += 1
+                else:
+                    raw_feature_count_dict[feature] = 1  # create with value 1
 
 
-    feature_count_dict: dict = get_feature_count_dict(patient_list)
-    # used for selection:
-    # count of existing features
-    # important features from research (+ needed for scoring systems)
-    # general patient features
+    # SORTING
+    sorted_feature_count_list: list = sorted(raw_feature_count_dict.items(),
+                                             key=lambda x: x[1],
+                                             reverse=True)  # sorted() creates a list of tuples(), reverse = descending
+    sorted_feature_count_dict: dict = dict(sorted_feature_count_list)
+    # ('CHECK: The following dictionary offers an overview of the occurrence of features in the dataset. '
+    #       'It can be used to select relevant features for the following analysis.')
+    # print(sorted_feature_count_dict)
+    print(f'Count of patients: {patient_count}, '
+          f'Count of features with occurrence for all patients: {countOf(sorted_feature_count_dict.values(), patient_count)}, '
+          f'Count of all available features: {len(sorted_feature_count_dict)} ')
 
-    # Goal:
+
+    # todo FILTERING
+    # manually remove features that are general patient info (will be added again later)
+    general_features: list = ['charttime', 'gender', 'age']
+    # manually remove features that are known and important from prev research (will be added again later)
+    important_features: list = ['heart rate']
+    # manually remove features that can be safely dismissed (without medical knowledge)
+    unimportant_features: list = ['Nasal Swab']
+
+    filtered_features_count_list: list = []
+    for feature_value_tuple in sorted_feature_count_list:
+        if not feature_value_tuple[0] in general_features \
+                and not feature_value_tuple[0] in important_features \
+                and not feature_value_tuple[0] in unimportant_features:
+            if (feature_value_tuple[1] / patient_count) >= 0.8:                        # todo 80% threshold but PROBLEM: these might actually be very important
+                filtered_features_count_list.append(feature_value_tuple)
+    filtered_feature_count_dict: dict = dict(filtered_features_count_list)
+    print(f'Count of all remaining features depending on occurrence: {len(filtered_features_count_list)}')
+
+    # Plot the filtered features that occur for all patients
+    feature_name, feature_count = zip(*filtered_features_count_list[:(countOf(filtered_feature_count_dict.values(), patient_count) + 10)])
+    plt.plot(feature_name, feature_count)
+    plt.xticks(rotation=45, ha='right')
+    plt.show()
+
+
+    # Add again the general_features and important_features to final feature-list
+    selected_features: list = general_features
+    selected_features.extend(important_features)
+    selected_features.extend(filtered_features_count_list[:20])             # only keep the features that were selected because of occurrence > 80%
+
+    print(f'Count of final selected features: {len(selected_features)}')
+
+    print('STATUS: Finished get_feature_selection.')
+
+    # Todo Goal:
     # feature-overview-table (first step for feature-selection):
     # label | item_id | count | variable_type (categorical(only 1 row) or continuous (average, min, max)) | selected (selected_general_patient_data or selected_because_research or selected_count_over_xx) |  | removed
 
-    feature_selection: list = []
+    # todo: decide how to use selected_features in rest of the code? might be good to save with other supplements as csv
+
+    return selected_features
 
 
-    # todo: decide if print of the list or also export as .csv? might be good to save with other supplements
+def export_final_dataset(project_path, use_case_name, selected_features: list):
+    # step 1: load each patient
+    for file in os.listdir(f'{project_path}/exports/{use_case_name}/'):
+        if isfile(f'{project_path}/exports/{use_case_name}/{file}') and not file == '0_patient_cohort.csv':
+            patient_df = pd.read_csv(f'{project_path}/exports/{use_case_name}/{file}')
 
-    return feature_selection
+            filtered_patient_df = patient_df(columns=selected_features)     # todo somehow like this
 
+            # step 2: export the patient but filtered with selected_features (and maybe sort these too?) into a new folder
 
-def export_final_dataset(feature_selection):
     return None

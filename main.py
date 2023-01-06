@@ -4,7 +4,9 @@ import supplements.selection_of_features
 
 ####### MAIN #######
 if __name__ == '__main__':
-    project_path: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'          # this variable must be fitted to the users local project folder
+    PROJECT_PATH: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'          # this variable must be fitted to the users local project folder
+    USE_CASE_NAME: str = 'testing_stroke_no_selected_labels'
+
     ### Mimic to CSV Export
     # Step 0) Setup when first time using db:
     # mimic_to_csv.setup_postgre_files()                 # setup all needed background functions and views for postgre. Warning: Sometimes this setup from Python does not work. Then you simply copy&paste each SQL Script into PostGre QueryTool and execute it.
@@ -13,20 +15,23 @@ if __name__ == '__main__':
     # mimic_to_csv.load_comorbidities_into_db()          # create the necessary table 'comorbidity_codes' where the icd9_codes that are used to find important comorbidities are loaded into the DB
 
     # Step 1.1) Export the raw patient data for the specified use_case (icd_list) into .csv files, all available features will be exported
-    use_case_name: str = 'testing_stroke_no_selected_labels'
-    mimic_to_csv.export_patients_to_csv(project_path=project_path,
-                                        use_case_icd_list=supplements.selection_icd9_codes.icd9_00_stroke_selected,
-                                        use_case_itemids=[],
-                                        use_case_name=use_case_name)
+    #mimic_to_csv.export_patients_to_csv(project_path=PROJECT_PATH,
+     #                                   use_case_icd_list=supplements.selection_icd9_codes.icd9_00_stroke_selected,
+      #                                  use_case_itemids=[],
+       #                                 use_case_name=USE_CASE_NAME)
 
     # Step 1.3) Select only relevant features
-    # TODO: Test feature-selection
-    #feature_selection: list = select_relevant_features.get_feature_selection(project_path=project_path,
-     #                                                                        use_case_name=use_case_name)
+    # TODO: Finish feature-selection
+    selected_features: list = select_relevant_features.get_selected_features(project_path=PROJECT_PATH,
+                                                                             use_case_name=USE_CASE_NAME)
+
+    # todo: maybe move .csvs into folder "raw" and keep filtered .csvs outside?
 
     # Step 1.4) Export final patient.csvs only with selected features into 'final_dataset'
-    # TODO: Test export of patient.csvs only with selected features -> this will be the final dataset
-    # select_relevant_features.export_final_dataset(feature_selection)
+    # TODO: Export of patient.csvs only with selected features -> this will be the final dataset
+    # select_relevant_features.export_final_dataset(project_path=PROJECT_PATH,
+    #                                               use_case_name=USE_CASE_NAME,
+    #                                               selected_features=selected_features)
 
 #### Upcoming TODOS
 # TODO: Export ALL patients
@@ -36,6 +41,7 @@ if __name__ == '__main__':
 #### Long Term #########################################################################################################
 ### CSV Import & Preprocessing
 # Step 2.1) Import all .csv files as a 'Patient' Object with a related dataframe
+    # -> use step_2_preprocessing.import_csv_to_patients for this
 
 # Step 2.2) Calculate avg, min, max for each feature for each patient
 # Depending on missing value-rate either interpolate or remove feature ?

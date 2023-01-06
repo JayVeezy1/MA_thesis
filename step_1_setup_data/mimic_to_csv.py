@@ -91,7 +91,7 @@ def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_i
         # Get chart_events for each icustay and export to .csv
         query_counter = 0
         seconds_cumulated = 0
-        for icustay_id in icu_stay_ids[:2]:             # todo reminder: loop through for all ids, also turn on sorting again
+        for icustay_id in icu_stay_ids[:10]:             # todo reminder: loop through for all ids, also turn on sorting again
             print('STATUS: Executing query_single_icustay for icustay_id', str(icustay_id))
             query_counter += 1
             starting_time = datetime.now()
@@ -175,8 +175,7 @@ def setup_postgre_files():
         print('Connection successful.')
         ##### run query #####
         for file in os.listdir('supplements/SQL/'):
-            if isfile(join('supplements/SQL/',
-                           file)):  # making sure only files, no other dictionaries inside the SQL folder
+            if isfile(join('supplements/SQL/', file)):  # making sure only files, no other dictionaries inside the SQL folder
                 if not file == 'create_events_dictionary.sql' and not file == 'create_icd9_codes_dictionary.sql':  # dictionary creation in other function (is optional, takes 30 seconds)
                     query_setup_postgre_files_string: str = open(f'supplements/SQL/{file}', 'r').read()
                     print('STATUS: Loading file into postgre database:', file)
