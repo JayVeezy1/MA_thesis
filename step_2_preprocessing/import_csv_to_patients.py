@@ -18,3 +18,5 @@ def import_complete_patient_files(project_path: str, use_case_name=None) -> list
     # todo: create the patient object with a dataframe (also with the respective raw_columns?)
     # df_patient_data = pd.read_csv(os.path.join(data_set_path, patient_filename), sep='|')
     # patient = Patient(os.path.splitext(patient_filename)[0], df_patient_data)
+
+    # important: fill columns that patient doesnt have with 'null'

@@ -1,20 +1,37 @@
 # This file is used to manually select itemids (features).
 # The lists below are used to mark the selected features in the table 'all_features_table'
 
-# selected for scores:
 # useful labels: acute physiology score (APS)-III,8 simplified acute physiology score (SAPS),9 SAPS-II,10 and the
 
-# Oxford acute severity of illness score (OASIS)
-
-
-# selected because recommended by research:
-# compare to 'a novel nomogram...' paper
-
-# selected because general patient information
-
-
-
-
+# from function step_1_setup_data/select_relevant_features
+selected_features: list = ['icustay_id', 'hadm_id', 'subject_id', 'intime', 'outtime', 'los_hours', 'icustays_count',
+                                 'age', 'patientweight', 'dob', 'dod', 'death_in_hosp', 'death_3_days', 'death_30_days',
+                                 'death_180_days', 'death_365_days', 'gender', 'ethnicity', 'admission_type',
+                                 'discharge_location', 'insurance', 'language', 'religion', 'marital_status',
+                                 'diagnosis_text', 'seq_num', 'icd9_code', 'stroke_type', 'all_icd9_codes', 'day_on_icu',
+                                 'oasis', 'oasis_prob', 'preiculos', 'gcs', 'mechvent', 'electivesurgery',
+                                 'hypertension_flag', 'diabetes_flag', 'cancer_flag', 'obesity_flag', 'drug_abuse_flag',
+                                 'sepsis_flag', 'charttime', 'Anion gap', 'Anion Gap', 'Bicarbonate', 'Chloride (whole blood)',
+                                 'Calcium Total', 'Creatinine', 'Glucose (whole blood)', 'Potassium (whole blood)',
+                                 'Sodium (whole blood)', 'Hemoglobin', 'WBC', 'White Blood Cells', 'Packed Red Blood Cells',
+                                 'Platelets', 'Platelet Count', 'Prothrombin time', 'INR', 'Heart Rate', 'Respiratory Rate',
+                                 'Respiratory Rate (Total)', 'Arterial Blood Pressure diastolic',
+                                 'Non Invasive Blood Pressure diastolic', 'ART BP Diastolic', 'Arterial Blood Pressure systolic',
+                                 'Non Invasive Blood Pressure systolic', 'ART BP Systolic', 'Arterial Blood Pressure mean',
+                                 'Non Invasive Blood Pressure mean', 'ART BP Mean', 'Arterial O2 Saturation',
+                                 'O2 saturation pulseoxymetry', 'ART %O2 saturation (PA Line)', '20 Gauge',
+                                 '18 Gauge', '22 Gauge', '16 Gauge', '14 Gauge', 'Braden Friction/Shear', 'Diet Type',
+                                 'Glucose', 'Heart rate Alarm - High', 'Heart Rate Alarm - Low', 'Heart Rhythm',
+                                 'O2 Delivery Device(s)', 'O2 Saturation Pulseoxymetry Alarm - High',
+                                 'O2 Saturation Pulseoxymetry Alarm - Low', 'Patient Location', 'Resp Alarm - High',
+                                 'Resp Alarm - Low', 'SpO2 Desat Limit', 'Respiratory Effort', 'Secondary diagnosis',
+                                 'Temperature Fahrenheit', 'Calcium, Total', 'Chloride', 'Hematocrit', 'Magnesium',
+                                 'MCH', 'MCHC', 'MCV', 'Non-Invasive Blood Pressure Alarm - High',
+                                 'Non-Invasive Blood Pressure Alarm - Low', 'Phosphate', 'Phosphorous',
+                                 'Potassium', 'Pupil Size Left', 'Pupil Size Right', 'RDW', 'Red Blood Cells',
+                                 'Sodium', 'Sodium (serum)', 'Speech', 'Pupil Response Left', 'Pupil Response Right',
+                                 'Daily Wake Up', 'NaCl 0.9%', 'Pain Level', 'Gag Reflex', 'Race', 'Foley',
+                                 'Support Systems', 'Family Communication', 'INR(PT)', 'Level of Consciousness', 'PT']
 
 
 #######################################################################################################################

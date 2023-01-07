@@ -1,6 +1,5 @@
-from step_1_setup_data import mimic_to_csv, select_relevant_features
-import supplements.selection_icd9_codes
-import supplements.selection_of_features
+from step_1_setup_data import select_relevant_features, mimic_to_csv
+from supplements import selection_icd9_codes
 
 ####### MAIN #######
 if __name__ == '__main__':
@@ -16,16 +15,15 @@ if __name__ == '__main__':
 
     # Step 1.1) Export the raw patient data for the specified use_case (icd_list) into .csv files, all available features will be exported
     #mimic_to_csv.export_patients_to_csv(project_path=PROJECT_PATH,
-     #                                   use_case_icd_list=supplements.selection_icd9_codes.icd9_00_stroke_selected,
+     #                                   use_case_icd_list=selection_icd9_codes.icd9_00_stroke_selected,
       #                                  use_case_itemids=[],
        #                                 use_case_name=USE_CASE_NAME)
 
     # Step 1.3) Select only relevant features
-    # TODO: Finish feature-selection
     selected_features: list = select_relevant_features.get_selected_features(project_path=PROJECT_PATH,
                                                                              use_case_name=USE_CASE_NAME)
 
-    # todo: maybe move .csvs into folder "raw" and keep filtered .csvs outside?
+    # TODO: move .csvs into folder "raw" and keep filtered .csvs outside?
 
     # Step 1.4) Export final patient.csvs only with selected features into 'final_dataset'
     # TODO: Export of patient.csvs only with selected features -> this will be the final dataset
@@ -35,7 +33,6 @@ if __name__ == '__main__':
 
 #### Upcoming TODOS
 # TODO: Export ALL patients
-    # file-size is huge but ok?
 
 
 #### Long Term #########################################################################################################
@@ -44,6 +41,9 @@ if __name__ == '__main__':
     # -> use step_2_preprocessing.import_csv_to_patients for this
 
 # Step 2.2) Calculate avg, min, max for each feature for each patient
+# also merge some features, like corneal reflex right + left or 20/18 Gauge to Gauge(yes, no)
+# Goal: feature-overview-table (first step for feature-selection):
+# label | item_id | count | variable_type (categorical(only 1 row) or continuous (average, min, max)) | selected (selected_general_patient_data or selected_because_research or selected_count_over_xx) |  | removed
 # Depending on missing value-rate either interpolate or remove feature ?
 
 # feature-classification-table (later for overview-analysis):
