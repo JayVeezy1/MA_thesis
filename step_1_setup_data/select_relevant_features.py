@@ -8,9 +8,101 @@ from os.path import isfile
 from matplotlib import pyplot as plt
 
 
-def get_selected_features(project_path, use_case_name) -> list:
+def export_final_dataset(project_path, use_case_name):
+    # step 0: select relevant features
+    # select all known general patient_info features
+    general_features: list = ['icustay_id', 'hadm_id', 'subject_id',
+                               'intime', 'outtime', 'los_hours', 'day_on_icu', 'icustays_count',
+                               'age', 'patientweight', 'gender', 'ethnicity',
+                               'admission_type', 'discharge_location', 'insurance',
+                               'language', 'religion', 'marital_status', 'diagnosis_text',
+                               'dob', 'dod',
+                               'death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
+                               'death_365_days',
+                               'oasis', 'oasis_prob', 'preiculos', 'gcs', 'mechvent', 'electivesurgery',
+                               'stroke_type',
+                               'hypertension_flag',
+                               'diabetes_flag',
+                               'cancer_flag',
+                               'obesity_flag',
+                               'drug_abuse_flag',
+                               'sepsis_flag',
+                               'icd9_code',
+                               'all_icd9_codes']
+
+    # select features that are known and important from prev research (will be added again later)
+    important_features: list = ['charttime',
+                                # from novel nomogram paper:
+                                # Vitals
+                                'Anion gap', 'Anion Gap',
+                                'Bicarbonate',
+                                'Chloride (whole blood)',
+                                'Calcium Total',
+                                'Creatinine',
+                                'Glucose (whole blood)',
+                                'Potassium (whole blood)',
+                                'Sodium (whole blood)',
+                                'Hemoglobin',
+                                'WBC', 'White Blood Cells',
+                                'Packed Red Blood Cells',
+                                'Platelets', 'Platelet Count',
+                                'Prothrombin time',
+                                'INR',
+                                'Heart Rate',
+                                'Respiratory Rate', 'Respiratory Rate (Total)',
+                                # Blood Pressure
+                                'Arterial Blood Pressure diastolic',
+                                'Non Invasive Blood Pressure diastolic',
+                                'ART BP Diastolic',
+                                'Arterial Blood Pressure systolic',
+                                'Non Invasive Blood Pressure systolic',
+                                'ART BP Systolic',
+                                'Arterial Blood Pressure mean',
+                                'Non Invasive Blood Pressure mean',
+                                'ART BP Mean',
+                                # O2
+                                'Arterial O2 Saturation', 'O2 saturation pulseoxymetry', 'ART %O2 saturation (PA Line)',
+                                # Gauges (important for stroke use-case)
+                                '20 Gauge', '18 Gauge', '22 Gauge', '16 Gauge', '14 Gauge']
+
+    print('CHECK: Count of general_features:', len(general_features))
+    print('CHECK: Count of important_features:', len(important_features))
+    selected_features: list = general_features
+    selected_features.extend(important_features)
+    print('CHECK: Count of selected_features:', len(selected_features))
+
+    for file in os.listdir(f'{project_path}/exports/{use_case_name}/raw/'):
+        if isfile(f'{project_path}/exports/{use_case_name}/raw/{file}') and not file == '0_patient_cohort.csv':
+            # step 1: load each patient
+            # import raw_.csv, not memory-ideal because pd. has to guess each column dtype, but it works fine
+            patient_df = pd.read_csv(f'{project_path}/exports/{use_case_name}/raw/{file}')
+            filtered_patient_df = patient_df[patient_df.columns[patient_df.columns.isin(selected_features)]]
+            # todo: filtered df has a first row for id -> should have a name in the header!
+
+            # step 2: merge some columns to a binary column
+            # TODO: preprocess columns here -> so the final dataset really is final
+
+
+            # step 3: export final .csv file
+            filename_id = file[15:21]
+            filename_string: str = f'{project_path}/exports/{use_case_name}/icustay_id_{filename_id}.csv'
+            filename = filename_string.encode()
+            with open(filename, 'w', newline='') as output_file:
+                filtered_patient_df.to_csv(output_file)
+
+    print('STATUS: Finished export_final_dataset.')
+    return None
+
+
+def plot_occurrence_of_features(project_path, use_case_name):
     """
-    This function selects the features that will be used for the final_dataset
+    This function was an old version to select features based on their occurrence.
+    It can be used to examine the available features
+
+    It does work properly however, the features proposed by prev research are more important.
+    And they, combined with general patient_info, already make up more than 50 features.
+
+    --> occurrence of features leads to too many features.
 
     :param project_path:
     :param use_case_name:
@@ -20,10 +112,10 @@ def get_selected_features(project_path, use_case_name) -> list:
     # IMPORT
     raw_feature_count_dict: dict = {}
     patient_count: int = 0
-    for file in os.listdir(f'{project_path}/exports/{use_case_name}/'):
-        if isfile(f'{project_path}/exports/{use_case_name}/{file}') and not file == '0_patient_cohort.csv':
+    for file in os.listdir(f'{project_path}/exports/{use_case_name}/raw/'):
+        if isfile(f'{project_path}/exports/{use_case_name}/raw/{file}') and not file == '0_patient_cohort.csv':
             patient_count += 1
-            header = pd.read_csv(f'{project_path}/exports/{use_case_name}/{file}', nrows=0)  # only get header
+            header = pd.read_csv(f'{project_path}/exports/{use_case_name}/raw/{file}', nrows=0)  # only get header
 
             for feature in header:
                 if feature in raw_feature_count_dict.keys():
@@ -80,7 +172,8 @@ def get_selected_features(project_path, use_case_name) -> list:
                                 'Arterial O2 Saturation', 'O2 saturation pulseoxymetry', 'ART %O2 saturation (PA Line)',
                                 # Gauges
                                 '20 Gauge', '18 Gauge', '22 Gauge', '16 Gauge', '14 Gauge']
-    # manually remove features that can be safely dismissed (without medical knowledge)
+    # manually remove features that can be safely dismissed
+    # the following are removed, even though little medical knowledge exists
     unimportant_features: list = ['Gender', 'Religion',  'Language',   # are in general as 'gender' and 'religion'
                                   'Nasal Swab', 'Abdominal Assessment', 'Activity', 'Activity Tolerance',
                                   'Admission Weight (Kg)', 'Alarms On', 'Ambulatory aid',
@@ -149,7 +242,7 @@ def get_selected_features(project_path, use_case_name) -> list:
                                   ]
 
     filtered_features_count_list: list = []
-    SELECTED_FEATURE_THRESHOLD = 0.9
+    SELECTED_FEATURE_THRESHOLD = 0.7
     for feature_value_tuple in sorted_feature_count_list:
         if not feature_value_tuple[0] in general_features \
                 and not feature_value_tuple[0] in important_features \
@@ -178,25 +271,8 @@ def get_selected_features(project_path, use_case_name) -> list:
     selected_features.extend(important_features)                # 38 features
     selected_features.extend(filtered_features_list)            # approx. 48 features
 
-    print(selected_features)
+    # print(selected_features)
     print(f'Count of final selected features: {len(selected_features)}')
-    print('STATUS: Finished get_feature_selection.')
-
-    # might even be useful to save selected_features with other supplements as csv
-
-    return selected_features
-
-
-def export_final_dataset(project_path, use_case_name, selected_features: list):
-    # step 1: load each patient
-    for file in os.listdir(f'{project_path}/exports/{use_case_name}/'):
-        if isfile(f'{project_path}/exports/{use_case_name}/{file}') and not file == '0_patient_cohort.csv':
-            patient_df = pd.read_csv(f'{project_path}/exports/{use_case_name}/{file}')
-
-            filtered_patient_df = patient_df(columns=selected_features)  # todo somehow like this
-
-            # also if patient doesnt have feature -> feature value = None
-
-            # step 2: export the patient but filtered with selected_features (and maybe sort these too?) into a new folder
+    print('STATUS: Finished plot_occurrence_of_features.')
 
     return None

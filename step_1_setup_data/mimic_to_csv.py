@@ -61,14 +61,14 @@ def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_i
         cohort_header: list = SQL_queries.query_header_patient_cohort(cursor_1)
 
         # create new directory for this use-case if it does not exist yet
-        directory: str = f'{project_path}exports/{use_case_name}'
+        directory: str = f'{project_path}exports/{use_case_name}/raw/'
         try:
             os.mkdir(directory)
         except FileExistsError:
             pass
 
         # export to csv
-        filename_string: str = f'{directory}/0_patient_cohort.csv'
+        filename_string: str = f'{project_path}exports/{use_case_name}/0_patient_cohort.csv'                  # patient_cohort outside of /raw folder
         filename = filename_string.encode()
         with open(filename, 'w', newline='') as output_file:                        # use newline with windows
             csv_out = csv.writer(output_file)
@@ -91,7 +91,7 @@ def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_i
         # Get chart_events for each icustay and export to .csv
         query_counter = 0
         seconds_cumulated = 0
-        for icustay_id in icu_stay_ids[:150]:             # todo reminder: loop through for all ids, also turn on sorting again
+        for icustay_id in icu_stay_ids[:2]:             # todo reminder: loop through for all ids, also turn on sorting again
             print('STATUS: Executing query_single_icustay for icustay_id', str(icustay_id))
             query_counter += 1
             starting_time = datetime.now()
@@ -105,7 +105,7 @@ def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_i
             print('CHECK: Seconds needed for last Query:', round(time_needed.total_seconds()))
             print(f'CHECK: Estimated minutes for remaining {remaining_queries} Queries: {round(avg_seconds * remaining_queries / 60)}')
 
-            filename_string: str = f'{directory}/icustay_id_{icustay_id}.csv'
+            filename_string: str = f'{directory}/raw_icustay_id_{icustay_id}.csv'
             filename = filename_string.encode()
             with open(filename, 'w', newline='') as output_file:                    # use newline with windows
                 csv_out = csv.writer(output_file)

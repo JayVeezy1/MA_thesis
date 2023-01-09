@@ -14,25 +14,18 @@ if __name__ == '__main__':
     # mimic_to_csv.load_comorbidities_into_db()          # create the necessary table 'comorbidity_codes' where the icd9_codes that are used to find important comorbidities are loaded into the DB
 
     # Step 1.1) Export the raw patient data for the specified use_case (icd_list) into .csv files, all available features will be exported
-    #mimic_to_csv.export_patients_to_csv(project_path=PROJECT_PATH,
-     #                                   use_case_icd_list=selection_icd9_codes.icd9_00_stroke_selected,
-      #                                  use_case_itemids=[],
-       #                                 use_case_name=USE_CASE_NAME)
+    mimic_to_csv.export_patients_to_csv(project_path=PROJECT_PATH,
+                                        use_case_icd_list=selection_icd9_codes.icd9_00_stroke_selected,
+                                        use_case_itemids=[],
+                                        use_case_name=USE_CASE_NAME)
 
-    # Step 1.3) Select only relevant features
-    selected_features: list = select_relevant_features.get_selected_features(project_path=PROJECT_PATH,
-                                                                             use_case_name=USE_CASE_NAME)
-
-    # TODO: move .csvs into folder "raw" and keep filtered .csvs outside?
-
-    # Step 1.4) Export final patient.csvs only with selected features into 'final_dataset'
-    # TODO: Export of patient.csvs only with selected features -> this will be the final dataset
-    # select_relevant_features.export_final_dataset(project_path=PROJECT_PATH,
-    #                                               use_case_name=USE_CASE_NAME,
-    #                                               selected_features=selected_features)
+    # Step 1.2) Filter final patient.csvs for relevant features and export as 'final_dataset'
+    # TODO: preprocess columns, then export of patient.csvs with final features
+    select_relevant_features.export_final_dataset(project_path=PROJECT_PATH,
+                                                  use_case_name=USE_CASE_NAME)
 
 #### Upcoming TODOS
-# TODO: Export ALL patients
+# TODO: Export ALL patients to raw_csv and filter to final_csv
 
 
 #### Long Term #########################################################################################################
