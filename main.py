@@ -4,7 +4,7 @@ from supplements import selection_icd9_codes
 ####### MAIN #######
 if __name__ == '__main__':
     PROJECT_PATH: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'          # this variable must be fitted to the users local project folder
-    USE_CASE_NAME: str = 'testing_stroke_no_selected_labels'
+    USE_CASE_NAME: str = 'stroke_patients_data'
 
     ### Mimic to CSV Export
     # Step 0) Setup when first time using db:
@@ -20,9 +20,8 @@ if __name__ == '__main__':
                                         use_case_name=USE_CASE_NAME)
 
     # Step 1.2) Filter final patient.csvs for relevant features and export as 'final_dataset'
-    # TODO: preprocess columns, then export of patient.csvs with final features
-    select_relevant_features.export_final_dataset(project_path=PROJECT_PATH,
-                                                  use_case_name=USE_CASE_NAME)
+    # select_relevant_features.export_final_dataset(project_path=PROJECT_PATH,
+    #                                            use_case_name=USE_CASE_NAME)
 
 #### Upcoming TODOS
 # TODO: Export ALL patients to raw_csv and filter to final_csv
@@ -34,9 +33,7 @@ if __name__ == '__main__':
     # -> use step_2_preprocessing.import_csv_to_patients for this
 
 # Step 2.2) Calculate avg, min, max for each feature for each patient
-# also merge some features, like corneal reflex right + left or 20/18 Gauge to Gauge(yes, no)
-# Goal: feature-overview-table (first step for feature-selection):
-# label | item_id | count | variable_type (categorical(only 1 row) or continuous (average, min, max)) | selected (selected_general_patient_data or selected_because_research or selected_count_over_xx) |  | removed
+# use feature_preprocessing_table.xlsx for selection of continuous vs categorical
 # Depending on missing value-rate either interpolate or remove feature ?
 
 # feature-classification-table (later for overview-analysis):

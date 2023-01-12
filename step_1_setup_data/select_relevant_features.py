@@ -2,6 +2,7 @@ import csv
 import os
 from operator import countOf
 
+import numpy as np
 import pandas as pd
 from os.path import isfile
 
@@ -31,10 +32,11 @@ def export_final_dataset(project_path, use_case_name):
                                'all_icd9_codes']
 
     # select features that are known and important from prev research (will be added again later)
-    important_features: list = ['charttime',
+    vitals_features: list = ['charttime',
                                 # from novel nomogram paper:
                                 # Vitals
-                                'Anion gap', 'Anion Gap',
+                                # 'Anion gap',      # removed: same as 'Anion Gap' but 1 hour later
+                                'Anion Gap',
                                 'Bicarbonate',
                                 'Chloride (whole blood)',
                                 'Calcium Total',
@@ -43,52 +45,74 @@ def export_final_dataset(project_path, use_case_name):
                                 'Potassium (whole blood)',
                                 'Sodium (whole blood)',
                                 'Hemoglobin',
-                                'WBC', 'White Blood Cells',
+                                # 'WBC',            # removed: same as 'White Blood Cells' but 1 hour later
+                                'White Blood Cells',
                                 'Packed Red Blood Cells',
-                                'Platelets', 'Platelet Count',
+                                'Platelet Count',
                                 'Prothrombin time',
-                                'INR',
+                                'INR',              # definition: international normalized ratio (INR) for blood
                                 'Heart Rate',
-                                'Respiratory Rate', 'Respiratory Rate (Total)',
+                                'Respiratory Rate',
+                                # 'Respiratory Rate (Total)',       # removed: 'Respiratory Rate' is much more common
                                 # Blood Pressure
                                 'Arterial Blood Pressure diastolic',
                                 'Non Invasive Blood Pressure diastolic',
-                                'ART BP Diastolic',
+                                #'ART BP Diastolic',
                                 'Arterial Blood Pressure systolic',
                                 'Non Invasive Blood Pressure systolic',
-                                'ART BP Systolic',
+                                #'ART BP Systolic',
                                 'Arterial Blood Pressure mean',
                                 'Non Invasive Blood Pressure mean',
-                                'ART BP Mean',
+                                #'ART BP Mean',
                                 # O2
-                                'Arterial O2 Saturation', 'O2 saturation pulseoxymetry', 'ART %O2 saturation (PA Line)',
+                                # 'Arterial O2 Saturation',
+                                'O2 saturation pulseoxymetry',      # pulseoxymetry is the most common for O2
+                                # 'ART %O2 saturation (PA Line)',
                                 # Gauges (important for stroke use-case)
-                                '20 Gauge', '18 Gauge', '22 Gauge', '16 Gauge', '14 Gauge']
+                                '14 Gauge', '16 Gauge', '18 Gauge', '20 Gauge',  '22 Gauge']
 
     print('CHECK: Count of general_features:', len(general_features))
-    print('CHECK: Count of important_features:', len(important_features))
-    selected_features: list = general_features
-    selected_features.extend(important_features)
+    print('CHECK: Count of vitals_features:', len(vitals_features))
+    selected_features: list = general_features.copy()
+    selected_features.extend(vitals_features)
     print('CHECK: Count of selected_features:', len(selected_features))
 
     for file in os.listdir(f'{project_path}/exports/{use_case_name}/raw/'):
         if isfile(f'{project_path}/exports/{use_case_name}/raw/{file}') and not file == '0_patient_cohort.csv':
             # step 1: load each patient
             # import raw_.csv, not memory-ideal because pd. has to guess each column dtype, but it works fine
-            patient_df = pd.read_csv(f'{project_path}/exports/{use_case_name}/raw/{file}')
-            filtered_patient_df = patient_df[patient_df.columns[patient_df.columns.isin(selected_features)]]
-            # todo: filtered df has a first row for id -> should have a name in the header!
+            patient_df = pd.read_csv(f'{project_path}/exports/{use_case_name}/raw/{file}', low_memory=False)
+            patient_df.index.name = 'row_id'
+            vitals_patient_df = patient_df[patient_df.columns[patient_df.columns.isin(vitals_features)]].copy()
+            general_patient_df = patient_df[patient_df.columns[patient_df.columns.isin(general_features)]].copy()
+            for feature in vitals_features:
+                if feature not in vitals_patient_df:
+                    vitals_patient_df.insert(loc=0, column=feature, value=np.nan)      # loc was left out because alphabetical ordering later
 
-            # step 2: merge some columns to a binary column
-            # TODO: preprocess columns here -> so the final dataset really is final
+            # Sum of all Gauge Types into gauges_total
+            vitals_patient_df.insert(loc=0, column='gauges_total', value=vitals_patient_df[['14 Gauge', '16 Gauge', '18 Gauge', '20 Gauge', '22 Gauge']].sum(axis=1))
+            vitals_patient_df = vitals_patient_df.drop(columns=['14 Gauge', '16 Gauge', '18 Gauge', '20 Gauge',  '22 Gauge'])
 
+            # alphabetical order & charttime at front
+            vitals_patient_df = vitals_patient_df.reindex(sorted(vitals_patient_df.columns), axis=1)
+            temp_cols = vitals_patient_df.columns.tolist()
+            new_cols = temp_cols[-1:] + temp_cols[:-1]
+            vitals_patient_df = vitals_patient_df[new_cols]
+
+            # Add general patient info to the back
+            # final_patient_df = pd.concat([vitals_patient_df, general_patient_df])       # concat not possible, needs a key for join
+            final_patient_df = vitals_patient_df.copy()
+            for feature in general_features:
+                current_columns_count = len(final_patient_df.columns)
+                final_patient_df.insert(loc=current_columns_count, column=feature, value=general_patient_df[feature].iloc[0])
+            # print(final_patient_df)
 
             # step 3: export final .csv file
             filename_id = file[15:21]
             filename_string: str = f'{project_path}/exports/{use_case_name}/icustay_id_{filename_id}.csv'
             filename = filename_string.encode()
             with open(filename, 'w', newline='') as output_file:
-                filtered_patient_df.to_csv(output_file)
+                final_patient_df.to_csv(output_file)
 
     print('STATUS: Finished export_final_dataset.')
     return None

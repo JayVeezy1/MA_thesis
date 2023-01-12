@@ -3,6 +3,7 @@ import os
 import time
 from datetime import datetime
 from os.path import isfile, join
+from pathlib import Path
 
 import psycopg2
 
@@ -60,10 +61,11 @@ def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_i
         patient_cohort: list = SQL_queries.query_patient_cohort(cursor_1, use_case_icd_list)
         cohort_header: list = SQL_queries.query_header_patient_cohort(cursor_1)
 
-        # create new directory for this use-case if it does not exist yet
         directory: str = f'{project_path}exports/{use_case_name}/raw/'
         try:
+            os.mkdir(f'{project_path}exports/{use_case_name}/')
             os.mkdir(directory)
+            print('STATUS: New directory was created for this use case.')
         except FileExistsError:
             pass
 
@@ -91,7 +93,7 @@ def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_i
         # Get chart_events for each icustay and export to .csv
         query_counter = 0
         seconds_cumulated = 0
-        for icustay_id in icu_stay_ids[:2]:             # todo reminder: loop through for all ids, also turn on sorting again
+        for icustay_id in icu_stay_ids:             # Important: Select here, if really all icu_stays should be exported, or when still in testing only use [:3]
             print('STATUS: Executing query_single_icustay for icustay_id', str(icustay_id))
             query_counter += 1
             starting_time = datetime.now()
@@ -117,12 +119,12 @@ def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_i
         cursor_1.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
-        print('Error occurred:', error)
+        print('ERROR:', error)
 
     finally:
         if conn is not None:
             conn.close()
-        print('STATUS: Finished mimic_to_csv.')
+        print('STATUS: Finished mimic_to_csv. \n')
 
 
 ### SETUP FUNCTIONS ###

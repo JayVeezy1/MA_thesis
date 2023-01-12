@@ -109,7 +109,7 @@ begin
 		outtime = v_patient_record.outtime,
 		los_hours = v_patient_record.los_hours,
 		icustays_count = v_patient_record.icustays_count,
-		age = v_patient_record.age,
+		age = TRUNC((v_patient_record.age), 0),
 		patientweight = v_patient_record.patientweight,
 		gender = v_patient_record.gender,
 		ethnicity = v_patient_record.ethnicity,
@@ -172,7 +172,7 @@ begin
 		UPDATE public.temp_transposed_patient 
 		SET  
 			OASIS = v_oasis_record.OASIS,		
-			OASIS_PROB = v_oasis_record.OASIS_PROB,
+			OASIS_PROB = TRUNC(v_oasis_record.OASIS_PROB, 3),
 			preiculos = v_oasis_record.preiculos,
 			gcs = v_oasis_record.gcs,
 			mechvent = v_oasis_record.mechvent,
