@@ -13,14 +13,15 @@ def export_final_dataset(project_path, use_case_name):
     # step 0: select relevant features
     # select all known general patient_info features
     general_features: list = ['icustay_id', 'hadm_id', 'subject_id',
-                               'intime', 'outtime', 'los_hours', 'day_on_icu', 'icustays_count',
+                               'intime', 'outtime', 'los_hours',
+                              'icustays_count',
                                'age', 'patientweight', 'gender', 'ethnicity',
                                'admission_type', 'discharge_location', 'insurance',
                                'language', 'religion', 'marital_status', 'diagnosis_text',
                                'dob', 'dod',
                                'death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
                                'death_365_days',
-                               'oasis', 'oasis_prob', 'preiculos', 'gcs', 'mechvent', 'electivesurgery',
+                               'preiculos', 'gcs', 'mechvent', 'electivesurgery',
                                'stroke_type',
                                'hypertension_flag',
                                'diabetes_flag',
@@ -69,7 +70,9 @@ def export_final_dataset(project_path, use_case_name):
                                 'O2 saturation pulseoxymetry',      # pulseoxymetry is the most common for O2
                                 # 'ART %O2 saturation (PA Line)',
                                 # Gauges (important for stroke use-case)
-                                '14 Gauge', '16 Gauge', '18 Gauge', '20 Gauge',  '22 Gauge']
+                                '14 Gauge', '16 Gauge', '18 Gauge', '20 Gauge',  '22 Gauge',
+                                'day_on_icu', 'oasis', 'oasis_prob'         # these will not be at the original position with the other general_info, but they must be with vitals_df because hourly/daily values
+                                ]
 
     print('CHECK: Count of general_features:', len(general_features))
     print('CHECK: Count of vitals_features:', len(vitals_features))
@@ -85,7 +88,7 @@ def export_final_dataset(project_path, use_case_name):
             patient_df.index.name = 'row_id'
             vitals_patient_df = patient_df[patient_df.columns[patient_df.columns.isin(vitals_features)]].copy()
             general_patient_df = patient_df[patient_df.columns[patient_df.columns.isin(general_features)]].copy()
-            for feature in vitals_features:
+            for feature in vitals_features:                                            # checking that every selected_feature is a column in the vitals_patient_df
                 if feature not in vitals_patient_df:
                     vitals_patient_df.insert(loc=0, column=feature, value=np.nan)      # loc was left out because alphabetical ordering later
 
@@ -93,11 +96,14 @@ def export_final_dataset(project_path, use_case_name):
             vitals_patient_df.insert(loc=0, column='gauges_total', value=vitals_patient_df[['14 Gauge', '16 Gauge', '18 Gauge', '20 Gauge', '22 Gauge']].sum(axis=1))
             vitals_patient_df = vitals_patient_df.drop(columns=['14 Gauge', '16 Gauge', '18 Gauge', '20 Gauge',  '22 Gauge'])
 
-            # alphabetical order & charttime at front
+            # alphabetical order
             vitals_patient_df = vitals_patient_df.reindex(sorted(vitals_patient_df.columns), axis=1)
             temp_cols = vitals_patient_df.columns.tolist()
+            # move charttime to front
             new_cols = temp_cols[-1:] + temp_cols[:-1]
             vitals_patient_df = vitals_patient_df[new_cols]
+            # move day_on_icu, oasis, oasis_prob to back
+            vitals_patient_df = vitals_patient_df[[column for column in vitals_patient_df if column not in ['day_on_icu', 'oasis', 'oasis_prob']] + ['day_on_icu', 'oasis', 'oasis_prob']]
 
             # Add general patient info to the back
             # final_patient_df = pd.concat([vitals_patient_df, general_patient_df])       # concat not possible, needs a key for join
@@ -109,7 +115,7 @@ def export_final_dataset(project_path, use_case_name):
 
             # step 3: export final .csv file
             filename_id = file[15:21]
-            filename_string: str = f'{project_path}/exports/{use_case_name}/icustay_id_{filename_id}.csv'
+            filename_string: str = f'{project_path}/exports/{use_case_name}/selected_features/icustay_id_{filename_id}.csv'
             filename = filename_string.encode()
             with open(filename, 'w', newline='') as output_file:
                 final_patient_df.to_csv(output_file)

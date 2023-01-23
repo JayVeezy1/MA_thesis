@@ -3,7 +3,6 @@ import os
 import time
 from datetime import datetime
 from os.path import isfile, join
-from pathlib import Path
 
 import psycopg2
 
@@ -18,6 +17,7 @@ def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_i
     The files are saved inside /export/use_case_name/
     The function does not return anything.
     Analysis of the selection can be conducted on the .csv file created by export_basic_statistics
+    It might be useful to change Windows-process-priority for Python to high -> estimated time from 500 minutes to 470 minutes
     :param project_path: local directory where files are stored, must be defined by the user
     :param use_case_icd_list: recommended to use this list of all icd_9 codes that should be selected for this use-case
     :param use_case_itemids:
@@ -60,19 +60,20 @@ def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_i
         ##### 1) Execute the query_patient_cohort
         patient_cohort: list = SQL_queries.query_patient_cohort(cursor_1, use_case_icd_list)
         cohort_header: list = SQL_queries.query_header_patient_cohort(cursor_1)
+        total_starting_time = datetime.now()
 
-        directory: str = f'{project_path}exports/{use_case_name}/raw/'
         try:
             os.mkdir(f'{project_path}exports/{use_case_name}/')
-            os.mkdir(directory)
+            os.mkdir(f'{project_path}exports/{use_case_name}/raw/')
+            os.mkdir(f'{project_path}exports/{use_case_name}/selected_features/')                   # later used for feature selection
             print('STATUS: New directory was created for this use case.')
         except FileExistsError:
             pass
 
         # export to csv
-        filename_string: str = f'{project_path}exports/{use_case_name}/0_patient_cohort.csv'                  # patient_cohort outside of /raw folder
+        filename_string: str = f'{project_path}exports/{use_case_name}/0_patient_cohort.csv'        # patient_cohort is saved outside /raw folder
         filename = filename_string.encode()
-        with open(filename, 'w', newline='') as output_file:                        # use newline with windows
+        with open(filename, 'w', newline='') as output_file:                                        # use newline with windows
             csv_out = csv.writer(output_file)
             csv_out.writerow(cohort_header)
             csv_out.writerows(patient_cohort)
@@ -93,7 +94,7 @@ def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_i
         # Get chart_events for each icustay and export to .csv
         query_counter = 0
         seconds_cumulated = 0
-        for icustay_id in icu_stay_ids:             # Important: Select here, if really all icu_stays should be exported, or when still in testing only use [:3]
+        for icustay_id in icu_stay_ids[:5]:             # Important: Select here, if really all icu_stays should be exported, or when still in testing only use [:3]
             print('STATUS: Executing query_single_icustay for icustay_id', str(icustay_id))
             query_counter += 1
             starting_time = datetime.now()
@@ -107,7 +108,7 @@ def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_i
             print('CHECK: Seconds needed for last Query:', round(time_needed.total_seconds()))
             print(f'CHECK: Estimated minutes for remaining {remaining_queries} Queries: {round(avg_seconds * remaining_queries / 60)}')
 
-            filename_string: str = f'{directory}/raw_icustay_id_{icustay_id}.csv'
+            filename_string: str = f'{project_path}exports/{use_case_name}/raw/raw_icustay_id_{icustay_id}.csv'
             filename = filename_string.encode()
             with open(filename, 'w', newline='') as output_file:                    # use newline with windows
                 csv_out = csv.writer(output_file)
@@ -117,6 +118,8 @@ def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_i
         # cursor_1.execute('DROP TABLE public.temp_filtered_patient_cohort;')       # deleting table temp_filtered_patient_cohort, it should always only exist in DB for the current use-case
         conn.commit()
         cursor_1.close()
+
+        print('\n CHECK: Complete time needed for export:', datetime.now() - total_starting_time)
 
     except (Exception, psycopg2.DatabaseError) as error:
         print('ERROR:', error)

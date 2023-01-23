@@ -48,6 +48,12 @@ However, the creation of the single patient files with all their chart-events ta
 Approximately the creation of one patient .csv file takes 30 seconds. 
 Depending on the use case, for example stroke there are 1400 available patients, which leads to about 700 minutes (>10h).
 
+**Requirements:**
+
+A Python Development Environment is needed and the required packages are listed in requirements.txt .
+Moreover, it is recommended to not use a Python Version above 3.10.9 as PacMap is not yet compatible with any newer version.
+Currently, there is no alternative available, but it might be possible in future PacMap versions, to also use the latest Python Version. 
+
 **Filtering:** 
 
 There are 3 steps where the dataset is filtered.
@@ -90,11 +96,14 @@ The final selection of icd9-codes for stroke was chosen based on the stroke-type
 
 - Other (+late_effects_of_stroke): 437, 4370, 4371, 4372, 4373, 4374, 438, 4381, 43811, 4382, 43820, 4383, 4384, 4385, 4388, 43882, 43885
 
-
 There are 1.451 unique icustay_ids for the use-case of stroke (about 9.5% of the available data). 
-Also all icustays with less than 24 hours were removed, which resulted in a total of 1232 icustays.
+Also, all icustays with less than 24 hours were removed, which resulted in a total of 1232 icustays.
 A patient can come to the ICU multiple times, within one hospital stay (one admission). 
 Thus, the relevant key shall be the icu-stay, to not use duplicate patients.
+
+**Further Info**
+When checking the .csv files manually, be sure to turn off excels column-data-transformation. 
+Otherwise, some comma numbers, which are separated with a '.' will appear as dates and then be transformed to very large numbers.
 
 3) Feature Selection (Input at the 'export_patients_to_csv()' function):
 
@@ -113,11 +122,10 @@ It is recommended to choose about 40 itemids. This selection naturally requires 
 thus it is also recommended to use previous research filtering as a guideline. 
 Patient demographics, secondary diagnosis will always be derived, regardless of this filter.
 
-
 Features that are always included:
-- General Patient information (subject_id, hadm_id, icustay_id, demographics)
 - Patient Vitals -> need to be selected after analysis of relevance
 - OASIS Score and related features (mechanical ventilation, GCS Score)
+- General Patient information (subject_id, hadm_id, icustay_id, demographics)
 
 4) Further Information about the OASIS Score Feature
 
@@ -130,7 +138,6 @@ They must be loaded manually into the postgres database before running the patie
 the scripts is about 15 minutes in total (each ranging between 30 seconds and 3 minutes). 
 The created views are saved inside the mimiciii schema, and not inside the public schema, where all the other objects 
 of this thesis were created. This makes it easier to see, which scripts come from where. 
-
 
 5) Notes for Future Research:
 
