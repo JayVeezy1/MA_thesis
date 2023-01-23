@@ -1,0 +1,7 @@
+,case,total,death_3_days,death_30_days,death_180_days,death_365_days
+0,death_in_hosp,157.0,84.0,71.0,2.0,0.0
+1,death_not_in_hosp,255.0,9.0,115.0,91.0,40.0
+2,total_deaths,412.0,93.0,186.0,93.0,40.0
+3,total_deaths_perc,0.33,0.08,0.15,0.08,0.03
+4,alive,820.0,-,-,-,-
+5,total,1232.0,-,-,-,-

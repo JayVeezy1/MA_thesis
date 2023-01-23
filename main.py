@@ -35,8 +35,8 @@ if __name__ == '__main__':
     ### Preprocessing
     # Step 2.1) Calculate avg, min, max for each feature for each patient
     complete_avg_patient_cohort = Patient.get_avg_patient_cohort(project_path=PROJECT_PATH,
-                                                        use_case_name=USE_CASE_NAME,
-                                                        selected_patients=[])  # if empty -> all
+                                                                 use_case_name=USE_CASE_NAME,
+                                                                 selected_patients=[])  # if empty -> all
 
     SELECTED_FEATURES = Patient.feature_categories[Patient.feature_categories['selected_for_analysis'] == 'yes'][
         'feature_name'].to_list()
@@ -46,28 +46,27 @@ if __name__ == '__main__':
     # Step 2.2) Impute, Interpolate, Normalize dataframes for each patient
     # todo 0: work on NaN, interpolation, also min/max-columns for features?
 
-#### Long Term #########################################################################################################
-### Data Analysis
-# Step 3.1) General Statistics
-    # todo 2: 'death_table' from notes
-    # general_statistics.calculate_deaths_table(avg_patient_cohort=avg_hemorrhage_cohort,
-    #                                            cohort_title='avg_hemorrhage_cohort',
-    #                                           selected_features=SELECTED_FEATURES,
-    #                                          selected_dependent_variable='death_in_hosp')
+    #### Long Term #########################################################################################################
+    ### Data Analysis
+    # Step 3.1) General Statistics
+    general_statistics.calculate_deaths_table(avg_patient_cohort=complete_avg_patient_cohort,
+                                              cohort_title='complete_avg_patient_cohort',
+                                              selected_features=SELECTED_FEATURES,
+                                              save_to_file=True)
 
-    # todo 3: 'feature_classification_table'
+    # todo 3: finish 'feature_classification_table'
     # label | classification (existing values of this feature) | patients_in_training_set (count/occurrence) | correlation_to_death | p-value (continuous) | chi-squared-value (categorical) | NaN Amount
-    general_statistics.calculate_feature_overview_table(avg_patient_cohort=complete_avg_patient_cohort,
-                                                cohort_title='complete_avg_patient_cohort',
-                                               selected_features=SELECTED_FEATURES,
-                                              selected_dependent_variable='death_in_hosp')
+    # general_statistics.calculate_feature_overview_table(avg_patient_cohort=complete_avg_patient_cohort,
+    #                                          cohort_title='complete_avg_patient_cohort',
+    #                                        selected_features=SELECTED_FEATURES,
+    #                                                save_to_file=True)
 
     # Step 3.2) Correlations, Clustering, etc.
     # data_visualization.display_pacmap(avg_patient_cohort=avg_hemorrhage_cohort,
-      #                                cohort_title='avg_hemorrhage_cohort',
-       #                               selected_features=SELECTED_FEATURES,
-        #                              selected_dependent_variable='death_in_hosp',
-         #                             save_to_file=True)
+    #                                cohort_title='avg_hemorrhage_cohort',
+    #                               selected_features=SELECTED_FEATURES,
+    #                              selected_dependent_variable='death_in_hosp',
+    #                             save_to_file=True)
 
     # Correlation Prototype
     # correlations.calculate_correlations_on_cohort(avg_patient_cohort=avg_hemorrhage_cohort,
@@ -83,14 +82,13 @@ if __name__ == '__main__':
     #                                    selected_dependent_variable='death_in_hosp',
     #                                    save_to_file=True)
 
-
 ### Machine Learning Predictions
 # Step 4.1) Random Forest
-    # todo 5: Check again Prediction Prototype
-    # classification.calculate_RF_on_cohort(avg_patient_cohort=avg_hemorrhage_cohort,
-    #                                     cohort_title='avg_hemorrhage_cohort',
-    #                                    selected_features=SELECTED_FEATURES,
-    #                                   selected_dependent_variable='death_in_hosp')
+# todo 5: Check again Prediction Prototype
+# classification.calculate_RF_on_cohort(avg_patient_cohort=avg_hemorrhage_cohort,
+#                                     cohort_title='avg_hemorrhage_cohort',
+#                                    selected_features=SELECTED_FEATURES,
+#                                   selected_dependent_variable='death_in_hosp')
 
 # Step 4.2) XGBoost
 
