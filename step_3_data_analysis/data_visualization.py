@@ -4,32 +4,21 @@ import matplotlib
 import pacmap
 from matplotlib import pyplot as plt
 
+from step_2_preprocessing import preprocessing_functions
 
-def display_pacmap(avg_patient_cohort, cohort_title, selected_features, selected_dependent_variable, save_to_file):
-    # Preprocessing for classification
-    avg_df = avg_patient_cohort.copy()
-    avg_df = avg_df.drop(columns=['ethnicity',
-                                  'insurance'])  # todo: these features can only be used if numeric - any good way to include?
-    selected_features_final = selected_features
-    selected_features_final.remove('icustay_id')
-    selected_features_final.remove('stroke_type')
-    selected_features_final.remove('ethnicity')
-    selected_features_final.remove('insurance')
-    selected_features_final.append(selected_dependent_variable)
 
-    available_dependent_variables: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
-                                           'death_365_days']
-    available_dependent_variables.remove(selected_dependent_variable)
-    avg_df = avg_df.drop(columns=available_dependent_variables)
-    avg_df = avg_df[selected_features_final]
-    avg_df = avg_df.fillna(0)
+def calculate_pacmap(avg_patient_cohort, cohort_title, selected_features, selected_dependent_variable):
+    """
+    :return pacmap_data_points = data points, and death_list = markings
+    """
+    avg_df = preprocessing_functions.cleanup_avg_df(avg_patient_cohort, selected_features, selected_dependent_variable)
 
     # Filter and transform df to avg_np
     avg_np = avg_df.to_numpy()
     avg_np.reshape(avg_np.shape[0], -1)  # does this have an effect?
     print(f'STATUS: Conducting PaCMAP on {cohort_title}')
     embedding = pacmap.PaCMAP(n_components=3, n_neighbors=10, MN_ratio=0.5, FP_ratio=2.0, verbose=False, random_state=1)  # n_components = dimensions
-    data_transformed = embedding.fit_transform(avg_np, init="pca")
+    pacmap_data_points = embedding.fit_transform(avg_np, init="pca")
 
     # Get death_list for markings
     death_list = []
@@ -39,13 +28,19 @@ def display_pacmap(avg_patient_cohort, cohort_title, selected_features, selected
         else:
             death_list.append(0)
 
+    return pacmap_data_points, death_list         # pacmap_data_points = data points, death_list = markings
+
+
+def display_pacmap(avg_patient_cohort, cohort_title, selected_features, selected_dependent_variable, save_to_file):
+    pacmap_data_points, death_list = calculate_pacmap(avg_patient_cohort, cohort_title, selected_features, selected_dependent_variable)
+
     # Plot PacMap
     fig = plt.figure()
     ax1 = fig.add_subplot(1, 1, 1, projection='3d')
     ax1.set_title(f'PaCMAP visualization of {cohort_title} with {selected_dependent_variable}')
-    ax1.scatter(data_transformed[:, 0],
-                data_transformed[:, 1],
-                data_transformed[:, 2],           # todo: this is only for 3D ? it seems like the z-dimension is missing
+    ax1.scatter(pacmap_data_points[:, 0],
+                pacmap_data_points[:, 1],
+                pacmap_data_points[:, 2],
                 cmap="cool",
                 c=death_list,
                 s=0.6, label="Patient")
@@ -54,7 +49,7 @@ def display_pacmap(avg_patient_cohort, cohort_title, selected_features, selected
                                               norm=matplotlib.colors.Normalize(
                                                   vmin=min(death_list),
                                                   vmax=max(death_list))),
-                 ax=ax1)
+                                              ax=ax1)
 
     if save_to_file:
         plt.savefig(

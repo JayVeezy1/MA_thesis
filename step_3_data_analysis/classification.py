@@ -1,3 +1,4 @@
+import csv
 import datetime
 
 import pandas as pd
@@ -10,31 +11,17 @@ from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import NearMiss
 
+from step_2_preprocessing.preprocessing_functions import cleanup_avg_df_for_classification
+
 
 def calculate_RF_on_cohort(avg_patient_cohort, cohort_title, selected_features, selected_dependent_variable, save_to_file):
     # Classification/Prediction with RandomForest on avg_patient_cohort
-
-    # Preprocessing for classification
-    avg_df = avg_patient_cohort.drop(columns=['icustay_id',
-                                              'stroke_type']).copy()  # these features are needed for clustering, not correlations/classification
-    avg_df = avg_df.drop(columns=['ethnicity', 'insurance'])        # todo: these features can only be used if numeric - any good way to include?
-    selected_features_final = selected_features
-    selected_features_final.remove('icustay_id')
-    selected_features_final.remove('stroke_type')
-    selected_features_final.remove('ethnicity')
-    selected_features_final.remove('insurance')
-    selected_features_final.append(selected_dependent_variable)
-
-    available_dependent_variables: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days', 'death_365_days']
-    available_dependent_variables.remove(selected_dependent_variable)
-    avg_df = avg_df.drop(columns=available_dependent_variables)
+    # Cleanup & filtering
+    avg_df = cleanup_avg_df_for_classification(avg_patient_cohort, selected_features, selected_dependent_variable)      # todo: check if this still works after moving into function
+    death_df = avg_df[selected_dependent_variable]         # death_label as its own df y_data
+    avg_df_filtered = avg_df.drop([selected_dependent_variable], axis=1)   # death_label not inside x_data
 
     # Implement Training
-    avg_df_filtered = avg_df[selected_features_final]
-    avg_df_filtered = avg_df_filtered.fillna(0)     # todo: is this fix of NaN problem correct?
-    death_df = avg_df_filtered[selected_dependent_variable]         # death_label as its own df y_data
-    avg_df_filtered = avg_df_filtered.drop([selected_dependent_variable], axis=1)   # death_label not inside x_data
-
     clf = RandomForestClassifier(n_estimators=100, max_depth=5, bootstrap=True, random_state=1321)
     x_train, x_test, y_train, y_test = train_test_split(avg_df_filtered, death_df, test_size=0.2, random_state=1321)
 
@@ -45,7 +32,7 @@ def calculate_RF_on_cohort(avg_patient_cohort, cohort_title, selected_features, 
     display_confusion_matrix(clf, x_test, y_test, cohort_title=cohort_title, save_to_file=save_to_file)
 
     # ROC/AUC Curve
-    display_roc_auc_curve(clf, x_test, y_test, cohort_title=cohort_title)
+    display_roc_auc_curve(clf, x_test, y_test, cohort_title=cohort_title, save_to_file=save_to_file)
 
     # todo: add over/undersampling
     """
@@ -81,8 +68,10 @@ def display_confusion_matrix(clf, x_test, y_test, cohort_title, save_to_file):
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["No Death", "Death"])
     disp.plot(ax=ax)            # todo: any option to make "true" case at top and "false (no_death)" to bottom row?
     ax.set_title(f"RandomForest Classification for {cohort_title}")
+
+    current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
     if save_to_file:
-        plt.savefig(f'./output/classification/random_forest_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
+        plt.savefig(f'./output/classification/RF_{cohort_title}_{current_time}.png')
     plt.show()
 
     # Print Confusion Matrix and Classification Report
@@ -97,13 +86,31 @@ def display_confusion_matrix(clf, x_test, y_test, cohort_title, save_to_file):
     report = classification_report(y_test, clf.predict(x_test))
     print(report)
 
+    if save_to_file:
+        cm_filename_string: str = f'./output/classification/RF_{cohort_title}_confusion_matrix_{current_time}.csv'
+        cm_filename = cm_filename_string.encode()
+        with open(cm_filename, 'w', newline='') as output_file:
+            cm_df.to_csv(output_file)
+            print(f'STATUS: cm_df was saved to {cm_filename}')
 
-def display_roc_auc_curve(clf, x_test, y_test, cohort_title):
+        report_filename_string: str = f'./output/classification/RF_{cohort_title}_report_{current_time}.csv'
+        report_filename = report_filename_string.encode()
+        with open(report_filename, 'w', newline='') as output_file:
+            output_file.write(report)
+            output_file.close()
+
+
+def display_roc_auc_curve(clf, x_test, y_test, cohort_title, save_to_file):
     # todo: this is not correct yet!
     roc_auc = roc_auc_score(y_test, clf.predict_proba(x_test)[:, 1])
 
     disp = RocCurveDisplay.from_predictions(y_true=y_test, y_pred=clf.predict(x_test), name=f'Random Forest for {cohort_title}')
 
     plt.title(f"RandomForest for {cohort_title} AUC: {round(roc_auc, 4)}")
+
+    if save_to_file:
+        # save disp once its correct
+        # plt.savefig(f'./output/classification/random_forest_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
+        pass
 
     plt.show()

@@ -1,3 +1,5 @@
+import pandas as pd
+
 from objects.patients import Patient
 from step_1_setup_data import cache_IO, mimic_to_csv, select_relevant_features
 from step_3_data_analysis import correlations, classification, clustering, general_statistics, data_visualization
@@ -38,57 +40,58 @@ if __name__ == '__main__':
                                                                  use_case_name=USE_CASE_NAME,
                                                                  selected_patients=[])  # if empty -> all
 
-    SELECTED_FEATURES = Patient.feature_categories[Patient.feature_categories['selected_for_analysis'] == 'yes'][
-        'feature_name'].to_list()
+    feature_categories_df = pd.read_excel('./supplements/feature_preprocessing_table.xlsx')
+    SELECTED_FEATURES = feature_categories_df[feature_categories_df['selected_for_analysis'] == 'yes']['feature_name'].to_list()
     avg_hemorrhage_cohort = complete_avg_patient_cohort[complete_avg_patient_cohort['stroke_type'] == 'hemorrhagic']
     avg_ischemic_cohort = complete_avg_patient_cohort[complete_avg_patient_cohort['stroke_type'] == 'ischemic']
 
     # Step 2.2) Impute, Interpolate, Normalize dataframes for each patient
-    # todo 0: work on NaN, interpolation, also min/max-columns for features?
+    # todo 0: work on NaN -> first add NaN to the features_table, interpolation, also min/max-columns for features?
+    # todo 00: do the features table, correltations and all the rest with less features -> better results??
 
     #### Long Term #########################################################################################################
     ### Data Analysis
     # Step 3.1) General Statistics
-    general_statistics.calculate_deaths_table(avg_patient_cohort=complete_avg_patient_cohort,
-                                              cohort_title='complete_avg_patient_cohort',
-                                              selected_features=SELECTED_FEATURES,
-                                              save_to_file=True)
+    # general_statistics.calculate_deaths_table(selected_patient_cohort=complete_avg_patient_cohort,
+    #                                        cohort_title='complete_avg_patient_cohort',
+    #                                       selected_features=SELECTED_FEATURES,
+    #                                      save_to_file=True)
 
-    # todo 3: finish 'feature_classification_table'
     # label | classification (existing values of this feature) | patients_in_training_set (count/occurrence) | correlation_to_death | p-value (continuous) | chi-squared-value (categorical) | NaN Amount
-    # general_statistics.calculate_feature_overview_table(avg_patient_cohort=complete_avg_patient_cohort,
-    #                                          cohort_title='complete_avg_patient_cohort',
-    #                                        selected_features=SELECTED_FEATURES,
-    #                                                save_to_file=True)
+    # general_statistics.calculate_feature_overview_table(selected_patient_cohort=complete_avg_patient_cohort,
+      #                                                  cohort_title='complete_avg_patient_cohort',
+       #                                                 selected_features=SELECTED_FEATURES,
+        #                                                save_to_file=True)
 
-    # Step 3.2) Correlations, Clustering, etc.
-    # data_visualization.display_pacmap(avg_patient_cohort=avg_hemorrhage_cohort,
-    #                                cohort_title='avg_hemorrhage_cohort',
-    #                               selected_features=SELECTED_FEATURES,
-    #                              selected_dependent_variable='death_in_hosp',
-    #                             save_to_file=True)
+    # Step 3.2) Visualization, Correlation, Clustering, etc.
+    # data_visualization.display_pacmap(avg_patient_cohort=avg_hemorrhage_cohort, cohort_title='avg_hemorrhage_cohort', selected_features=SELECTED_FEATURES, selected_dependent_variable='death_in_hosp', save_to_file=True)
 
-    # Correlation Prototype
-    # correlations.calculate_correlations_on_cohort(avg_patient_cohort=avg_hemorrhage_cohort,
-    #                                            cohort_title='avg_hemorrhage_cohort',
-    #                                           selected_features=SELECTED_FEATURES,
-    #                                          selected_dependent_variable='death_in_hosp',         # death_3_days, death_in_hosp
-    #                                          save_to_file=True)
+    # Correlation Prototype # death_3_days, death_in_hosp
+    # correlations.calculate_correlations_on_cohort(avg_patient_cohort=avg_hemorrhage_cohort, cohort_title='avg_hemorrhage_cohort', selected_features=SELECTED_FEATURES, selected_dependent_variable='death_in_hosp', save_to_file=True)
 
-    # todo 4: Finish working on Clustering Prototype
-    # clustering.calculate_k_means_on_cohort(avg_patient_cohort=avg_hemorrhage_cohort,
-    #                                      cohort_title='avg_hemorrhage_cohort',
-    #                                     selected_features=SELECTED_FEATURES,
-    #                                    selected_dependent_variable='death_in_hosp',
-    #                                    save_to_file=True)
+    # todo 4: Add DBSCAN Prototype
+    # Clustering Prototype
+    # clustering.plot_sh_score_kmeans(avg_patient_cohort=avg_hemorrhage_cohort, cohort_title='avg_hemorrhage_cohort', selected_features=SELECTED_FEATURES, selected_dependent_variable='death_in_hosp', filter_labels=False, save_to_file=True)
+    # manually checking silhouette score shows: 3 clusters is optimal
+    SELECTED_CLUSTERS_COUNT = 3
+    clustering.plot_clusters_on_pacmap(avg_patient_cohort=avg_hemorrhage_cohort, cohort_title='avg_hemorrhage_cohort', selected_features=SELECTED_FEATURES, selected_dependent_variable='death_in_hosp', selected_cluster_count=SELECTED_CLUSTERS_COUNT, filter_labels=False, save_to_file=True)
+
+    # Analysing Single Cluster Prototype        # todo: why is cluster 1 in above example only 1 patient? -> icustay_id = 293675, but the patient actually has most data available. Where is this error coming from? Or is it an indicator that the cluster and icustay_id is not correctly mapped?
+    cluster_to_analyse: int = 1
+    filtered_cluster_icustay_ids: list = clustering.get_ids_for_cluster(avg_patient_cohort=avg_hemorrhage_cohort, cohort_title='avg_hemorrhage_cohort', selected_features=SELECTED_FEATURES,
+                                                                        selected_dependent_variable='death_in_hosp', selected_k_means_count=SELECTED_CLUSTERS_COUNT, selected_cluster=cluster_to_analyse, filter_labels=False)
+    print(filtered_cluster_icustay_ids)
+    filtered_cluster_cohort = complete_avg_patient_cohort[complete_avg_patient_cohort['icustay_id'].isin(filtered_cluster_icustay_ids)]
+    general_statistics.calculate_feature_overview_table(selected_patient_cohort=filtered_cluster_cohort, cohort_title='filtered_cluster_cohort', selected_features=SELECTED_FEATURES, save_to_file=False)
+
 
 ### Machine Learning Predictions
 # Step 4.1) Random Forest
-# todo 5: Check again Prediction Prototype
-# classification.calculate_RF_on_cohort(avg_patient_cohort=avg_hemorrhage_cohort,
-#                                     cohort_title='avg_hemorrhage_cohort',
-#                                    selected_features=SELECTED_FEATURES,
-#                                   selected_dependent_variable='death_in_hosp')
+# classification.calculate_RF_on_cohort(avg_patient_cohort=complete_avg_patient_cohort,
+#                               cohort_title='complete_avg_patient_cohort',
+#                             selected_features=SELECTED_FEATURES,
+#                           selected_dependent_variable='death_in_hosp',
+#                                 save_to_file=True)
 
 # Step 4.2) XGBoost
 

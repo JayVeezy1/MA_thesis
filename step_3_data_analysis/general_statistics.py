@@ -1,11 +1,13 @@
 import datetime
+import warnings
 
+import numpy as np
 import pandas as pd
 from pandas import Series
 from pandas.core.interchange import dataframe
 
 
-def calculate_deaths_table(avg_patient_cohort, cohort_title, selected_features, save_to_file):
+def calculate_deaths_table(selected_patient_cohort, cohort_title, selected_features, save_to_file):
     # include dependent_variables (they are also used in the separate death_overview)
     available_dependent_variables: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
                                            'death_365_days']
@@ -28,7 +30,7 @@ def calculate_deaths_table(avg_patient_cohort, cohort_title, selected_features, 
     death_180_days_counter_outside = 0
     death_360_days_counter_outside = 0
 
-    for index, row in avg_patient_cohort.iterrows():
+    for index, row in selected_patient_cohort.iterrows():
         if row['death_in_hosp'] == 1:
             if row['death_3_days'] == 1:
                 death_in_hosp_counter += 1
@@ -81,32 +83,32 @@ def calculate_deaths_table(avg_patient_cohort, cohort_title, selected_features, 
                                      death_360_days_counter_inside + death_360_days_counter_outside]
     deaths_df.loc[len(deaths_df)] = ['total_deaths_perc',
                                      round((death_in_hosp_counter + death_not_in_hosp_counter) / len(
-                                         avg_patient_cohort.index), 2),
+                                         selected_patient_cohort.index), 2),
                                      round((death_3_days_counter_inside + death_3_days_counter_outside) / len(
-                                         avg_patient_cohort.index), 2),
+                                         selected_patient_cohort.index), 2),
                                      round((death_30_days_counter_inside + death_30_days_counter_outside) / len(
-                                         avg_patient_cohort.index), 2),
+                                         selected_patient_cohort.index), 2),
                                      round((death_180_days_counter_inside + death_180_days_counter_outside) / len(
-                                         avg_patient_cohort.index), 2),
+                                         selected_patient_cohort.index), 2),
                                      round((death_360_days_counter_inside + death_360_days_counter_outside) / len(
-                                         avg_patient_cohort.index), 2)]
+                                         selected_patient_cohort.index), 2)]
     deaths_df.loc[len(deaths_df)] = ['alive', alive_counter, '-', '-', '-', '-']
-    deaths_df.loc[len(deaths_df)] = ['total', len(avg_patient_cohort.index), '-', '-', '-', '-']
+    deaths_df.loc[len(deaths_df)] = ['total', len(selected_patient_cohort.index), '-', '-', '-', '-']
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
-        filename_string: str = f'./output/deaths_overview_table_{current_time}.csv'
+        filename_string: str = f'./output/deaths_overview_{cohort_title}_{current_time}.csv'
         filename = filename_string.encode()
         with open(filename, 'w', newline='') as output_file:
             deaths_df.to_csv(output_file)
-            print(f'STATUS: deaths_overview_table was saved to ./output/deaths_overview_table_{current_time}.csv')
+            print(f'STATUS: deaths_overview_table was saved to {filename_string}')
     else:
         print(deaths_df.to_string())
 
     return None
 
 
-def calculate_feature_overview_table(avg_patient_cohort, cohort_title, selected_features, save_to_file):
+def calculate_feature_overview_table(selected_patient_cohort, cohort_title, selected_features, save_to_file):
     feature_categories_table = pd.read_excel('./supplements/feature_preprocessing_table.xlsx')
 
     # include dependent_variables (they are also used in the separate death_overview)
@@ -115,42 +117,56 @@ def calculate_feature_overview_table(avg_patient_cohort, cohort_title, selected_
     selected_features.extend(available_dependent_variables)
 
     # create overview_df
-    data = {'Variables': ['Total'], 'Classification': ['Patients'], 'Count': [len(avg_patient_cohort.index)]}
+    data = {'Variables': ['Total'], 'Classification': ['Patients'], 'Count': [len(selected_patient_cohort.index)]}
     overview_df: dataframe = pd.DataFrame(data)
 
     # fill the overview_df
-    for feature in selected_features:
+    for feature in selected_features:  # todo: also put features into categories to sort them (general_info, vital_signs, laboratory_results)
         # normal case, no binning needed
         if feature_categories_table['needs_binning'][
             feature_categories_table['feature_name'] == feature].item() == 'False':
-            for appearance in pd.unique(avg_patient_cohort[feature]):
+            for appearance in pd.unique(selected_patient_cohort[feature]):
                 temp_df: dataframe = pd.DataFrame({'Variables': [feature],
                                                    'Classification': [appearance],
-                                                   'Count': [avg_patient_cohort[feature][
-                                                                 avg_patient_cohort[feature] == appearance].count()]})
+                                                   'Count': [selected_patient_cohort[feature][
+                                                                 selected_patient_cohort[
+                                                                     feature] == appearance].count()]})
                 overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
         # binning needed for vital signs, etc.
         elif feature_categories_table['needs_binning'][
             feature_categories_table['feature_name'] == feature].item() == 'True':
-            feature_min = round(min(avg_patient_cohort[feature]), 0)
-            feature_max = round(max(avg_patient_cohort[feature]), 0)
-            feature_appearances_series: Series = avg_patient_cohort[feature].value_counts(bins=[feature_min,
-                                                                                                feature_min + round((
-                                                                                                                                feature_max - feature_min) * 1 / 3,
-                                                                                                                    0),
-                                                                                                feature_min + round((
-                                                                                                                                feature_max - feature_min) * 2 / 3,
-                                                                                                                    0),
-                                                                                                feature_max])
-            binning_intervals: list = list(feature_appearances_series.keys())
-            binning_counts: list = list(feature_appearances_series.values)
 
-            # add all bins for the features
-            for i in range(0, len(binning_intervals)):
+            try:
+                feature_min = int(np.nanmin(selected_patient_cohort[feature].values))
+                feature_max = int(np.nanmax(selected_patient_cohort[feature].values))
+
+                feature_appearances_series: Series = selected_patient_cohort[feature].value_counts(bins=[feature_min,
+                                                                                                         feature_min + round(
+                                                                                                             (
+                                                                                                                     feature_max - feature_min) * 1 / 3,
+                                                                                                             0),
+                                                                                                         feature_min + round(
+                                                                                                             (
+                                                                                                                     feature_max - feature_min) * 2 / 3,
+                                                                                                             0),
+                                                                                                         feature_max])
+                binning_intervals: list = list(feature_appearances_series.keys())
+                binning_counts: list = list(feature_appearances_series.values)
+
+                # add all bins for the features
+                for i in range(0, len(binning_intervals)):
+                    temp_df: dataframe = pd.DataFrame({'Variables': [feature],
+                                                       'Classification': [str(binning_intervals[i])],
+                                                       'Count': [binning_counts[i]]})
+                    overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
+
+            except ValueError as e:             # this happens if for the selected cohort (a small cluster) all patients have NaN
+                print(f'WARNING: Column found with All-NaN entries: {feature}')
                 temp_df: dataframe = pd.DataFrame({'Variables': [feature],
-                                                   'Classification': [str(binning_intervals[i])],  # maybe with [0]
-                                                   'Count': [binning_counts[i]]})  # maybe with [1]
+                                                   'Classification': ['All Entries NaN'],
+                                                   'Count': [0]})
                 overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
+
         # known feature that can be removed
         elif feature == 'icustay_id':
             pass
@@ -169,11 +185,11 @@ def calculate_feature_overview_table(avg_patient_cohort, cohort_title, selected_
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
-        filename_string: str = f'./output/features_overview_table_{current_time}.csv'
+        filename_string: str = f'./output/features_overview_{cohort_title}_{current_time}.csv'
         filename = filename_string.encode()
         with open(filename, 'w', newline='') as output_file:
             overview_df.to_csv(output_file)
-            print(f'STATUS: features_overview_table was saved to ./output/deaths_overview_table_{current_time}.csv')
+            print(f'STATUS: features_overview_table was saved to {filename_string}')
     else:
         print(overview_df.to_string())
 

@@ -56,7 +56,7 @@ class Patient:
         cleaned_raw_data: dataframe = patient_data.copy()
 
         # Preprocess non-numeric columns
-        cleaned_raw_data['gender'] = np.where(cleaned_raw_data['gender'] == 'F', 0, 1)
+        cleaned_raw_data['gender'] = np.where(cleaned_raw_data['gender'] == 'F', 0, 1)  # F = 0, M = 1
 
         cleaned_raw_data.loc[cleaned_raw_data['ethnicity'] == 'WHITE - RUSSIAN', 'ethnicity'] = 'WHITE'
         cleaned_raw_data.loc[cleaned_raw_data['ethnicity'] == 'WHITE - BRAZILIAN', 'ethnicity'] = 'WHITE'
