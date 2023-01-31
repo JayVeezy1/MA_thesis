@@ -2,17 +2,36 @@
 
 # Complete List of icd9-codes: https://www.cms.gov/Medicare/Coding/ICD9ProviderDiagnosticCodes/codes
 
-icd9_00_cerebrovascular_general: list = [430, 431, 432, 4329, 433, 4330, 4331, 4332, 434, 4340, 43400, 43401, 4341, 43410, 43411,
-                                         435, 4350, 4351, 4352, 4353, 4359, 436, 437, 4370, 4371, 4372, 4373, 4374, 4375, 4376,
-                                         4377, 438, 4380, 4381, 43810, 43811, 43812, 43819, 4382, 43820, 43821, 43822, 4383,
-                                         4384, 4385, 4388, 43881, 43882, 43883, 43884, 43885, 4389]
 
-# Final filtering selection: only Stroke relevant codes
+# Myocardial Infarct related codes
+
+# 410.00-411.1 -> STEMI (ST-elevation myocardial infarction)
+STEMI_codes = [41000, 41001, 41002, 41010, 41011, 41012, 41020, 41021, 41022, 41030, 41031,
+               41032, 41040, 41041, 41042, 41050, 41051, 41052, 41060, 41061, 41062, 41080,
+               41081, 41082, 41090, 41091, 41092, 4110, 4111]
+
+# 410.70 - 410.72 -> NSTEMI (non-ST-elevation myocardial infarction)
+NSTEMI_codes = [41070, 41071, 41072]
+
+selected_myocardial_infarct_codes = [41000, 41001, 41002, 41010, 41011, 41012, 41020, 41021, 41022, 41030, 41031,
+                                     41032, 41040, 41041, 41042, 41050, 41051, 41052, 41060, 41061, 41062, 41080,
+                                     41081, 41082, 41090, 41091, 41092, 4110, 4111, 41070, 41071, 41072]
+
+# todo: in sql script new column 'infarct_type'
+
+
+# Stroke related codes
+icd9_00_cerebrovascular_general: list = [430, 431, 432, 4329, 433, 4330, 4331, 4332, 434, 4340, 43400, 43401, 4341,
+                                         43410, 43411,
+                                         435, 4350, 4351, 4352, 4353, 4359, 436, 437, 4370, 4371, 4372, 4373, 4374,
+                                         4375, 4376,
+                                         4377, 438, 4380, 4381, 43810, 43811, 43812, 43819, 4382, 43820, 43821, 43822,
+                                         4383,
+                                         4384, 4385, 4388, 43881, 43882, 43883, 43884, 43885, 4389]
 # stroke-type reference: https://health.mo.gov/data/mica/CDP_MICA/StrokeDefofInd.html
 # hemorrhage: 430, 431, 432, 4329,
 # ischemic (+TIA): 433, 4330, 4331, 4332, 434, 4340, 43400, 43401, 4341, 43411, 435, 4350, 4351, 4353, 4359, 436
 # other (+late_effects_of_stroke): 437, 4370, 4371, 4372, 4373, 4374, 438, 4381, 43811, 4382, 43820, 4383, 4384, 4385, 4388, 43882, 43885
-
 icd9_00_stroke_selected: list = [430, 431, 432, 4329, 433, 4330, 4331, 4332, 434, 4340, 43400, 43401, 4341, 43411,
                                  435, 4350, 4351, 4353, 4359, 436, 437, 4370, 4371, 4372, 4373, 4374,
                                  438, 4381, 43811, 4382, 43820, 4383, 4384, 4385, 4388, 43882, 43885]
@@ -37,7 +56,6 @@ icd9_code   occurrence
 
 Total       1451
 """
-
 
 # Overview of cerebrovascular related ICD9-Categories:
 """
@@ -123,7 +141,7 @@ icd9_03_metabolic: list = ['240–279']
 icd9_04_blood: list = ['280–289']
 icd9_05_mental_disorders: list = ['290–319']
 icd9_06_nervous_system: list = ['320–389']
-icd9_07_circulatory_system: list = ['390–459']          # stroke relevant codes further below
+icd9_07_circulatory_system: list = ['390–459']  # stroke relevant codes further below
 icd9_08_respiratory_system: list = ['460–519']
 icd9_09_digestive_system: list = ['520–579']
 icd9_10_genitourinary_system: list = ['580–629']

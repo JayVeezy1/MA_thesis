@@ -6,10 +6,23 @@ def cleanup_avg_df(avg_patient_cohort, selected_features, selected_dependent_var
     avg_df = avg_patient_cohort.copy()
     avg_df = avg_df.drop(columns=['ethnicity', 'insurance'])  # todo: these features can only be used if numeric - any good way to include?
     selected_features_final = selected_features.copy()
-    selected_features_final.remove('icustay_id')
-    selected_features_final.remove('stroke_type')
-    selected_features_final.remove('ethnicity')
-    selected_features_final.remove('insurance')
+    try:
+        selected_features_final.remove('icustay_id')
+    except ValueError as e:
+        print('WARNING: icustay_id has already been removed from dataframe.')
+    try:
+        selected_features_final.remove('stroke_type')
+    except ValueError as e:
+        print('WARNING: stroke_type has already been removed from dataframe.')
+    try:
+        selected_features_final.remove('ethnicity')
+    except ValueError as e:
+        print('WARNING: ethnicity has already been removed from dataframe.')
+    try:
+        selected_features_final.remove('insurance')
+    except ValueError as e:
+        print('WARNING: insurance has already been removed from dataframe.')
+
     selected_features_final.append(selected_dependent_variable)
     avg_df = avg_df[selected_features_final]
     avg_df = avg_df.fillna(0)
@@ -23,12 +36,24 @@ def cleanup_avg_df_for_classification(avg_patient_cohort, selected_features, sel
     avg_df = avg_patient_cohort.copy()
     avg_df = avg_df.drop(columns=['ethnicity', 'insurance'])  # todo: these features can only be used if numeric - any good way to include?
     selected_features_final = selected_features.copy()
-    selected_features_final.remove('icustay_id')
-    selected_features_final.remove('stroke_type')
-    selected_features_final.remove('ethnicity')
-    selected_features_final.remove('insurance')
-    selected_features_final.append(selected_dependent_variable)
+    try:
+        selected_features_final.remove('icustay_id')
+    except ValueError as e:
+        print('WARNING: icustay_id has already been removed from dataframe.')
+    try:
+        selected_features_final.remove('stroke_type')
+    except ValueError as e:
+        print('WARNING: stroke_type has already been removed from dataframe.')
+    try:
+        selected_features_final.remove('ethnicity')
+    except ValueError as e:
+        print('WARNING: ethnicity has already been removed from dataframe.')
+    try:
+        selected_features_final.remove('insurance')
+    except ValueError as e:
+        print('WARNING: insurance has already been removed from dataframe.')
 
+    selected_features_final.append(selected_dependent_variable)
     available_dependent_variables: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
                                            'death_365_days']
     available_dependent_variables.remove(selected_dependent_variable)

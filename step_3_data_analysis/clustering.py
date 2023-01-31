@@ -101,7 +101,7 @@ def plot_clusters_on_3D_pacmap(plot_title, pacmap_data_points, cluster_count, sh
 
     if save_to_file:
         plt.savefig(
-            f'./output/data_visualization/3D_clusters_kmeans_{plot_title.replace(" ", "_")}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')       # todo: remove plot title from filename?
+            f'./output/clustering/3D_clusters_kmeans_{plot_title.replace(" ", "_")}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')       # todo: remove plot title from filename?
     plt.show()
     plt.close()
 
@@ -138,10 +138,10 @@ def plot_sh_score_kmeans(avg_patient_cohort, cohort_title, selected_features, se
     plt.plot(krange, avg_silhouettes)  # for DBSCAN use eps_range instead of krange
     plt.xlabel("$k$")
     plt.ylabel("Average Silhouettes Score")
-    plt.show()
     if save_to_file:
         plt.savefig(f'./output/clustering/{f"Silhouette Score for k-Means on {cohort_title}".replace(" ", "_")}.png',
                     bbox_inches="tight")
+    plt.show()
     plt.close()
 
     return None
@@ -224,10 +224,10 @@ def plot_cluster_details(plot_title: str, data: np.ndarray, death_list: list, sh
     for cluster in cluster_deaths_sum.keys():
         axs[0, 1].bar(cluster, cluster_deaths_sum[cluster] / cluster_sum[cluster],
                       color=plt.get_cmap(color_map)(cluster / max(coloring)))
-    plt.show()
 
     if save_to_file:
         plt.savefig(f'./output/clustering/overview_kmeans_{cohort_title}.png')
+    plt.show()
     plt.close()
 
     return None

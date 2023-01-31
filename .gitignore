@@ -1,3 +1,6 @@
+# ignore output files
+./output/
+
 # created by virtualenv automatically
 venv/Lib
 step_1_setup_data/database.ini

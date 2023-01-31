@@ -127,7 +127,8 @@ Features that are always included:
 - OASIS Score and related features (mechanical ventilation, GCS Score)
 - General Patient information (subject_id, hadm_id, icustay_id, demographics)
 
-4) Further Information about the OASIS Score Feature
+
+**Further Information about the OASIS Score Feature**
 
 The OASIS score represents a very common and important index for the patient risk. It is commonly used to compare
 new prediction models with the status quo. The calculation of the score depends on a multitude of factors.
@@ -139,7 +140,7 @@ the scripts is about 15 minutes in total (each ranging between 30 seconds and 3 
 The created views are saved inside the mimiciii schema, and not inside the public schema, where all the other objects 
 of this thesis were created. This makes it easier to see, which scripts come from where. 
 
-5) Notes for Future Research:
+**Notes for Future Research:**
 
 There are many labels in the MIMIC-III dataset that have not yet been included into this analysis.
 It is possible to include sources like: transfers, services, microbiology-events, cptevents, prescriptions for further research.

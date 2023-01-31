@@ -100,7 +100,7 @@ def calculate_deaths_table(selected_patient_cohort, cohort_title, selected_featu
         filename_string: str = f'./output/deaths_overview_{cohort_title}_{current_time}.csv'
         filename = filename_string.encode()
         with open(filename, 'w', newline='') as output_file:
-            deaths_df.to_csv(output_file)
+            deaths_df.to_csv(output_file, index=False)
             print(f'STATUS: deaths_overview_table was saved to {filename_string}')
     else:
         print(deaths_df.to_string())
@@ -188,7 +188,7 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, sele
         filename_string: str = f'./output/features_overview_{cohort_title}_{current_time}.csv'
         filename = filename_string.encode()
         with open(filename, 'w', newline='') as output_file:
-            overview_df.to_csv(output_file)
+            overview_df.to_csv(output_file, index=False)
             print(f'STATUS: features_overview_table was saved to {filename_string}')
     else:
         print(overview_df.to_string())
