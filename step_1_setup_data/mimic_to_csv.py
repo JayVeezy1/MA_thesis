@@ -94,7 +94,8 @@ def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_i
         # Get chart_events for each icustay and export to .csv
         query_counter = 0
         seconds_cumulated = 0
-        for icustay_id in icu_stay_ids[:5]:             # Important: Select here, if really all icu_stays should be exported, or when still in testing only use [:3]
+        # todo: put back to all
+        for icustay_id in icu_stay_ids[:2]:             # Important: Select here, if really all icu_stays should be exported, or when still in testing only use [:3]
             print('STATUS: Executing query_single_icustay for icustay_id', str(icustay_id))
             query_counter += 1
             starting_time = datetime.now()

@@ -162,23 +162,28 @@ class Patient:
         if not selected_patients:
             selected_patients = Patient.all_patient_objs_set
 
+        print('CHECK: Count of selected patients for get_avg_patient_cohort: ', len(selected_patients))
+
         avg_dataframes: list = []
         for patient in selected_patients:
             avg_dataframes.append(patient.avg_data)
         avg_patient_cohort_dataframe: dataframe = pd.concat(avg_dataframes)
         avg_patient_cohort_dataframe = avg_patient_cohort_dataframe.sort_values(by=['icustay_id'], axis=0)
         avg_patient_cohort_dataframe = avg_patient_cohort_dataframe.reset_index(drop=True)
-        avg_patient_cohort_dataframe.index.name = 'index'
 
         # Export avg_patient_cohort
         filename_string: str = f'{project_path}/exports/{use_case_name}/avg_patient_cohort.csv'
         filename = filename_string.encode()
         with open(filename, 'w', newline='') as output_file:
-            avg_patient_cohort_dataframe.to_csv(output_file)
+            avg_patient_cohort_dataframe.to_csv(output_file, index=False)
 
-        print(f'STATUS: avg_patient_cohort file was saved to {project_path}/exports/{use_case_name}')
+        print(f'STATUS: avg_patient_cohort file was saved to {project_path}/exports/{use_case_name} \n')
 
         return avg_patient_cohort_dataframe
+
+    @classmethod
+    def get_NAN_for_feature_in_cohort(cls, avg_patient_cohort_dataframe: dataframe, selected_feature) -> int:
+        return avg_patient_cohort_dataframe[selected_feature].isna().sum()
 
     @classmethod
     def add_patient_obj(cls, patient_obj):

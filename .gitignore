@@ -1,5 +1,6 @@
 # ignore output files
 ./output/
+*.png
 
 # created by virtualenv automatically
 venv/Lib

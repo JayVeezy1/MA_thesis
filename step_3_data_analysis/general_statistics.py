@@ -3,8 +3,11 @@ import warnings
 
 import numpy as np
 import pandas as pd
+from numpy import sort
 from pandas import Series
 from pandas.core.interchange import dataframe
+
+from objects.patients import Patient
 
 
 def calculate_deaths_table(selected_patient_cohort, cohort_title, selected_features, save_to_file):
@@ -117,30 +120,29 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, sele
     selected_features.extend(available_dependent_variables)
 
     # create overview_df
-    data = {'Variables': ['Total'], 'Classification': ['Patients'], 'Count': [len(selected_patient_cohort.index)]}
+    data = {'Variables': ['Total'], 'Classification': ['Patients'], 'Count': [len(selected_patient_cohort.index)], 'NaN_Count': ['-']}
     overview_df: dataframe = pd.DataFrame(data)
 
     # fill the overview_df
     for feature in selected_features:  # todo: also put features into categories to sort them (general_info, vital_signs, laboratory_results)
         # normal case, no binning needed
-        if feature_categories_table['needs_binning'][
-            feature_categories_table['feature_name'] == feature].item() == 'False':
-            for appearance in pd.unique(selected_patient_cohort[feature]):
+        if feature_categories_table['needs_binning'][feature_categories_table['feature_name'] == feature].item() == 'False':
+            for appearance in sort(pd.unique(selected_patient_cohort[feature])):
                 temp_df: dataframe = pd.DataFrame({'Variables': [feature],
                                                    'Classification': [appearance],
                                                    'Count': [selected_patient_cohort[feature][
                                                                  selected_patient_cohort[
-                                                                     feature] == appearance].count()]})
+                                                                     feature] == appearance].count()],
+                                                   'NaN_Count': Patient.get_NAN_for_feature_in_cohort(selected_patient_cohort, feature)})
                 overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
         # binning needed for vital signs, etc.
-        elif feature_categories_table['needs_binning'][
-            feature_categories_table['feature_name'] == feature].item() == 'True':
+        elif feature_categories_table['needs_binning'][feature_categories_table['feature_name'] == feature].item() == 'True':
 
             try:
                 feature_min = int(np.nanmin(selected_patient_cohort[feature].values))
                 feature_max = int(np.nanmax(selected_patient_cohort[feature].values))
 
-                feature_appearances_series: Series = selected_patient_cohort[feature].value_counts(bins=[feature_min,
+                feature_appearances_series = selected_patient_cohort[feature].value_counts(bins=[feature_min,
                                                                                                          feature_min + round(
                                                                                                              (
                                                                                                                      feature_max - feature_min) * 1 / 3,
@@ -150,21 +152,29 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, sele
                                                                                                                      feature_max - feature_min) * 2 / 3,
                                                                                                              0),
                                                                                                          feature_max])
-                binning_intervals: list = list(feature_appearances_series.keys())
-                binning_counts: list = list(feature_appearances_series.values)
+                feature_appearances_df = pd.DataFrame()
+                feature_appearances_df['intervals'] = feature_appearances_series.keys()
+                feature_appearances_df['counts'] = feature_appearances_series.values
+                feature_appearances_df['interval_starts'] = feature_appearances_df['intervals'].map(lambda x: x.left)
+                feature_appearances_df = feature_appearances_df.sort_values(by='interval_starts')
+                binning_intervals: list = feature_appearances_df['intervals'].to_list()
+                binning_counts: list = feature_appearances_df['counts'].to_list()
 
                 # add all bins for the features
+                temp_nan: int = Patient.get_NAN_for_feature_in_cohort(selected_patient_cohort, feature)     # NaN is the same for each bin
                 for i in range(0, len(binning_intervals)):
                     temp_df: dataframe = pd.DataFrame({'Variables': [feature],
                                                        'Classification': [str(binning_intervals[i])],
-                                                       'Count': [binning_counts[i]]})
+                                                       'Count': [binning_counts[i]],
+                                                       'NaN_Count': temp_nan})
                     overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
 
             except ValueError as e:             # this happens if for the selected cohort (a small cluster) all patients have NaN
-                print(f'WARNING: Column found with All-NaN entries: {feature}')
+                print(f'WARNING: Column found with All-NaN entries: {feature} with {e}')
                 temp_df: dataframe = pd.DataFrame({'Variables': [feature],
                                                    'Classification': ['All Entries NaN'],
-                                                   'Count': [0]})
+                                                   'Count': [0],
+                                                   'NaN_Count': len(selected_patient_cohort)})
                 overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
 
         # known feature that can be removed
@@ -174,14 +184,11 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, sele
         else:
             temp_df: dataframe = pd.DataFrame({'Variables': [feature],
                                                'Classification': [f'no category for: {feature}'],
-                                               'Count': '-'})
+                                               'Count': '-',
+                                               'NaN_Count': '-'})
             overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
 
-    # todo: sort variables, also sort for each variable the appearances (first 1, then 0) or alphabetically, also sort the intervals for vital signs somehow
-
-    # todo: somehow add correlation-to-death + p-value (must be after the correlation calculation?)
-
-    # todo: add NaN amount
+    # todo: add correlation-to-death + p-value (must be after the correlation calculation?)
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")

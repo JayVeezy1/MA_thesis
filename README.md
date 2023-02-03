@@ -67,7 +67,7 @@ not suitable to use both systems. Metavision was chosen, as it is the newer one 
 This also means, that instead of around 12.000  (often duplicate) aspects that were measured on the ICU, only 2.200 remain.
 
 This filtering was in parts based on concepts from previous research by Alistair et al. (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5851804/pdf/nihms925667.pdf).
-It should not be changed by the user. After this first step, there are still 16.058 unique icu-stays left. 
+It should not be changed by the user. After this first step, there are still 13.383 unique icu-stays left. 
 
 2) Use-Case Selection (Input at the 'export_patients_to_csv()' function):
  

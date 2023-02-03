@@ -8,7 +8,9 @@ from supplements import selection_icd9_codes
 ####### MAIN #######
 if __name__ == '__main__':
     PROJECT_PATH: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'  # this variable must be fitted to the users local project folder
-    USE_CASE_NAME: str = 'heart_infarct_patients_data'         # stroke case = stroke_patients_data
+    USE_CASE_NAME: str = 'stroke_patients_data'  # stroke_patients_data       # heart_infarct_patients_data
+    FEATURE_SELECTION_DF = pd.read_excel('./supplements/feature_preprocessing_table.xlsx')
+    SELECTED_FEATURES = FEATURE_SELECTION_DF[FEATURE_SELECTION_DF['selected_for_analysis'] == 'yes']['feature_name'].to_list()
 
     ### Setup, MIMIC-III Export from DB, Python-Cache
     # Step 0) Setup when first time using db:
@@ -21,39 +23,30 @@ if __name__ == '__main__':
     # stroke use-case has 1232 patients, each takes approx. 30 seconds -> 500 Minutes, 8,5 hours
 
     # mimic_to_csv.export_patients_to_csv(project_path=PROJECT_PATH,
-    #                                     use_case_icd_list=selection_icd9_codes.icd9_00_stroke_selected,
-    #                                     use_case_itemids=[],
-    #                                     use_case_name=USE_CASE_NAME)
+    #                                    use_case_icd_list=selection_icd9_codes.selected_myocardial_infarct_codes,            # stroke case = icd9_00_stroke_selected
+    #                                   use_case_itemids=[],
+    #                                  use_case_name=USE_CASE_NAME)
 
     # Step 1.2) Filter final patient.csvs for relevant features and export as 'final_dataset'
     # select_relevant_features.export_final_dataset(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME)
 
     # Step 1.3) Load all .csv files as a 'Patient' Object, use Pickle for Cache
     # cache_IO.save_csvs_into_cache(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME)
-    #cache_IO.load_patients_from_cache(project_path=PROJECT_PATH,
-     #                                 use_case_name=USE_CASE_NAME,
-      #                                delete_existing_cache=False)
+    cache_IO.load_patients_from_cache(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME, delete_existing_cache=False)
 
     ### Preprocessing
     # Step 2.1) Calculate avg, min, max for each feature for each patient
-    #complete_avg_patient_cohort = Patient.get_avg_patient_cohort(project_path=PROJECT_PATH,
-     #                                                            use_case_name=USE_CASE_NAME,
-      #                                                           selected_patients=[])  # if empty -> all
-
-    # feature_categories_df = pd.read_excel('./supplements/feature_preprocessing_table.xlsx')
-    # SELECTED_FEATURES = feature_categories_df[feature_categories_df['selected_for_analysis'] == 'yes'][
-    #    'feature_name'].to_list()
+    complete_avg_patient_cohort = Patient.get_avg_patient_cohort(project_path=PROJECT_PATH,
+                                                                 use_case_name=USE_CASE_NAME,
+                                                                 selected_patients=[])  # if empty -> all
     # avg_hemorrhage_cohort = complete_avg_patient_cohort[complete_avg_patient_cohort['stroke_type'] == 'hemorrhagic']
     # avg_ischemic_cohort = complete_avg_patient_cohort[complete_avg_patient_cohort['stroke_type'] == 'ischemic']
 
     # Step 2.2) Impute, Interpolate, Normalize dataframes for each patient
-
     # todo: check dataframe tricks https://www.youtube.com/watch?v=_gaAoJBMJ_Q
 
     # todo 00: do the features table, correlations and all the rest with less features -> better results?? recall: 0.31
     # todo: problem: too many patients are considere hemorrhagic because standard stroke icd9 code 430 - but might very well be ischemic. -> filtering not correct.
-
-    # todo 0: work on NaN -> first add NaN to the features_table, interpolation, also min/max-columns for features?
 
     #### Long Term #########################################################################################################
     ### Data Analysis
@@ -64,15 +57,16 @@ if __name__ == '__main__':
     #                                  save_to_file=True)
 
     # label | classification (existing values of this feature) | patients_in_training_set (count/occurrence) | correlation_to_death | p-value (continuous) | chi-squared-value (categorical) | NaN Amount
-    # general_statistics.calculate_feature_overview_table(selected_patient_cohort=complete_avg_patient_cohort,
-    #                                                 cohort_title='complete_avg_patient_cohort',
-    #                                                  selected_features=SELECTED_FEATURES,
-    #                                                 save_to_file=True)
+    # todo 0: work on NaN -> first add NaN to the features_table, interpolation, also min/max-columns for features?
+    general_statistics.calculate_feature_overview_table(selected_patient_cohort=complete_avg_patient_cohort,
+                                                        cohort_title='complete_avg_patient_cohort',
+                                                        selected_features=SELECTED_FEATURES,
+                                                        save_to_file=False)
 
     # Step 3.2) Visualization, Correlation, Clustering, etc.
     # data_visualization.display_pacmap(avg_patient_cohort=avg_hemorrhage_cohort, cohort_title='avg_hemorrhage_cohort',
-      #                                selected_features=SELECTED_FEATURES, selected_dependent_variable='death_in_hosp',
-       #                               save_to_file=True)
+    #                                selected_features=SELECTED_FEATURES, selected_dependent_variable='death_in_hosp',
+    #                               save_to_file=True)
 
     # Correlation Prototype # death_3_days, death_in_hosp
     # correlations.calculate_correlations_on_cohort(avg_patient_cohort=avg_hemorrhage_cohort,
@@ -109,10 +103,10 @@ if __name__ == '__main__':
     ### Machine Learning Predictions
     # Step 4.1) Random Forest
     # classification.calculate_RF_on_cohort(avg_patient_cohort=avg_hemorrhage_cohort,
-      #                                    cohort_title='avg_hemorrhage_cohort',
-       #                                   selected_features=SELECTED_FEATURES,
-        #                                  selected_dependent_variable='death_in_hosp',
-         #                                 save_to_file=True)
+    #                                    cohort_title='avg_hemorrhage_cohort',
+    #                                   selected_features=SELECTED_FEATURES,
+    #                                  selected_dependent_variable='death_in_hosp',
+    #                                 save_to_file=True)
 
 # Step 4.2) XGBoost
 
