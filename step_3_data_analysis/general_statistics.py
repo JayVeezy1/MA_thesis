@@ -8,6 +8,7 @@ from pandas import Series
 from pandas.core.interchange import dataframe
 
 from objects.patients import Patient
+from step_3_data_analysis.correlations import get_correlations_on_cohort
 
 
 def calculate_deaths_table(selected_patient_cohort, cohort_title, selected_features, save_to_file):
@@ -111,7 +112,7 @@ def calculate_deaths_table(selected_patient_cohort, cohort_title, selected_featu
     return None
 
 
-def calculate_feature_overview_table(selected_patient_cohort, cohort_title, selected_features, save_to_file):
+def calculate_feature_overview_table(selected_patient_cohort, cohort_title, selected_features, selected_dependent_variable, save_to_file):
     feature_categories_table = pd.read_excel('./supplements/feature_preprocessing_table.xlsx')
 
     # include dependent_variables (they are also used in the separate death_overview)
@@ -119,8 +120,12 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, sele
                                            'death_365_days']
     selected_features.extend(available_dependent_variables)
 
+    # get correlations per feature
+    deaths_correlation_df, p_value, r_value = get_correlations_on_cohort(avg_patient_cohort=selected_patient_cohort.copy(), selected_features=selected_features, selected_dependent_variable=selected_dependent_variable)
+
     # create overview_df
-    data = {'Variables': ['Total'], 'Classification': ['Patients'], 'Count': [len(selected_patient_cohort.index)], 'NaN_Count': ['-']}
+    data = {'Variables': ['Total'], 'Classification': ['Patients'], 'Count': [len(selected_patient_cohort.index)], 'NaN_Count': ['-'],
+            f'Correlation_to_{selected_dependent_variable}': ['-'], 'p_value': ['-']}
     overview_df: dataframe = pd.DataFrame(data)
 
     # fill the overview_df
@@ -133,7 +138,9 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, sele
                                                    'Count': [selected_patient_cohort[feature][
                                                                  selected_patient_cohort[
                                                                      feature] == appearance].count()],
-                                                   'NaN_Count': Patient.get_NAN_for_feature_in_cohort(selected_patient_cohort, feature)})
+                                                   'NaN_Count': Patient.get_NAN_for_feature_in_cohort(selected_patient_cohort, feature),
+                                                   f'Correlation_to_{selected_dependent_variable}': [deaths_correlation_df[feature].item()],
+                                                   'p_value': [p_value[feature].item()]})
                 overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
         # binning needed for vital signs, etc.
         elif feature_categories_table['needs_binning'][feature_categories_table['feature_name'] == feature].item() == 'True':
@@ -166,7 +173,9 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, sele
                     temp_df: dataframe = pd.DataFrame({'Variables': [feature],
                                                        'Classification': [str(binning_intervals[i])],
                                                        'Count': [binning_counts[i]],
-                                                       'NaN_Count': temp_nan})
+                                                       'NaN_Count': temp_nan,
+                                                       f'Correlation_to_{selected_dependent_variable}': [deaths_correlation_df[feature].item()],
+                                                       'p_value': [p_value[feature].item()]})
                     overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
 
             except ValueError as e:             # this happens if for the selected cohort (a small cluster) all patients have NaN
@@ -174,7 +183,9 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, sele
                 temp_df: dataframe = pd.DataFrame({'Variables': [feature],
                                                    'Classification': ['All Entries NaN'],
                                                    'Count': [0],
-                                                   'NaN_Count': len(selected_patient_cohort)})
+                                                   'NaN_Count': len(selected_patient_cohort),
+                                                   f'Correlation_to_{selected_dependent_variable}': ['-'],
+                                                   'p_value': ['-']})
                 overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
 
         # known feature that can be removed
@@ -185,7 +196,9 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, sele
             temp_df: dataframe = pd.DataFrame({'Variables': [feature],
                                                'Classification': [f'no category for: {feature}'],
                                                'Count': '-',
-                                               'NaN_Count': '-'})
+                                               'NaN_Count': '-',
+                                               f'Correlation_to_{selected_dependent_variable}': ['-'],
+                                               'p_value': ['-']})
             overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
 
     # todo: add correlation-to-death + p-value (must be after the correlation calculation?)

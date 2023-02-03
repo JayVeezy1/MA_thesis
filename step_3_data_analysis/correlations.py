@@ -1,19 +1,18 @@
 import datetime
+
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from pandas.core.interchange import dataframe
+from scipy.stats import pearsonr, stats
 
 
-def calculate_correlations_on_cohort(avg_patient_cohort, cohort_title, selected_features, selected_dependent_variable, save_to_file):
+def get_correlations_on_cohort(avg_patient_cohort, selected_features, selected_dependent_variable) -> dataframe:
     # Preprocessing for correlation
     avg_patient_cohort = avg_patient_cohort.drop(columns=['icustay_id', 'stroke_type'])   # these features are needed for clustering, not correlations
     selected_features_corr = selected_features
     selected_features_corr.remove('icustay_id')
     selected_features_corr.remove('stroke_type')
-    selected_features_corr.append(selected_dependent_variable)
-
-    available_dependent_variables: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days', 'death_365_days']
-    available_dependent_variables.remove(selected_dependent_variable)
-    avg_patient_cohort = avg_patient_cohort.drop(columns=available_dependent_variables)
 
     # todo: check/ask if there is better option? How to use non-numeric columns for correlation? Not really useful? But still needed for clustering right?
     avg_patient_cohort[['insurance', 'ethnicity']] = avg_patient_cohort[['insurance', 'ethnicity']].apply(lambda x: pd.factorize(x)[0])
@@ -22,8 +21,27 @@ def calculate_correlations_on_cohort(avg_patient_cohort, cohort_title, selected_
 
     # Calculate correlation
     avg_patient_cohort_corr = avg_patient_cohort[selected_features_corr].corr(numeric_only=False)
-    death_corr = avg_patient_cohort_corr[selected_dependent_variable]
-    sorted_death_corr = death_corr.sort_values(ascending=False)
+    death_corr = avg_patient_cohort_corr[selected_dependent_variable].round(2)     # only return correlation towards selected_dependent_variable
+
+    # Calculate r-values & p-values
+    # todo: Are these calculations correct?
+    # pval = avg_patient_cohort[selected_features_corr].corr(method=lambda x, y: pearsonr(x, y)[1]) - np.eye(*avg_patient_cohort_corr.shape)        #  old calculation, unclear results
+    # p = pval.applymap(lambda x: ''.join(['*' for t in [.05, .01, .001] if x <= t]))       # alternative to turn pval into stars *
+
+    cleaned_df: dataframe = avg_patient_cohort.fillna(value=0)      # filling nan with 0 correct?
+    validity_df: dataframe = pd.DataFrame()
+    for feature in avg_patient_cohort[selected_features_corr]:
+        r_val, p_val = stats.pearsonr(cleaned_df[feature], avg_patient_cohort[selected_dependent_variable])
+        validity_df[feature] = [round(r_val, 3), round(p_val, 3)]
+
+    validity_df = validity_df.rename({0: 'r_value', 1: 'p_value'}).transpose()
+
+    return death_corr.sort_values(ascending=False), validity_df['p_value'], validity_df['r_value']
+
+
+def plot_correlations(avg_patient_cohort, cohort_title, selected_features, selected_dependent_variable, save_to_file):
+    sorted_death_corr, p_value, r_value = get_correlations_on_cohort(avg_patient_cohort, selected_features, selected_dependent_variable)
+    # todo: somehow add pval to plot?
 
     # Plot of correlation
     plot_death_corr = sorted_death_corr.drop(selected_dependent_variable)
@@ -37,15 +55,16 @@ def calculate_correlations_on_cohort(avg_patient_cohort, cohort_title, selected_
     ax1.bar([i for i in range(len(plot_death_corr))],
             [value for value in plot_death_corr],
             label=plot_death_corr.index.tolist(),
-            color=[color((value - min_value) / 0.5) for value in plot_death_corr])          # (max_value + 0.05 - min_value))
+            color=[color((value - min_value) / 0.5) for value in plot_death_corr])  # (max_value + 0.05 - min_value))
     ax1.set_xticks([i for i in range(len(plot_death_corr))])
     ax1.set_xticklabels(plot_death_corr.index.tolist())
-    ax1.set_ylim([-y_axis, y_axis])                       # correlation over 0.4 is not expected
+    ax1.set_ylim([-y_axis, y_axis])  # correlation over 0.4 is not expected
     ax1.set_title(f"Correlation to {selected_dependent_variable} for {cohort_title}")
     plt.xticks(rotation=90)
     fig.tight_layout()
     if save_to_file:
-        plt.savefig(f'./output/correlations/correlation_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
+        plt.savefig(
+            f'./output/correlations/correlation_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
     plt.show()
 
     # todo: include these plots
@@ -72,3 +91,4 @@ def calculate_correlations_on_cohort(avg_patient_cohort, cohort_title, selected_
 
     print('STATUS: calculate_correlations_on_cohort executed.')
     return None
+

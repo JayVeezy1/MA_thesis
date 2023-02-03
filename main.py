@@ -11,6 +11,7 @@ if __name__ == '__main__':
     USE_CASE_NAME: str = 'stroke_patients_data'  # stroke_patients_data       # heart_infarct_patients_data
     FEATURE_SELECTION_DF = pd.read_excel('./supplements/feature_preprocessing_table.xlsx')
     SELECTED_FEATURES = FEATURE_SELECTION_DF[FEATURE_SELECTION_DF['selected_for_analysis'] == 'yes']['feature_name'].to_list()
+    SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'       # death_3_days, death_in_hosp
 
     ### Setup, MIMIC-III Export from DB, Python-Cache
     # Step 0) Setup when first time using db:
@@ -43,11 +44,7 @@ if __name__ == '__main__':
     # avg_ischemic_cohort = complete_avg_patient_cohort[complete_avg_patient_cohort['stroke_type'] == 'ischemic']
 
     # Step 2.2) Impute, Interpolate, Normalize dataframes for each patient
-    # todo: check dataframe tricks https://www.youtube.com/watch?v=_gaAoJBMJ_Q
-
-    # todo 00: do the features table, correlations and all the rest with less features -> better results?? recall: 0.31
-    # todo: problem: too many patients are considere hemorrhagic because standard stroke icd9 code 430 - but might very well be ischemic. -> filtering not correct.
-
+    # todo long term: add interpolation/imputation to timeseries depending on NaN, and also min/max-columns for features?
     #### Long Term #########################################################################################################
     ### Data Analysis
     # Step 3.1) General Statistics
@@ -55,32 +52,34 @@ if __name__ == '__main__':
     #                                      cohort_title='complete_avg_patient_cohort',
     #                                    selected_features=SELECTED_FEATURES,
     #                                  save_to_file=True)
-
     # label | classification (existing values of this feature) | patients_in_training_set (count/occurrence) | correlation_to_death | p-value (continuous) | chi-squared-value (categorical) | NaN Amount
-    # todo 0: work on NaN -> first add NaN to the features_table, interpolation, also min/max-columns for features?
+
+    # TODO: Rework filtering because its not correct.
+    # TODO: IMPORTANT: Do calculations again with correct dataset (for stroke & heart new exports) and with normalized data??? -> better results??
     general_statistics.calculate_feature_overview_table(selected_patient_cohort=complete_avg_patient_cohort,
                                                         cohort_title='complete_avg_patient_cohort',
+                                                        selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                                         selected_features=SELECTED_FEATURES,
                                                         save_to_file=False)
 
     # Step 3.2) Visualization, Correlation, Clustering, etc.
     # data_visualization.display_pacmap(avg_patient_cohort=avg_hemorrhage_cohort, cohort_title='avg_hemorrhage_cohort',
-    #                                selected_features=SELECTED_FEATURES, selected_dependent_variable='death_in_hosp',
+    #                                selected_features=SELECTED_FEATURES, selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
     #                               save_to_file=True)
 
-    # Correlation Prototype # death_3_days, death_in_hosp
-    # correlations.calculate_correlations_on_cohort(avg_patient_cohort=avg_hemorrhage_cohort,
+    # Correlation Prototype
+    # correlations.plot_correlations(avg_patient_cohort=avg_hemorrhage_cohort,
     #                                            cohort_title='avg_hemorrhage_cohort',
     #                                           selected_features=SELECTED_FEATURES,
-    #                                          selected_dependent_variable='death_in_hosp', save_to_file=True)
+    #                                          selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE, save_to_file=True)
 
-    # todo 4: Add DBSCAN Prototype
+    # todo long term: Add DBSCAN Prototype
     # Clustering Prototype
-    # clustering.plot_sh_score_kmeans(avg_patient_cohort=avg_hemorrhage_cohort, cohort_title='avg_hemorrhage_cohort', selected_features=SELECTED_FEATURES, selected_dependent_variable='death_in_hosp', filter_labels=False, save_to_file=True)
+    # clustering.plot_sh_score_kmeans(avg_patient_cohort=avg_hemorrhage_cohort, cohort_title='avg_hemorrhage_cohort', selected_features=SELECTED_FEATURES, selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE, filter_labels=False, save_to_file=True)
     # manually checking silhouette score shows: 3 clusters is optimal
     # SELECTED_CLUSTERS_COUNT = 4
     # clustering.plot_clusters_on_pacmap(avg_patient_cohort=avg_hemorrhage_cohort, cohort_title='avg_hemorrhage_cohort',
-    #                                   selected_features=SELECTED_FEATURES, selected_dependent_variable='death_in_hosp',
+    #                                   selected_features=SELECTED_FEATURES, selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
     #                                 selected_cluster_count=SELECTED_CLUSTERS_COUNT, filter_labels=False,
     #                                save_to_file=False)
 
@@ -89,7 +88,7 @@ if __name__ == '__main__':
     # #filtered_cluster_icustay_ids: list = clustering.get_ids_for_cluster(avg_patient_cohort=avg_hemorrhage_cohort,
     #                                                                 cohort_title='avg_hemorrhage_cohort',
     #                                                                selected_features=SELECTED_FEATURES,
-    #                                                               selected_dependent_variable='death_in_hosp',
+    #                                                               selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
     #                                                              selected_k_means_count=SELECTED_CLUSTERS_COUNT,
     #                                                             selected_cluster=cluster_to_analyse,
     #                                                            filter_labels=False)
@@ -105,7 +104,7 @@ if __name__ == '__main__':
     # classification.calculate_RF_on_cohort(avg_patient_cohort=avg_hemorrhage_cohort,
     #                                    cohort_title='avg_hemorrhage_cohort',
     #                                   selected_features=SELECTED_FEATURES,
-    #                                  selected_dependent_variable='death_in_hosp',
+    #                                  selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
     #                                 save_to_file=True)
 
 # Step 4.2) XGBoost
