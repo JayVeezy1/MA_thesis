@@ -6,6 +6,7 @@ returns table (
 		intime						timestamp without time zone,
 		outtime						timestamp without time zone,
 		los_hours					numeric,
+		dbsource					varchar(20),
 		icustays_count				bigint,
 		age 						numeric,
 		patientweight				double precision,
@@ -27,7 +28,8 @@ returns table (
 		diagnosis_text				text,
 		seq_num						int,
 		icd9_code					varchar(10),
-		stroke_type					text,
+		stroke_type					varchar(15),
+		infarct_type				varchar(15),
 		all_icd9_codes 				varchar[],
 		hypertension_flag			int,				-- flag columns must be listed here at the end, but can be moved further to the front in create_transposed_patient
 		diabetes_flag				int,
@@ -89,6 +91,7 @@ begin
 				basic_cohort.intime,
 				basic_cohort.outtime,
 				basic_cohort.los_hours,
+				basic_cohort.dbsource,
 				basic_cohort.icustays_count,
 				basic_cohort.age,
 				basic_cohort.patientweight,
@@ -111,6 +114,8 @@ begin
 				basic_cohort.excluded,
 				diag.seq_num,
 				diag.icd9_code,
+				diag.stroke_type,
+				diag.infarct_type,
 				diag.all_icd9_codes	
 			from patient_cohort_view basic_cohort
 			inner join diagnoses diag
@@ -123,6 +128,7 @@ begin
 				icd_cohort.intime,
 				icd_cohort.outtime,
 				icd_cohort.los_hours,
+				icd_cohort.dbsource,
 				icd_cohort.icustays_count,
 				icd_cohort.age,
 				icd_cohort.patientweight,
@@ -144,25 +150,13 @@ begin
 				icd_cohort.diagnosis_text,
 				icd_cohort.seq_num,
 				icd_cohort.icd9_code,
-				-- TODO: add stroke-type column here with 
-				-- hemorrhagic: 430, 431, 432, 4329,
-				-- ischemic (+TIA): 433, 4330, 4331, 4332, 434, 4340, 43400, 43401, 4341, 43411, 435, 4350, 4351, 4353, 4359, 436
-				-- other (+late_effects_of_stroke): 437, 4370, 4371, 4372, 4373, 4374, 438, 4381, 43811, 4382, 43820, 4383, 4384, 4385, 4388, 43882, 43885
-				case when icd_cohort.icd9_code = '430' or icd_cohort.icd9_code = '431' or icd_cohort.icd9_code = '432' or icd_cohort.icd9_code = '4329' 
-						then 'hemorrhagic'
-					 when icd_cohort.icd9_code = '433' or icd_cohort.icd9_code = '4330' or icd_cohort.icd9_code = '4331' or icd_cohort.icd9_code = '4332' 
-						or icd_cohort.icd9_code = '434' or icd_cohort.icd9_code = '4340' or icd_cohort.icd9_code = '43400' 
-						or icd_cohort.icd9_code = '43401' or icd_cohort.icd9_code = '4341' or icd_cohort.icd9_code = '43411' 
-						or icd_cohort.icd9_code = '435' or icd_cohort.icd9_code = '4350' or icd_cohort.icd9_code = '4351'
-						or icd_cohort.icd9_code = '4353' or icd_cohort.icd9_code = '4359' or icd_cohort.icd9_code = '436'
-					 	then 'ischemic'
-			  		 else 'other_stroke' end 
-					 as stroke_type, 
+				icd_cohort.stroke_type,
+				icd_cohort.infarct_type,
 				icd_cohort.all_icd9_codes
 		from icd_cohort 
 		where icd_cohort.excluded = 0					-- remove all 'excluded' entries
 		and los_hours > 24								-- remove all icustays with < 24 hours
-		order by icd_cohort.icustay_id, icd_cohort.seq_num;			
+		order by icd_cohort.icustay_id, icd_cohort.seq_num;		
 	-- select count(*) from  patient_cohort_with_icd;
 	-- join leads to 705921 entries, but in diagnoses only 600.000 hadm_id entries 
 	-- because in cohort_view some hadm_ids are duplicate, because it was 1 hadm but multiple times icustay_id
@@ -180,8 +174,10 @@ begin
 		WHERE patient_cohort_with_icd.seq_num = '1';-- only keep first diagnosis -> no duplicate icustays
 	ELSE
 		raise notice 'Creating temp_filtered_patient_cohort with selected icd9_codes.';
+		
+		-- FILTERING of patients happens here
 		CREATE TABLE public.temp_filtered_patient_cohort AS
-		SELECT * FROM public.patient_cohort_with_icd
+		SELECT * FROM public.patient_cohort_with_icd			-- patient_cohort_with_icd has a row per diagnosis
 		 WHERE patient_cohort_with_icd.icd9_code IN (SELECT icd9_codes FROM public.temp_icd9_codes_selected)			-- filter for icd9_codes here
 		 AND concat(cast(patient_cohort_with_icd.icustay_id as varchar), cast(patient_cohort_with_icd.seq_num as varchar))
 			IN (SELECT concat(cast(patient_cohort_with_icd.icustay_id as varchar), cast(min(patient_cohort_with_icd.seq_num) as varchar))

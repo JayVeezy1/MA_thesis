@@ -46,7 +46,7 @@ def save_csvs_into_cache(project_path: str, use_case_name=None):
     print('CHECK: Took', datetime.datetime.now() - start_time, 'to execute save_csvs_into_cache.')
 
 
-def load_patients_from_cache(project_path, use_case_name, delete_existing_cache):
+def load_data_from_cache(project_path, use_case_name, delete_existing_cache):
     cache_file_path = project_path + 'exports/' + use_case_name + '/complete_patients_cache.p'
 
     if delete_existing_cache:

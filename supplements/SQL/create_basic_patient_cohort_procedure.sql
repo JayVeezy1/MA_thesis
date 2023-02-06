@@ -122,6 +122,7 @@ begin
 		  , t1.intime
 		  , t1.outtime
 		  , t1.los_hours
+		  , t1.dbsource
 		  , t1.icustays_count
 		  -- set de-identified ages to median of 91.4
 		  , case when t1.age > 89 then 91.4 else t1.age end as age
@@ -143,10 +144,9 @@ begin
 		  , t1.marital_status
 		  , t1.diagnosis_text
 		  , t1.first_service
-		  , t1.dbsource
 		  -- exclusions
 		  , case when t1.rn = 1 then 0 else 1 end as exclusion_secondarystay
-		  , case when t1.age <= 18 then 1 else 0 end as exclusion_nonadult
+		  , case when t1.age < 18 then 1 else 0 end as exclusion_nonadult
 		  -- , case when t1.first_service in ('CSURG','VSURG','TSURG') then 1 else 0 end as exclusion_csurg
 		  , case when t1.dbsource != 'metavision' then 1 else 0 end as exclusion_carevue
 		  , case when t1.HAS_CHARTEVENTS_DATA = 0 then 1
@@ -157,12 +157,12 @@ begin
 		  -- below flag is used to actually exclude patients in future queries
 		  , case when
 					 t1.rn != 1
-				  or t1.age <= 18											-- remove patients under 18
+				  or t1.age < 18											-- remove patients under 18
 				  -- or t1.first_service in ('CSURG','VSURG','TSURG')		-- surgery patients should not be considered
 				  or t1.HAS_CHARTEVENTS_DATA = 0
 				  or t1.intime is null
 				  or t1.outtime is null
-				  or t1.dbsource != 'metavision'
+				  -- or t1.dbsource != 'metavision'		-- carevue		-- removed this filter. can be filtered in python.
 				then 1
 				else 0 end as excluded
 		from t1

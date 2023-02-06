@@ -61,6 +61,7 @@ begin
 		ADD COLUMN intime						timestamp without time zone, 
 		ADD COLUMN outtime						timestamp without time zone, 
 		ADD COLUMN los_hours 					numeric,
+		ADD COLUMN dbsource 					text,
 		ADD COLUMN day_on_icu 					int,				-- day_on_icu
 		ADD COLUMN icustays_count				bigint,
 		ADD COLUMN age							numeric,
@@ -90,6 +91,7 @@ begin
 	    ADD COLUMN electivesurgery 				int,
 		-- comorbidities
 		ADD COLUMN stroke_type					text,
+		ADD COLUMN infarct_type					text,
 		ADD COLUMN hypertension_flag			int,
 		ADD COLUMN diabetes_flag				int,
 		ADD COLUMN cancer_flag					int,
@@ -108,6 +110,7 @@ begin
 		intime = v_patient_record.intime,
 		outtime = v_patient_record.outtime,
 		los_hours = v_patient_record.los_hours,
+		dbsource = v_patient_record.dbsource,
 		icustays_count = v_patient_record.icustays_count,
 		age = TRUNC((v_patient_record.age), 0),
 		patientweight = v_patient_record.patientweight,
@@ -134,6 +137,7 @@ begin
 		drug_abuse_flag = v_patient_record.drug_abuse_flag,
 		sepsis_flag = v_patient_record.sepsis_flag,
 		stroke_type = v_patient_record.stroke_type,
+		infarct_type = v_patient_record.infarct_type,
 		icd9_code = v_patient_record.icd9_code,
 		all_icd9_codes = v_patient_record.all_icd9_codes;
 
@@ -148,13 +152,13 @@ begin
 	FOR v_day in 1..(SELECT max(day_on_icu) 
 					 FROM public.temp_transposed_patient
 					 WHERE temp_transposed_patient.icustay_id = v_patient_record.icustay_id) LOOP
- 
+ 	
 		-- use a view to add day_on_icu also here
 		with oasis_1 as (
 			SELECT 
 				*,
 				ROW_NUMBER() OVER (PARTITION BY oasis.icustay_id ORDER BY oasis.icustay_id) as day_on_icu
-			FROM mimiciii.oasis
+			FROM mimiciii.oasis										-- this table comes from the GitHub repository https://github.com/caisr-hh/Dayly-SAPS-III-and-OASIS-scores-for-MIMIC-III
 			WHERE oasis.icustay_id = v_patient_record.icustay_id
 		)
 		SELECT 

@@ -8,41 +8,46 @@ from supplements import selection_icd9_codes
 ####### MAIN #######
 if __name__ == '__main__':
     PROJECT_PATH: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'  # this variable must be fitted to the users local project folder
-    USE_CASE_NAME: str = 'stroke_patients_data'  # stroke_patients_data       # heart_infarct_patients_data
-    FEATURE_SELECTION_DF = pd.read_excel('./supplements/feature_preprocessing_table.xlsx')
-    SELECTED_FEATURES = FEATURE_SELECTION_DF[FEATURE_SELECTION_DF['selected_for_analysis'] == 'yes'][
-        'feature_name'].to_list()
+    USE_CASE_NAME: str = 'stroke_all_systems'  # stroke_patients_data       # heart_infarct_patients_data
+
+    FEATURES_DF = pd.read_excel('./supplements/feature_preprocessing_table.xlsx')
+    SELECTED_FEATURES = FEATURES_DF[FEATURES_DF['selected_for_analysis'] == 'yes']['feature_name'].to_list()
     SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'  # death_3_days, death_in_hosp
 
     ### Setup, MIMIC-III Export from DB, Load from Cache
     # Step 0) Setup when first time using db:
     # mimic_to_csv.setup_postgre_files()                 # setup all needed background functions and views for postgre. Warning: Sometimes this setup from Python does not work. Then you simply copy&paste each SQL Script into PostGre QueryTool and execute it.
-    # mimic_to_csv.create_table_all_diagnoses()          # create a necessary table 'all_diagnoses' where for each admission all available diagnoses are saved in the new field 'all_icd_codes' (takes approx. 45 min)
+    # mimic_to_csv.create_table_all_diagnoses()          # create a necessary table 'all_diagnoses' where for each admission all available diagnoses are saved in the new field 'all_icd_codes' (takes approx. 2 hours)
     # mimic_to_csv.create_supplement_dictionaries()      # create supplementary dictionary files
     # mimic_to_csv.load_comorbidities_into_db()          # create the necessary table 'comorbidity_codes' where the icd9_codes that are used to find important comorbidities are loaded into the DB
 
     # Step 1.1) Export the raw patient data for the specified use_case (icd_list) into .csv files, all available features will be exported
-    # stroke use-case has 1232 patients, each takes approx. 30 seconds -> 500 Minutes, 8,5 hours
-
-    # mimic_to_csv.export_patients_to_csv(project_path=PROJECT_PATH,
-    #                                    use_case_icd_list=selection_icd9_codes.selected_myocardial_infarct_codes,            # stroke case = icd9_00_stroke_selected
-    #                                   use_case_itemids=[],
-    #                                  use_case_name=USE_CASE_NAME)
+    # metavision stroke use-case has 1232 patients, each takes approx. 30 seconds -> 500 Minutes, 8,5 hours
+    # complete stroke cases has 2655 -> 1300 minutes, 20 hours
+    # Run this function only once for the patient-export. Afterwards use .csvs
+    mimic_to_csv.export_patients_to_csv(project_path=PROJECT_PATH,
+                                        use_case_icd_list=selection_icd9_codes.selected_stroke_codes,            # stroke case = icd9_00_stroke_selected
+                                        use_case_itemids=[],
+                                        use_case_name=USE_CASE_NAME)
 
     # Step 1.2) Filter final patient.csvs for relevant features and export as 'final_dataset'
+    # transform raw.csvs into filtered, final .csvs
+    # todo: need to change this because now also carevue included? for example need to map 'carevue White-Blood-Cells' to 'metavision White Blood Cells' ?
+        # Idea: if patient = carevue rename important columns into metavision names
+        # carvue blood pressure seems to be: NBP [Diastolic]	NBP [Systolic]	NBP Mean
     # select_relevant_features.export_final_dataset(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME)
 
     # Step 1.3) Load all .csv files as a 'Patient' Object, use Pickle for Cache
+    # After .csvs finished, use the cache option to load patients
     # cache_IO.save_csvs_into_cache(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME)
-    cache_IO.load_patients_from_cache(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME,
-                                      delete_existing_cache=False)
+    # cache_IO.load_data_from_cache(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME, delete_existing_cache=False)
 
     ### Preprocessing
     # Step 2.1) Calculate avg, min, max for each feature for each patient
-    complete_avg_patient_cohort = Patient.get_avg_patient_cohort(project_path=PROJECT_PATH,
-                                                                 use_case_name=USE_CASE_NAME,
-                                                                 selected_patients=[])  # if empty -> all
-    avg_hemorrhage_cohort = complete_avg_patient_cohort[complete_avg_patient_cohort['stroke_type'] == 'hemorrhagic']
+    # complete_avg_patient_cohort = Patient.get_avg_patient_cohort(project_path=PROJECT_PATH,
+    #                                                           use_case_name=USE_CASE_NAME,
+    #                                                          selected_patients=[])  # if empty -> all
+    # avg_hemorrhage_cohort = complete_avg_patient_cohort[complete_avg_patient_cohort['stroke_type'] == 'hemorrhagic']
     # avg_ischemic_cohort = complete_avg_patient_cohort[complete_avg_patient_cohort['stroke_type'] == 'ischemic']
 
     # Step 2.2) Impute, Interpolate, Normalize dataframes for each patient
@@ -57,6 +62,7 @@ if __name__ == '__main__':
     # label | classification (existing values of this feature) | patients_in_training_set (count/occurrence) | correlation_to_death | p-value (continuous) | chi-squared-value (categorical) | NaN Amount
 
     # TODO: Rework filtering because its not correct. -> maybe move stroke_type and infarct_type into Patient Class -> more flexible for future cases instead of Postgres Script
+    # todo: are the hemorrhagic filters correct?
     # TODO: IMPORTANT: Do calculations again with correct dataset (for stroke & heart new exports) and with normalized data??? -> better results??
     # general_statistics.calculate_feature_overview_table(selected_patient_cohort=complete_avg_patient_cohort,
     #                                                   cohort_title='complete_avg_patient_cohort',
