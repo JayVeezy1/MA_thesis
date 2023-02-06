@@ -205,7 +205,7 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, sele
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
-        filename_string: str = f'./output/features_overview_{cohort_title}_{current_time}.csv'
+        filename_string: str = f'./output/features_overview_table_{cohort_title}_{current_time}.csv'
         filename = filename_string.encode()
         with open(filename, 'w', newline='') as output_file:
             overview_df.to_csv(output_file, index=False)

@@ -24,6 +24,9 @@ class Patient:
     def __init__(self, patient_id: str, patient_data: dataframe):
         self.features: list = list(patient_data.columns.values)
 
+        # todo: idea: set stroke_type or infarct_type here when first loading patient -> not needed inside Postgres/raw.csv -> but useful if also available for cohort somehow?
+        # but its needed inside postgres for selecting the correct patients? No! patient-selection is with the icd9_list
+
         if patient_id not in Patient.all_patient_ids_set:
             self.patient_id = patient_id
             Patient.all_patient_ids_set.add(patient_id)
@@ -172,12 +175,12 @@ class Patient:
         avg_patient_cohort_dataframe = avg_patient_cohort_dataframe.reset_index(drop=True)
 
         # Export avg_patient_cohort
-        filename_string: str = f'{project_path}/exports/{use_case_name}/avg_patient_cohort.csv'
+        filename_string: str = f'{project_path}exports/{use_case_name}/avg_patient_cohort.csv'
         filename = filename_string.encode()
         with open(filename, 'w', newline='') as output_file:
             avg_patient_cohort_dataframe.to_csv(output_file, index=False)
 
-        print(f'STATUS: avg_patient_cohort file was saved to {project_path}/exports/{use_case_name} \n')
+        print(f'STATUS: avg_patient_cohort file was saved to {project_path}exports/{use_case_name} \n')
 
         return avg_patient_cohort_dataframe
 

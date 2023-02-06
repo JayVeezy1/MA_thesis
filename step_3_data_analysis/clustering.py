@@ -27,9 +27,8 @@ def get_ids_for_cluster(avg_patient_cohort, cohort_title, selected_features, sel
                                                       verbose=True)
 
     # connect k-means clusters back to icustay_ids
-    clusters_df: dataframe = pd.DataFrame({'icustay_id': avg_patient_cohort['icustay_id'],
-                                           # todo: recheck if this connection is correct, if sorting changed then wrong icustay_id to wrong cluster
-                                           'cluster': k_means_list})
+    # todo: recheck if this connection is correct, if sorting changed then wrong icustay_id to wrong cluster
+    clusters_df: dataframe = pd.DataFrame({'icustay_id': avg_patient_cohort['icustay_id'],'cluster': k_means_list})
 
     print(
         f'CHECK: Count of patients for cluster {selected_cluster}: {len(clusters_df["icustay_id"][clusters_df["cluster"] == selected_cluster])}')
@@ -101,7 +100,7 @@ def plot_clusters_on_3D_pacmap(plot_title, pacmap_data_points, cluster_count, sh
 
     if save_to_file:
         plt.savefig(
-            f'./output/clustering/3D_clusters_kmeans_{plot_title.replace(" ", "_")}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')       # todo: remove plot title from filename?
+            f'./output/clustering/3D_clusters_kmeans_{plot_title.replace(" ", "_")}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
     plt.show()
     plt.close()
 
@@ -161,20 +160,15 @@ def plot_clusters_on_pacmap(avg_patient_cohort, cohort_title, selected_features,
                                                                          selected_dependent_variable=selected_dependent_variable)
 
     # Plot the cluster with best sh_score
-    # cmap = matplotlib.cm.get_cmap('tab20')
-    # rgba = cmap(0.5)
     k_means_list, sh_score = calculate_cluster_kmeans(avg_np, cohort_title, n_clusters=selected_cluster_count)
     plot_title = f"k_Means_clusters_{selected_cluster_count} for {cohort_title}"
     plot_clusters_on_3D_pacmap(plot_title=plot_title, pacmap_data_points=pacmap_data_points, cluster_count=selected_cluster_count,
                                sh_score=sh_score, coloring=k_means_list, save_to_file=save_to_file)
 
-    # Plot 4 figures 'overview' in one plot:
-    # plot_cluster_details(plot_title=title, data=pacmap_data_points, sh_score=best_score, coloring=k_means_list, death_list=death_list, color_map='tab20c', selected_dependent_variable=selected_dependent_variable, cohort_title, save_to_file=save_to_file)
-
     return None
 
 
-# todo: rework this old graphic, might be helpful for choosing optimal cluster?
+# todo: rework this old graphic, might be helpful for choosing optimal cluster? -> idea: quick overview of cluster details
 def plot_cluster_details(plot_title: str, data: np.ndarray, death_list: list, sh_score: float, coloring: [float],
                          color_map: str, selected_dependent_variable: str, cohort_title: str, save_to_file: bool):
     fig = plt.figure()
