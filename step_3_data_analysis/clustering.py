@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt, cm
 from pandas.core.interchange import dataframe
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, DBSCAN
 from sklearn.metrics import silhouette_score
 
 from step_2_preprocessing import preprocessing_functions
@@ -61,19 +61,47 @@ def transform_df_to_np_for_clustering(avg_patient_cohort,
 def calculate_cluster_kmeans(avg_np: np.ndarray, cohort_title: str, n_clusters: int, verbose: bool = False):
     """
     k-means clustering: choose amount n_clusters to calculate k centroids for these clusters
-
-    :param verbose:
-    :param cohort_title:
-    :param avg_np:
+    :param verbose: boolean for printing STATUS
+    :param cohort_title: title for STATUS
+    :param avg_np: data
     :param n_clusters: amount of k clusters
     :return: list of responding clusters in the same order as patients list
     """
     if verbose:
         print(f'STATUS: Calculating k-means on {cohort_title} for {n_clusters} clusters.')
-    # use weights per label to give imputed labels less weight?
+
+    # Calculate KMeans
     kmeans_obj = KMeans(init="k-means++", n_clusters=n_clusters, n_init=4, random_state=0, max_iter=350).fit(avg_np)
     clustering_labels_list = kmeans_obj.labels_             # todo: directly merge these labels back to the icustay_id -> one place. Not return of labels as list but series icustay_id | cluster_label
 
+    # get sh_score
+    avg_np.reshape(avg_np.shape[0], -1)  # does this have an effect?
+    if len(set(clustering_labels_list)) < 2:
+        sh_score = 0
+    else:
+        sh_score = round(silhouette_score(avg_np, labels=clustering_labels_list, metric='euclidean', random_state=0), 2)
+
+    return clustering_labels_list, sh_score
+
+
+def calculate_cluster_DBSCAN(avg_np: np.ndarray, cohort_title: str, eps: float, min_samples: int, verbose: bool = False):
+    """
+    density Based Spatial Clustering of Applications with Noise. Instances in dense region get clustered.
+    :param verbose: boolean for printing STATUS
+    :param cohort_title: title for STATUS
+    :param avg_np: data
+    :param eps: radius of clustering regions
+    :param min_samples: needed for minimum amount of neighbors in clustering regions
+    :return: list of responding clusters in the same order as patients list
+    """
+    if verbose:
+        print(f'STATUS: Calculating DBSCAN on {cohort_title} for {eps} epsilon with {min_samples} min_samples.')
+
+    # Calculate DBSCAN
+    clustering_obj = DBSCAN(eps=eps, min_samples=min_samples).fit(avg_np)           # we could use weights per label to give imputed labels less weight?
+    clustering_labels_list = clustering_obj.labels_
+
+    # get sh_score
     avg_np.reshape(avg_np.shape[0], -1)  # does this have an effect?
     if len(set(clustering_labels_list)) < 2:
         sh_score = 0

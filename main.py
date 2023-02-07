@@ -18,24 +18,23 @@ if __name__ == '__main__':
     # Step 0) Setup when first time using db:
     # mimic_to_csv.setup_postgre_files()                 # setup all needed background functions and views for postgre. Warning: Sometimes this setup from Python does not work. Then you simply copy&paste each SQL Script into PostGre QueryTool and execute it.
     # mimic_to_csv.create_table_all_diagnoses()          # create a necessary table 'all_diagnoses' where for each admission all available diagnoses are saved in the new field 'all_icd_codes' (takes approx. 2 hours)
-    # mimic_to_csv.create_supplement_dictionaries()      # create supplementary dictionary files
+    mimic_to_csv.create_supplement_dictionaries()      # create supplementary dictionary files
     # mimic_to_csv.load_comorbidities_into_db()          # create the necessary table 'comorbidity_codes' where the icd9_codes that are used to find important comorbidities are loaded into the DB
 
     # Step 1.1) Export the raw patient data for the specified use_case (icd_list) into .csv files, all available features will be exported
     # metavision stroke use-case has 1232 patients, each takes approx. 30 seconds -> 500 Minutes, 8,5 hours
     # complete stroke cases has 2655 -> 1300 minutes, 20 hours
     # Run this function only once for the patient-export. Afterwards use .csvs
-    mimic_to_csv.export_patients_to_csv(project_path=PROJECT_PATH,
-                                        use_case_icd_list=selection_icd9_codes.selected_stroke_codes,            # stroke case = icd9_00_stroke_selected
-                                        use_case_itemids=[],
-                                        use_case_name=USE_CASE_NAME)
+    #mimic_to_csv.export_patients_to_csv(project_path=PROJECT_PATH,
+     #                                   use_case_icd_list=selection_icd9_codes.selected_stroke_codes,            # stroke case = icd9_00_stroke_selected
+      #                                  use_case_itemids=[],
+       #                                 use_case_name=USE_CASE_NAME)
 
     # Step 1.2) Filter final patient.csvs for relevant features and export as 'final_dataset'
     # transform raw.csvs into filtered, final .csvs
     # todo: need to change this because now also carevue included? for example need to map 'carevue White-Blood-Cells' to 'metavision White Blood Cells' ?
         # Idea: if patient = carevue rename important columns into metavision names
-        # carvue blood pressure seems to be: NBP [Diastolic]	NBP [Systolic]	NBP Mean
-    # select_relevant_features.export_final_dataset(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME)
+    select_relevant_features.export_final_dataset(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME)
 
     # Step 1.3) Load all .csv files as a 'Patient' Object, use Pickle for Cache
     # After .csvs finished, use the cache option to load patients
@@ -73,8 +72,8 @@ if __name__ == '__main__':
     # Step 3.2) Visualization, Correlation, Clustering, etc.
     # PacMap
     # data_visualization.display_pacmap(avg_patient_cohort=avg_hemorrhage_cohort, cohort_title='avg_hemorrhage_cohort',
-    #                               selected_features=SELECTED_FEATURES, selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-    #                            save_to_file=True)
+    #                                   selected_features=SELECTED_FEATURES, selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+    #                                   save_to_file=True)
 
     # Correlations (also available: plot_heatmap and plot_pairplot)
     # correlations.plot_correlations(avg_patient_cohort=avg_hemorrhage_cohort,
@@ -82,7 +81,7 @@ if __name__ == '__main__':
     #                             selected_features=SELECTED_FEATURES,
     #                            selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE, save_to_file=False)
 
-    # todo long term: Add DBSCAN Prototype
+    # todo long term: Test DBSCAN Prototype, implement both available methods in one main-clustering method 'plot_clusters_on_pacmap'
     # Clustering Prototype
     # clustering.plot_sh_score_kmeans(avg_patient_cohort=avg_hemorrhage_cohort, cohort_title='avg_hemorrhage_cohort', selected_features=SELECTED_FEATURES, selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE, filter_labels=False, save_to_file=True)
     # manually checking silhouette score shows: 3 clusters is optimal

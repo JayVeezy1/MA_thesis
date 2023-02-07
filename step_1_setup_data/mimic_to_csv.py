@@ -95,7 +95,7 @@ def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_i
         query_counter = 0
         seconds_cumulated = 0
         # IMPORTANT: Select patient count in icu_stay_ids[:], when still in testing only use [:3]
-        for icustay_id in icu_stay_ids:
+        for icustay_id in icu_stay_ids[1874:]:           # probably needed to split up dataset, only approx. 930 patients worked with my PC, then 'shared memory exhausted'. Simply carry on export with next icustay_id.
             print('STATUS: Executing query_single_icustay for icustay_id', str(icustay_id))
             query_counter += 1
             starting_time = datetime.now()

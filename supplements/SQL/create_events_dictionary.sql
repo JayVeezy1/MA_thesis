@@ -14,6 +14,12 @@ inputevents_mv as (
 		amountuom as valueuom
 	from mimiciii.inputevents_mv
 ),
+inputevents_cv as (
+	select 
+		distinct(itemid), 
+		amountuom as valueuom
+	from mimiciii.inputevents_cv
+),
 outputevents as (
 	select 
 		distinct(itemid), 
@@ -63,7 +69,7 @@ d_items as(
 		d_items.category,
 		d_items.dbsource
 	from mimiciii.d_items
-	where not d_items.dbsource = 'carevue'			-- removing carevue, otherwise > 12000 additional itemids
+	-- where not d_items.dbsource = 'carevue'			-- removing carevue, otherwise > 12000 additional itemids
 ), d_labitems as(
 	Select 
 		d_labitems.itemid,

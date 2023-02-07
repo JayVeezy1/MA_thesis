@@ -1,4 +1,3 @@
-import csv
 import os
 from operator import countOf
 
@@ -12,67 +11,58 @@ from matplotlib import pyplot as plt
 def export_final_dataset(project_path, use_case_name):
     # step 0: select relevant features
     # select all known general patient_info features
-    general_features: list = ['icustay_id', 'hadm_id', 'subject_id',
-                               'intime', 'outtime', 'los_hours',
-                              'icustays_count',
-                               'age', 'patientweight', 'gender', 'ethnicity',
-                               'admission_type', 'discharge_location', 'insurance',
-                               'language', 'religion', 'marital_status', 'diagnosis_text',
-                               'dob', 'dod',
-                               'death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
-                               'death_365_days',
-                               'preiculos', 'gcs', 'mechvent', 'electivesurgery',
-                               'stroke_type',
-                               'hypertension_flag',
-                               'diabetes_flag',
-                               'cancer_flag',
-                               'obesity_flag',
-                               'drug_abuse_flag',
-                               'sepsis_flag',
-                               'icd9_code',
-                               'all_icd9_codes']
+    general_features: list = ['icustay_id', 'hadm_id', 'subject_id', 'intime', 'outtime', 'los_hours', 'icustays_count',
+                              'age', 'patientweight', 'gender', 'ethnicity', 'admission_type', 'discharge_location',
+                              'insurance', 'language', 'religion', 'marital_status', 'diagnosis_text', 'dob', 'dod',
+                              'death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days', 'death_365_days',
+                              'preiculos', 'gcs', 'mechvent', 'electivesurgery', 'stroke_type', 'infarct_type',
+                              'hypertension_flag', 'diabetes_flag', 'cancer_flag', 'obesity_flag', 'drug_abuse_flag',
+                              'sepsis_flag', 'icd9_code', 'all_icd9_codes']
 
     # select features that are known and important from prev research (will be added again later)
     vitals_features: list = ['charttime',
-                                # from novel nomogram paper:
-                                # Vitals
-                                # 'Anion gap',      # removed: same as 'Anion Gap' but 1 hour later
-                                'Anion Gap',
-                                'Bicarbonate',
-                                'Chloride (whole blood)',
-                                'Calcium Total',
-                                'Creatinine',
-                                'Glucose (whole blood)',
-                                'Potassium (whole blood)',
-                                'Sodium (whole blood)',
-                                'Hemoglobin',
-                                # 'WBC',            # removed: same as 'White Blood Cells' but 1 hour later
-                                'White Blood Cells',
-                                'Packed Red Blood Cells',
-                                'Platelet Count',
-                                'Prothrombin time',
-                                'INR',              # definition: international normalized ratio (INR) for blood
-                                'Heart Rate',
-                                'Respiratory Rate',
-                                # 'Respiratory Rate (Total)',       # removed: 'Respiratory Rate' is much more common
-                                # Blood Pressure
-                                'Arterial Blood Pressure diastolic',
-                                'Non Invasive Blood Pressure diastolic',
-                                #'ART BP Diastolic',
-                                'Arterial Blood Pressure systolic',
-                                'Non Invasive Blood Pressure systolic',
-                                #'ART BP Systolic',
-                                'Arterial Blood Pressure mean',
-                                'Non Invasive Blood Pressure mean',
-                                #'ART BP Mean',
-                                # O2
-                                # 'Arterial O2 Saturation',
-                                'O2 saturation pulseoxymetry',      # pulseoxymetry is the most common for O2
-                                # 'ART %O2 saturation (PA Line)',
-                                # Gauges (important for stroke use-case)
-                                '14 Gauge', '16 Gauge', '18 Gauge', '20 Gauge',  '22 Gauge',
-                                'day_on_icu', 'oasis', 'oasis_prob'         # these will not be at the original position with the other general_info, but they must be with vitals_df because hourly/daily values
-                                ]
+                             # selected following the novel nomogram paper:
+                             # Vitals
+                             # 'Anion gap',      # removed: same as 'Anion Gap' but 1 hour later
+                             'Anion Gap',
+                             'Bicarbonate',
+                             'Chloride (whole blood)',
+                             'Calcium Total',
+                             'Creatinine',
+                             'Glucose (whole blood)',
+                             'Potassium (whole blood)',
+                             'Sodium (whole blood)',
+                             'Hemoglobin',
+                             # 'WBC',            # removed: same as 'White Blood Cells' but 1 hour later
+                             'White Blood Cells',
+                             'Packed Red Blood Cells',
+                             'Platelet Count',
+                             'Prothrombin time',
+                             'INR',  # definition: international normalized ratio (INR) for blood
+                             'Heart Rate',
+                             'Respiratory Rate',
+                             # 'Respiratory Rate (Total)',       # removed: 'Respiratory Rate' is much more common
+                             # Blood Pressure
+                             'Arterial Blood Pressure diastolic',
+                             'Non Invasive Blood Pressure diastolic',
+                             # 'ART BP Diastolic',
+                             'Arterial Blood Pressure systolic',
+                             'Non Invasive Blood Pressure systolic',
+                             # 'ART BP Systolic',
+                             'Arterial Blood Pressure mean',
+                             'Non Invasive Blood Pressure mean',
+                             # 'ART BP Mean',
+                             # O2
+                             # 'Arterial O2 Saturation',
+                             'O2 saturation pulseoxymetry',  # pulseoxymetry is the most common for O2
+                             # 'ART %O2 saturation (PA Line)',
+                             # Gauges (important for stroke use-case)
+                             '14 Gauge', '16 Gauge', '18 Gauge', '20 Gauge', '22 Gauge',
+                             'day_on_icu', 'oasis', 'oasis_prob'
+                             # oasis will not be at the original position with the other general_info, but they must be with vitals_df because hourly/daily values
+                             ]
+
+    carevue_features: list = ['NBP [Diastolic]', 'NBP [Systolic]', 'NBP Mean']
 
     print('CHECK: Count of general_features:', len(general_features))
     print('CHECK: Count of vitals_features:', len(vitals_features))
@@ -86,31 +76,63 @@ def export_final_dataset(project_path, use_case_name):
             # import raw_.csv, not memory-ideal because pd. has to guess each column dtype, but it works fine
             patient_df = pd.read_csv(f'{project_path}/exports/{use_case_name}/raw/{file}', low_memory=False)
             patient_df.index.name = 'row_id'
-            vitals_patient_df = patient_df[patient_df.columns[patient_df.columns.isin(vitals_features)]].copy()
+
+            # keep all general features
             general_patient_df = patient_df[patient_df.columns[patient_df.columns.isin(general_features)]].copy()
-            for feature in vitals_features:                                            # checking that every selected_feature is a column in the vitals_patient_df
+            # keep all existing vitals features
+            vitals_patient_df = patient_df[patient_df.columns[patient_df.columns.isin(vitals_features)]].copy()
+            # add missing vitals features with empty column
+            for feature in vitals_features:
                 if feature not in vitals_patient_df:
-                    vitals_patient_df.insert(loc=0, column=feature, value=np.nan)      # loc was left out because alphabetical ordering later
+                    vitals_patient_df.insert(loc=0, column=feature,
+                                             value=np.nan)  # loc was left out because alphabetical ordering later
 
             # Sum of all Gauge Types into gauges_total
-            vitals_patient_df.insert(loc=0, column='gauges_total', value=vitals_patient_df[['14 Gauge', '16 Gauge', '18 Gauge', '20 Gauge', '22 Gauge']].sum(axis=1))
-            vitals_patient_df = vitals_patient_df.drop(columns=['14 Gauge', '16 Gauge', '18 Gauge', '20 Gauge',  '22 Gauge'])
+            vitals_patient_df.insert(loc=0, column='gauges_total', value=vitals_patient_df[
+                ['14 Gauge', '16 Gauge', '18 Gauge', '20 Gauge', '22 Gauge']].sum(axis=1))
+            vitals_patient_df = vitals_patient_df.drop(
+                columns=['14 Gauge', '16 Gauge', '18 Gauge', '20 Gauge', '22 Gauge'])
 
-            # alphabetical order
-            vitals_patient_df = vitals_patient_df.reindex(sorted(vitals_patient_df.columns), axis=1)
-            temp_cols = vitals_patient_df.columns.tolist()
+            # keep the carevue columns that have matching/corresponding metavision feature
+            # todo: make certain unit of measurement is correct for each
+            carevue_patients_df = patient_df[patient_df.columns[patient_df.columns.isin(carevue_features)]].copy()
+
+            # rename the carevue columns
+            # todo: use hardcoded mapping with dict -> alternative would have been an Excel Table
+
+            # carevue_patients_df.rename({'NBP [Diastolic]': 'Arterial Blood Pressure diastolic',
+            #                'Non Invasive Blood Pressure diastolic',
+            #                         'NBP [Systolic]':                              'Arterial Blood Pressure systolic',
+            #              'Non Invasive Blood Pressure systolic', ,
+            #                        'NBP Mean':                              'Arterial Blood Pressure mean',
+            # })
+
+            # Add carevue columns to final_vitals_df
+            final_vitals_df = vitals_patient_df.copy()
+            for renamed_feature in carevue_patients_df.columns():
+                current_columns_count = len(final_vitals_df.columns)
+                final_vitals_df.insert(loc=current_columns_count, column=renamed_feature,
+                                       value=carevue_patients_df[renamed_feature].iloc[
+                                           0])  # todo: check why iloc[0] -> only copy first row or complete column?
+
+            # Alphabetical Order
+            final_vitals_df = final_vitals_df.reindex(sorted(final_vitals_df.columns), axis=1)
+            temp_cols = final_vitals_df.columns.tolist()
             # move charttime to front
             new_cols = temp_cols[-1:] + temp_cols[:-1]
-            vitals_patient_df = vitals_patient_df[new_cols]
+            final_vitals_df = final_vitals_df[new_cols]
             # move day_on_icu, oasis, oasis_prob to back
-            vitals_patient_df = vitals_patient_df[[column for column in vitals_patient_df if column not in ['day_on_icu', 'oasis', 'oasis_prob']] + ['day_on_icu', 'oasis', 'oasis_prob']]
+            final_vitals_df = final_vitals_df[
+                [column for column in final_vitals_df if column not in ['day_on_icu', 'oasis', 'oasis_prob']] + [
+                    'day_on_icu', 'oasis', 'oasis_prob']]
 
             # Add general patient info to the back
             # final_patient_df = pd.concat([vitals_patient_df, general_patient_df])       # concat not possible, needs a key for join
-            final_patient_df = vitals_patient_df.copy()
+            final_patient_df = final_vitals_df.copy()
             for feature in general_features:
                 current_columns_count = len(final_patient_df.columns)
-                final_patient_df.insert(loc=current_columns_count, column=feature, value=general_patient_df[feature].iloc[0])
+                final_patient_df.insert(loc=current_columns_count, column=feature,
+                                        value=general_patient_df[feature].iloc[0])
             # print(final_patient_df)
 
             # step 3: export final .csv file
@@ -204,7 +226,7 @@ def plot_occurrence_of_features(project_path, use_case_name):
                                 '20 Gauge', '18 Gauge', '22 Gauge', '16 Gauge', '14 Gauge']
     # manually remove features that can be safely dismissed
     # the following are removed, even though little medical knowledge exists
-    unimportant_features: list = ['Gender', 'Religion',  'Language',   # are in general as 'gender' and 'religion'
+    unimportant_features: list = ['Gender', 'Religion', 'Language',  # are in general as 'gender' and 'religion'
                                   'Nasal Swab', 'Abdominal Assessment', 'Activity', 'Activity Tolerance',
                                   'Admission Weight (Kg)', 'Alarms On', 'Ambulatory aid',
                                   'Anti Embolic Device', 'Anti Embolic Device Status', 'Assistance Device',
@@ -284,22 +306,24 @@ def plot_occurrence_of_features(project_path, use_case_name):
     # print(f'CHECK filtered_features_count_dict: {filtered_features_count_dict}')
     print(f'Count of general_information features: {len(general_features)}')
     print(f'Count of important_features features: {len(important_features)}')
-    print(f'Count of all remaining features depending on occurrence over {SELECTED_FEATURE_THRESHOLD*100} %: {len(filtered_features_count_list)}')
+    print(
+        f'Count of all remaining features depending on occurrence over {SELECTED_FEATURE_THRESHOLD * 100} %: {len(filtered_features_count_list)}')
     filtered_features_list = []
     for feature_tuple in filtered_features_count_list:
         filtered_features_list.append(feature_tuple[0])
     # print(f'CHECK filtered_features_count_dict: {filtered_features_list}')
 
     # Plot the filtered features that occur for all patients
-    feature_name, feature_count = zip(*filtered_features_count_list)          # if only print most important features: list[:(countOf(filtered_features_count_dict.values(), patient_count) + 5)]
+    feature_name, feature_count = zip(
+        *filtered_features_count_list)  # if only print most important features: list[:(countOf(filtered_features_count_dict.values(), patient_count) + 5)]
     plt.plot(feature_name, feature_count)
     plt.xticks(rotation=45, ha='right')
     plt.show()
 
     # Add again the general_features and important_features to final feature-list
-    selected_features: list = general_features                  # 42 features
-    selected_features.extend(important_features)                # 38 features
-    selected_features.extend(filtered_features_list)            # approx. 48 features
+    selected_features: list = general_features  # 42 features
+    selected_features.extend(important_features)  # 38 features
+    selected_features.extend(filtered_features_list)  # approx. 48 features
 
     # print(selected_features)
     print(f'Count of final selected features: {len(selected_features)}')
