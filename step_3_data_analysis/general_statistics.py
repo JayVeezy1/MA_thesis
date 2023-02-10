@@ -1,10 +1,8 @@
 import datetime
-import warnings
 
 import numpy as np
 import pandas as pd
 from numpy import sort
-from pandas import Series
 from pandas.core.interchange import dataframe
 
 from objects.patients import Patient
@@ -113,6 +111,8 @@ def calculate_deaths_table(selected_patient_cohort, cohort_title, use_case_name,
 
 
 def calculate_feature_overview_table(selected_patient_cohort, cohort_title, use_case_name, features_df, selected_features, selected_dependent_variable, save_to_file):
+    # todo maybe: add patients_in_training_set (count/occurrence) and chi-squared-value (for categorical features) to overview_table, and also R-Value from correlation?
+
     # get correlations per feature
     selected_features_corr = selected_features.copy()
     selected_features_corr.remove('icustay_id')
@@ -200,8 +200,6 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, use_
                                                f'Correlation_to_{selected_dependent_variable}': ['-'],
                                                'p_value': ['-']})
             overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
-
-    # todo: add correlation-to-death + p-value (must be after the correlation calculation?)
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")

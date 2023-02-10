@@ -46,37 +46,37 @@ if __name__ == '__main__':
     # avg_hemorrhage_cohort = complete_avg_patient_cohort[complete_avg_patient_cohort['stroke_type'] == 'hemorrhagic']
     # avg_ischemic_cohort = complete_avg_patient_cohort[complete_avg_patient_cohort['stroke_type'] == 'ischemic']
 
-    # TODO: add normalization
+    # TODO NEXT STEP 2: Do calculations again with normalized data -> better results??
 
     # todo long term: add interpolation/imputation to timeseries depending on NaN, and also min/max-columns for features?
+    # todo if keeping stroke: are the hemorrhagic filters correct? -> maybe move filtering of stroke_type and infarct_type into Patient Class -> more flexible for future cases instead of Postgres Script
 
     ### Data Analysis
     # Step 3.1) General Statistics
-    general_statistics.calculate_deaths_table(selected_patient_cohort=complete_avg_patient_cohort,
-                                              cohort_title='complete_avg_patient_cohort',
-                                              use_case_name=USE_CASE_NAME,
-                                              selected_features=SELECTED_FEATURES,
-                                              save_to_file=True)
-    # label | classification (existing values of this feature) | patients_in_training_set (count/occurrence) | correlation_to_death | p-value (continuous) | chi-squared-value (categorical) | NaN Amount
+    # general_statistics.calculate_deaths_table(selected_patient_cohort=complete_avg_patient_cohort,
+    #                                        cohort_title='complete_avg_patient_cohort',
+    #                                       use_case_name=USE_CASE_NAME,
+    #                                     selected_features=SELECTED_FEATURES,
+    #                                    save_to_file=True)
 
-    # TODO: Rework filtering because its not correct. -> maybe move stroke_type and infarct_type into Patient Class -> more flexible for future cases instead of Postgres Script
-    # todo: are the hemorrhagic filters correct?
-    # TODO: IMPORTANT: Do calculations again with correct dataset (for stroke & heart new exports) and with normalized data??? -> better results??
-    general_statistics.calculate_feature_overview_table(selected_patient_cohort=complete_avg_patient_cohort,
-                                                        features_df=FEATURES_DF,
-                                                        cohort_title='complete_avg_patient_cohort',
-                                                        use_case_name=USE_CASE_NAME,
-                                                        selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                                        selected_features=SELECTED_FEATURES,
-                                                        save_to_file=True)
+    # general_statistics.calculate_feature_overview_table(selected_patient_cohort=complete_avg_patient_cohort,
+    #                                                   features_df=FEATURES_DF,
+    #                                                  cohort_title='complete_avg_patient_cohort',
+    #                                                 use_case_name=USE_CASE_NAME,
+    #                                                selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,        # could be derived from features_df
+    #                                               selected_features=SELECTED_FEATURES,                            # could be derived from features_df
+    #                                              save_to_file=True)
 
     # Step 3.2) Visualization, Correlation, Clustering, etc.
     # PacMap
-    # data_visualization.display_pacmap(avg_patient_cohort=avg_hemorrhage_cohort, cohort_title='avg_hemorrhage_cohort',
-    #                                    use_case_name = USE_CASE_NAME,
-    #                                   selected_features=SELECTED_FEATURES, selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-    #                                   save_to_file=True)
+    data_visualization.display_pacmap(avg_patient_cohort=complete_avg_patient_cohort,
+                                      cohort_title='complete_avg_patient_cohort',
+                                      use_case_name=USE_CASE_NAME,
+                                      selected_features=SELECTED_FEATURES,
+                                      selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                      save_to_file=True)
 
+    # TODO NEXT STEP 1: carry on with analysis of complete dataset (+carevue) here
     # Correlations (also available: plot_heatmap and plot_pairplot)
     # correlations.plot_correlations(avg_patient_cohort=avg_hemorrhage_cohort,
     #                                    use_case_name = USE_CASE_NAME,

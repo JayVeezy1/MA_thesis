@@ -31,7 +31,7 @@ def calculate_pacmap(avg_patient_cohort, cohort_title, selected_features, select
     return pacmap_data_points, death_list         # pacmap_data_points = data points, death_list = markings
 
 
-def display_pacmap(avg_patient_cohort, cohort_title, selected_features, selected_dependent_variable, save_to_file):
+def display_pacmap(avg_patient_cohort, cohort_title, use_case_name, selected_features, selected_dependent_variable, save_to_file):
     pacmap_data_points, death_list = calculate_pacmap(avg_patient_cohort, cohort_title, selected_features, selected_dependent_variable)
 
     # Plot PacMap
@@ -53,7 +53,7 @@ def display_pacmap(avg_patient_cohort, cohort_title, selected_features, selected
 
     if save_to_file:
         plt.savefig(
-            f'./output/data_visualization/PacMap_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
+            f'./output/{use_case_name}/data_visualization/PacMap_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
     plt.show()
     plt.close()
 
