@@ -8,13 +8,10 @@ from pandas.core.interchange import dataframe
 from scipy.stats import stats
 
 
-def get_correlations_on_cohort(avg_patient_cohort, selected_features, selected_dependent_variable) -> dataframe:
+def get_correlations_on_cohort(avg_patient_cohort, selected_features_corr, selected_dependent_variable) -> dataframe:
     # Preprocessing for correlation
-    avg_patient_cohort = avg_patient_cohort.drop(columns=['icustay_id', 'stroke_type'])   # these features are needed for clustering, not correlations
-    selected_features_corr = selected_features.copy()
-    selected_features_corr.remove('icustay_id')
-    selected_features_corr.remove('stroke_type')
-    selected_features_corr.append(selected_dependent_variable)
+    avg_patient_cohort = avg_patient_cohort.drop(columns=['icustay_id', 'stroke_type', 'infarct_type', 'dbsource'])   # these features are needed for clustering, not correlations
+
     # todo: check/ask if there is better option? How to use non-numeric columns for correlation? Not really useful? But still needed for clustering right?
     avg_patient_cohort[['insurance', 'ethnicity']] = avg_patient_cohort[['insurance', 'ethnicity']].apply(lambda x: pd.factorize(x)[0])
     # insurance: medicare = 0, mediaid = 1, Government = 2, private = 3, Self Pay = 4
@@ -39,8 +36,14 @@ def get_correlations_on_cohort(avg_patient_cohort, selected_features, selected_d
     return death_corr.sort_values(ascending=False), validity_df['p_value'], validity_df['r_value']
 
 
-def plot_correlations(avg_patient_cohort, cohort_title, selected_features, selected_dependent_variable, save_to_file):
-    sorted_death_corr, p_value, r_value = get_correlations_on_cohort(avg_patient_cohort, selected_features, selected_dependent_variable)
+def plot_correlations(avg_patient_cohort, cohort_title, use_case_name, selected_features, selected_dependent_variable, save_to_file):
+    selected_features_corr = selected_features.copy()
+    selected_features_corr.remove('icustay_id')
+    selected_features_corr.remove('dbsource')
+    selected_features_corr.remove('stroke_type')
+    selected_features_corr.remove('infarct_type')
+
+    sorted_death_corr, p_value, r_value = get_correlations_on_cohort(avg_patient_cohort, selected_features_corr, selected_dependent_variable)
     # todo: also add pval to plot?
 
     # Plot of correlation
@@ -64,14 +67,14 @@ def plot_correlations(avg_patient_cohort, cohort_title, selected_features, selec
     fig.tight_layout()
     if save_to_file:
         plt.savefig(
-            f'./output/correlations/correlation_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
+            f'./output/{use_case_name}/correlations/correlation_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
     plt.show()
 
     print('STATUS: calculate_correlations_on_cohort executed.')
     return None
 
 
-def plot_heatmap(avg_patient_cohort, cohort_title, selected_features, selected_dependent_variable, save_to_file):
+def plot_heatmap(avg_patient_cohort, cohort_title, use_case_name, selected_features, selected_dependent_variable, save_to_file):
     # Preprocessing (not inside the normal correlation function, because here ALL correlations needed, not just death)
     selected_features_corr = selected_features.copy()
     selected_features_corr.remove('icustay_id')
@@ -92,14 +95,14 @@ def plot_heatmap(avg_patient_cohort, cohort_title, selected_features, selected_d
 
     if save_to_file:
         plt.savefig(
-            f'./output/correlations/heatmap_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
+            f'./output/{use_case_name}/correlations/heatmap_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
     plt.show()
 
     print('STATUS: plot_heatmap executed.')
     return None
 
 
-def plot_pairplot(avg_patient_cohort, cohort_title, selected_features, selected_dependent_variable, save_to_file):
+def plot_pairplot(avg_patient_cohort, cohort_title, use_case_name, selected_features, selected_dependent_variable, save_to_file):
     selected_features_pair = selected_features.copy()
     selected_features_pair.remove('icustay_id')
     selected_features_pair.remove('stroke_type')
@@ -114,7 +117,7 @@ def plot_pairplot(avg_patient_cohort, cohort_title, selected_features, selected_
 
     if save_to_file:
         plt.savefig(
-            f'./output/correlations/pairplot_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
+            f'./output/{use_case_name}/correlations/pairplot_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
     plt.show()
 
     print('STATUS: plot_pairplot executed.')

@@ -11,46 +11,35 @@ from matplotlib import pyplot as plt
 def export_final_dataset(project_path, use_case_name):
     # step 0: select relevant features
     # select all known general patient_info features
-    general_features: list = ['icustay_id', 'hadm_id', 'subject_id', 'intime', 'outtime', 'los_hours', 'icustays_count',
-                              'age', 'patientweight', 'gender', 'ethnicity', 'admission_type', 'discharge_location',
-                              'insurance', 'language', 'religion', 'marital_status', 'diagnosis_text', 'dob', 'dod',
-                              'death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days', 'death_365_days',
-                              'preiculos', 'gcs', 'mechvent', 'electivesurgery', 'stroke_type', 'infarct_type',
-                              'hypertension_flag', 'diabetes_flag', 'cancer_flag', 'obesity_flag', 'drug_abuse_flag',
-                              'sepsis_flag', 'icd9_code', 'all_icd9_codes']
+    general_features: list = ['icustay_id', 'hadm_id', 'subject_id', 'intime', 'outtime', 'los_hours', 'dbsource',
+                              'icustays_count', 'age', 'patientweight', 'gender', 'ethnicity', 'admission_type',
+                              'discharge_location', 'insurance', 'language', 'religion', 'marital_status',
+                              'diagnosis_text', 'dob', 'dod', 'death_in_hosp', 'death_3_days', 'death_30_days',
+                              'death_180_days', 'death_365_days', 'preiculos', 'gcs', 'mechvent', 'electivesurgery',
+                              'stroke_type', 'infarct_type', 'hypertension_flag', 'diabetes_flag', 'cancer_flag',
+                              'obesity_flag', 'drug_abuse_flag', 'sepsis_flag', 'icd9_code', 'all_icd9_codes']
 
     # select features that are known and important from prev research (will be added again later)
     vitals_features: list = ['charttime',
                              # selected following the novel nomogram paper:
                              # Vitals
                              # 'Anion gap',      # removed: same as 'Anion Gap' but 1 hour later
-                             'Anion Gap',
-                             'Bicarbonate',
-                             'Chloride (whole blood)',
-                             'Calcium Total',
-                             'Creatinine',
-                             'Glucose (whole blood)',
-                             'Potassium (whole blood)',
-                             'Sodium (whole blood)',
-                             'Hemoglobin',
+                             'Anion Gap', 'Bicarbonate', 'Chloride (whole blood)', 'Calcium Total', 'Creatinine',
+                             'Glucose (whole blood)', 'Potassium (whole blood)', 'Sodium (whole blood)', 'Hemoglobin',
                              # 'WBC',            # removed: same as 'White Blood Cells' but 1 hour later
-                             'White Blood Cells',
-                             'Packed Red Blood Cells',
-                             'Platelet Count',
-                             'Prothrombin time',
+                             'White Blood Cells', 'Packed Red Blood Cells', 'Platelet Count', 'Prothrombin time',
                              'INR',  # definition: international normalized ratio (INR) for blood
-                             'Heart Rate',
-                             'Respiratory Rate',
+                             'Heart Rate', 'Respiratory Rate',
                              # 'Respiratory Rate (Total)',       # removed: 'Respiratory Rate' is much more common
                              # Blood Pressure
                              'Arterial Blood Pressure diastolic',
-                             'Non Invasive Blood Pressure diastolic',
+                             # 'Non Invasive Blood Pressure diastolic', # removed: too many blood options, not fitting to carevue
                              # 'ART BP Diastolic',
                              'Arterial Blood Pressure systolic',
-                             'Non Invasive Blood Pressure systolic',
+                             # 'Non Invasive Blood Pressure systolic',
                              # 'ART BP Systolic',
                              'Arterial Blood Pressure mean',
-                             'Non Invasive Blood Pressure mean',
+                             # 'Non Invasive Blood Pressure mean',
                              # 'ART BP Mean',
                              # O2
                              # 'Arterial O2 Saturation',
@@ -62,7 +51,17 @@ def export_final_dataset(project_path, use_case_name):
                              # oasis will not be at the original position with the other general_info, but they must be with vitals_df because hourly/daily values
                              ]
 
-    carevue_features: list = ['NBP [Diastolic]', 'NBP [Systolic]', 'NBP Mean']
+    carevue_features: dict = {'NBP [Diastolic]': 'Arterial Blood Pressure diastolic',
+                              'NBP [Systolic]': 'Arterial Blood Pressure systolic',
+                              'NBP Mean': 'Arterial Blood Pressure mean',
+                              'Calcium': 'Calcium Total',
+                              'Chloride': 'Chloride (whole blood)',
+                              'Glucose': 'Glucose (whole blood)',
+                              'O2 %': 'O2 saturation pulseoxymetry',  # not ideal mapping?
+                              'RBC': 'Packed Red Blood Cells',
+                              'Potassium': 'Potassium (whole blood)',
+                              # 'Thrombin': 'Prothrombin time',     # alternative: Bleeding Time   # there is no good match available
+                              'Sodium': 'Sodium (whole blood)'}
 
     print('CHECK: Count of general_features:', len(general_features))
     print('CHECK: Count of vitals_features:', len(vitals_features))
@@ -72,8 +71,7 @@ def export_final_dataset(project_path, use_case_name):
 
     for file in os.listdir(f'{project_path}/exports/{use_case_name}/raw/'):
         if isfile(f'{project_path}/exports/{use_case_name}/raw/{file}') and not file == '0_patient_cohort.csv':
-            # step 1: load each patient
-            # import raw_.csv, not memory-ideal because pd. has to guess each column dtype, but it works fine
+            # load each patient: import raw_.csv (not memory-ideal because pd. has to guess each column dtype, but it works fine)
             patient_df = pd.read_csv(f'{project_path}/exports/{use_case_name}/raw/{file}', low_memory=False)
             patient_df.index.name = 'row_id'
 
@@ -81,39 +79,26 @@ def export_final_dataset(project_path, use_case_name):
             general_patient_df = patient_df[patient_df.columns[patient_df.columns.isin(general_features)]].copy()
             # keep all existing vitals features
             vitals_patient_df = patient_df[patient_df.columns[patient_df.columns.isin(vitals_features)]].copy()
-            # add missing vitals features with empty column
+
+            # Carevue: keep columns that have matching/corresponding metavision feature
+            carevue_patient_df = patient_df[patient_df.columns[patient_df.columns.isin(carevue_features.keys())]].copy()
+            # Carevue: rename columns (alternative to hardcoded would have been Excel mapping table)
+            carevue_patient_df = carevue_patient_df.rename(columns=carevue_features)
+            # Carevue: add columns to final_vitals_df
+            final_vitals_df = vitals_patient_df.copy()
+            for renamed_feature in carevue_patient_df.columns:
+                final_vitals_df[renamed_feature] = carevue_patient_df[renamed_feature]              # insert complete column
+
+            # Add missing vitals features with empty column
             for feature in vitals_features:
-                if feature not in vitals_patient_df:
-                    vitals_patient_df.insert(loc=0, column=feature,
-                                             value=np.nan)  # loc was left out because alphabetical ordering later
+                if feature not in final_vitals_df:
+                    final_vitals_df.insert(loc=0, column=feature, value=np.nan)  # loc was left out because alphabetical ordering later
 
             # Sum of all Gauge Types into gauges_total
-            vitals_patient_df.insert(loc=0, column='gauges_total', value=vitals_patient_df[
-                ['14 Gauge', '16 Gauge', '18 Gauge', '20 Gauge', '22 Gauge']].sum(axis=1))
-            vitals_patient_df = vitals_patient_df.drop(
-                columns=['14 Gauge', '16 Gauge', '18 Gauge', '20 Gauge', '22 Gauge'])
-
-            # keep the carevue columns that have matching/corresponding metavision feature
-            # todo: make certain unit of measurement is correct for each
-            carevue_patients_df = patient_df[patient_df.columns[patient_df.columns.isin(carevue_features)]].copy()
-
-            # rename the carevue columns
-            # todo: use hardcoded mapping with dict -> alternative would have been an Excel Table
-
-            # carevue_patients_df.rename({'NBP [Diastolic]': 'Arterial Blood Pressure diastolic',
-            #                'Non Invasive Blood Pressure diastolic',
-            #                         'NBP [Systolic]':                              'Arterial Blood Pressure systolic',
-            #              'Non Invasive Blood Pressure systolic', ,
-            #                        'NBP Mean':                              'Arterial Blood Pressure mean',
-            # })
-
-            # Add carevue columns to final_vitals_df
-            final_vitals_df = vitals_patient_df.copy()
-            for renamed_feature in carevue_patients_df.columns():
-                current_columns_count = len(final_vitals_df.columns)
-                final_vitals_df.insert(loc=current_columns_count, column=renamed_feature,
-                                       value=carevue_patients_df[renamed_feature].iloc[
-                                           0])  # todo: check why iloc[0] -> only copy first row or complete column?
+            final_vitals_df.insert(loc=0, column='gauges_total', value=final_vitals_df[
+                ['22 Gauge', '20 Gauge', '18 Gauge', '16 Gauge', '14 Gauge']].sum(axis=1))
+            final_vitals_df = final_vitals_df.drop(
+                columns=['22 Gauge', '20 Gauge', '18 Gauge', '16 Gauge', '14 Gauge'])
 
             # Alphabetical Order
             final_vitals_df = final_vitals_df.reindex(sorted(final_vitals_df.columns), axis=1)
@@ -132,10 +117,9 @@ def export_final_dataset(project_path, use_case_name):
             for feature in general_features:
                 current_columns_count = len(final_patient_df.columns)
                 final_patient_df.insert(loc=current_columns_count, column=feature,
-                                        value=general_patient_df[feature].iloc[0])
-            # print(final_patient_df)
+                                        value=general_patient_df[feature].iloc[0])         # only insert first row value because general_patient_info
 
-            # step 3: export final .csv file
+            # export final .csv file
             filename_id = file[15:21]
             filename_string: str = f'{project_path}/exports/{use_case_name}/selected_features/icustay_id_{filename_id}.csv'
             filename = filename_string.encode()

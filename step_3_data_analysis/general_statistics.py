@@ -11,7 +11,7 @@ from objects.patients import Patient
 from step_3_data_analysis.correlations import get_correlations_on_cohort
 
 
-def calculate_deaths_table(selected_patient_cohort, cohort_title, selected_features, save_to_file):
+def calculate_deaths_table(selected_patient_cohort, cohort_title, use_case_name, selected_features, save_to_file):
     # include dependent_variables (they are also used in the separate death_overview)
     available_dependent_variables: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
                                            'death_365_days']
@@ -101,7 +101,7 @@ def calculate_deaths_table(selected_patient_cohort, cohort_title, selected_featu
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
-        filename_string: str = f'./output/deaths_overview_{cohort_title}_{current_time}.csv'
+        filename_string: str = f'./output/{use_case_name}/deaths_overview_{cohort_title}_{current_time}.csv'
         filename = filename_string.encode()
         with open(filename, 'w', newline='') as output_file:
             deaths_df.to_csv(output_file, index=False)
@@ -112,16 +112,16 @@ def calculate_deaths_table(selected_patient_cohort, cohort_title, selected_featu
     return None
 
 
-def calculate_feature_overview_table(selected_patient_cohort, cohort_title, selected_features, selected_dependent_variable, save_to_file):
-    feature_categories_table = pd.read_excel('./supplements/feature_preprocessing_table.xlsx')
-
-    # include dependent_variables (they are also used in the separate death_overview)
-    available_dependent_variables: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
-                                           'death_365_days']
-    selected_features.extend(available_dependent_variables)
-
+def calculate_feature_overview_table(selected_patient_cohort, cohort_title, use_case_name, features_df, selected_features, selected_dependent_variable, save_to_file):
     # get correlations per feature
-    deaths_correlation_df, p_value, r_value = get_correlations_on_cohort(avg_patient_cohort=selected_patient_cohort.copy(), selected_features=selected_features, selected_dependent_variable=selected_dependent_variable)
+    selected_features_corr = selected_features.copy()
+    selected_features_corr.remove('icustay_id')
+    selected_features_corr.remove('dbsource')
+    selected_features_corr.remove('stroke_type')
+    selected_features_corr.remove('infarct_type')
+    deaths_correlation_df, p_value, r_value = get_correlations_on_cohort(avg_patient_cohort=selected_patient_cohort.copy(),
+                                                                         selected_features_corr=selected_features_corr,
+                                                                         selected_dependent_variable=selected_dependent_variable)
 
     # create overview_df
     data = {'Variables': ['Total'], 'Classification': ['Patients'], 'Count': [len(selected_patient_cohort.index)], 'NaN_Count': ['-'],
@@ -129,9 +129,9 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, sele
     overview_df: dataframe = pd.DataFrame(data)
 
     # fill the overview_df
-    for feature in selected_features:  # todo: also put features into categories to sort them (general_info, vital_signs, laboratory_results)
+    for feature in selected_features_corr:  # todo: also put features into categories to sort them (general_info, vital_signs, laboratory_results)
         # normal case, no binning needed
-        if feature_categories_table['needs_binning'][feature_categories_table['feature_name'] == feature].item() == 'False':
+        if features_df['needs_binning'][features_df['feature_name'] == feature].item() == 'False':
             for appearance in sort(pd.unique(selected_patient_cohort[feature])):
                 temp_df: dataframe = pd.DataFrame({'Variables': [feature],
                                                    'Classification': [appearance],
@@ -143,7 +143,7 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, sele
                                                    'p_value': [p_value[feature].item()]})
                 overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
         # binning needed for vital signs, etc.
-        elif feature_categories_table['needs_binning'][feature_categories_table['feature_name'] == feature].item() == 'True':
+        elif features_df['needs_binning'][features_df['feature_name'] == feature].item() == 'True':
 
             try:
                 feature_min = int(np.nanmin(selected_patient_cohort[feature].values))
@@ -205,7 +205,7 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, sele
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
-        filename_string: str = f'./output/features_overview_table_{cohort_title}_{current_time}.csv'
+        filename_string: str = f'./output/{use_case_name}/features_overview_table_{cohort_title}_{current_time}.csv'
         filename = filename_string.encode()
         with open(filename, 'w', newline='') as output_file:
             overview_df.to_csv(output_file, index=False)

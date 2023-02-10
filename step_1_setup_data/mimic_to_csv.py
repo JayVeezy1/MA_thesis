@@ -66,6 +66,11 @@ def export_patients_to_csv(project_path: str, use_case_icd_list=None, use_case_i
             os.mkdir(f'{project_path}exports/{use_case_name}/')
             os.mkdir(f'{project_path}exports/{use_case_name}/raw/')
             os.mkdir(f'{project_path}exports/{use_case_name}/selected_features/')                   # later used for feature selection
+            os.mkdir(f'./output/{use_case_name}/')                                                  # used for analysis output
+            os.mkdir(f'./output/{use_case_name}/classification')
+            os.mkdir(f'./output/{use_case_name}/clustering')
+            os.mkdir(f'./output/{use_case_name}/correlations')
+            os.mkdir(f'./output/{use_case_name}/data_visualization')
             print('STATUS: New directory was created for this use case.')
         except FileExistsError:
             pass

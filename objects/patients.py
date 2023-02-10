@@ -19,13 +19,11 @@ class Patient:
     # CLASS FEATURES
     all_patient_ids_set: set = set()                  # not really needed, could be derived with a function get_ids_from_objs_set
     all_patient_objs_set: set = set()                 # keys from the cache file should be patients_ids
-    feature_categories: dataframe = pd.read_excel('./supplements/feature_preprocessing_table.xlsx')
 
-    def __init__(self, patient_id: str, patient_data: dataframe):
+    def __init__(self, patient_id: str, patient_data: dataframe, features_df: dataframe):
         self.features: list = list(patient_data.columns.values)
 
         # todo: idea: set stroke_type or infarct_type here when first loading patient -> not needed inside Postgres/raw.csv -> but useful if also available for cohort somehow?
-        # but its needed inside postgres for selecting the correct patients? No! patient-selection is with the icd9_list
 
         if patient_id not in Patient.all_patient_ids_set:
             self.patient_id = patient_id
@@ -40,11 +38,11 @@ class Patient:
             # raise NotUniqueIDError(f'Icustay ID {patient_id} already exists in all_patients_set')
 
         # patient related datasets
-        self.raw_data: dataframe = self.get_clean_raw_data(patient_data)  # raw = timeseries & no imputation/interpolation
+        self.raw_data: dataframe = self.get_clean_raw_data(patient_data, features_df)  # raw = timeseries & no imputation/interpolation
         self.imputed_data: dataframe = self.get_imputed_data()
         self.interpolated_data: dataframe = self.get_interpolated_data()  # interpolated built upon imputed?
         self.normalized_data: dataframe = self.get_normalized_data()  # normalized = z-values
-        self.avg_data: dataframe = self.get_avg_data()  # avg built upon interpolated?
+        self.avg_data: dataframe = self.get_avg_data(features_df)  # avg built upon interpolated?
 
 
     def __del__(self):
@@ -53,13 +51,18 @@ class Patient:
         if self in Patient.all_patient_objs_set:
             Patient.all_patient_objs_set.remove(self)
 
-    def get_clean_raw_data(self, patient_data: dataframe) -> dataframe:
-        # patient_data = patient_data.fillna(0)            # todo: check/ask if that is needed?
-        # also fill empty columns with a value?
-        cleaned_raw_data: dataframe = patient_data.copy()
+    def get_clean_raw_data(self, patient_data: dataframe, feature_df: dataframe) -> dataframe:
+        # patient_data = patient_data.fillna(0)            # todo: check/ask if that is needed here? Or better after 'mean' calculation, for normalized df?
+
+        # Remove strings from continuous columns
+        numbers_data = patient_data.copy()
+        continuous_features = feature_df.query('categorical_or_continuous=="continuous"')['feature_name']
+        cleaned_raw_data = (numbers_data.drop(continuous_features, axis=1)                                      # first remove all continuous columns
+                            .join(numbers_data[continuous_features].apply(pd.to_numeric, errors='coerce')))     # then add back with applied function
+        # cleaned_raw_data = cleaned_raw_data[cleaned_raw_data[continuous_features].notnull().all(axis=1)]      # only keep columns where ALL entries are not-null
 
         # Preprocess non-numeric columns
-        cleaned_raw_data['gender'] = np.where(cleaned_raw_data['gender'] == 'F', 0, 1)  # F = 0, M = 1
+        cleaned_raw_data['gender'] = np.where(numbers_data['gender'] == 'F', 0, 1)  # F = 0, M = 1
 
         cleaned_raw_data.loc[cleaned_raw_data['ethnicity'] == 'WHITE - RUSSIAN', 'ethnicity'] = 'WHITE'
         cleaned_raw_data.loc[cleaned_raw_data['ethnicity'] == 'WHITE - BRAZILIAN', 'ethnicity'] = 'WHITE'
@@ -112,14 +115,14 @@ class Patient:
     def get_normalized_data(self) -> dataframe:
         return self.raw_data
 
-    def get_avg_data(self) -> dataframe:
+    def get_avg_data(self, features_df: dataframe) -> dataframe:
         avg_df: dataframe = pd.DataFrame()
         avg_df = avg_df.assign(DUMMY_COLUMN=[1])
 
         for feature in self.raw_data.columns:
             # get feature_type from supplement table 'feature_categories'
-            if feature in Patient.feature_categories['feature_name'].tolist():
-                feature_type = Patient.feature_categories.loc[Patient.feature_categories['feature_name'] == feature, 'categorical_or_continuous'].item()
+            if feature in features_df['feature_name'].tolist():
+                feature_type = features_df.loc[features_df['feature_name'] == feature, 'categorical_or_continuous'].item()
             else:
                 feature_type = 'unknown'
 
@@ -129,7 +132,7 @@ class Patient:
             elif feature_type == 'continuous':
                 # calculate average over all rows
                 try:
-                    avg_df.insert(len(avg_df.columns), feature, round(self.raw_data[feature].mean(), 3))
+                    avg_df.insert(len(avg_df.columns), feature, round(self.raw_data[feature].mean(), 3))        # Error should not occur because cleaning data in earlier step
                 except TypeError:
                     avg_df.insert(len(avg_df.columns), feature, 'NaN')
                     print(f'CHECK: Error occurred for mean calculation of feature {feature} for patient {self.patient_id}')
