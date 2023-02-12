@@ -110,7 +110,7 @@ def calculate_deaths_table(selected_patient_cohort, cohort_title, use_case_name,
     return None
 
 
-def calculate_feature_overview_table(selected_patient_cohort, cohort_title, use_case_name, features_df, selected_features, selected_dependent_variable, save_to_file):
+def calculate_feature_overview_table(selected_patient_cohort, cohort_title, use_case_name, features_df, selected_features, selected_dependent_variable, save_to_file: False):
     # todo maybe: add patients_in_training_set (count/occurrence) and chi-squared-value (for categorical features) to overview_table, and also R-Value from correlation?
 
     # get correlations per feature

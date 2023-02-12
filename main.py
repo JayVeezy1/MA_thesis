@@ -69,58 +69,74 @@ if __name__ == '__main__':
 
     # Step 3.2) Visualization, Correlation, Clustering, etc.
     # PacMap
-    data_visualization.display_pacmap(avg_patient_cohort=complete_avg_patient_cohort,
-                                      cohort_title='complete_avg_patient_cohort',
-                                      use_case_name=USE_CASE_NAME,
-                                      selected_features=SELECTED_FEATURES,
-                                      selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                      save_to_file=True)
+    # data_visualization.display_pacmap(avg_patient_cohort=complete_avg_patient_cohort,
+    #                                 cohort_title='complete_avg_patient_cohort',
+    #                                use_case_name=USE_CASE_NAME,
+    #                               selected_features=SELECTED_FEATURES,
+    #                              selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+    #                             save_to_file=True)
 
-    # TODO NEXT STEP 1: carry on with analysis of complete dataset (+carevue) here
     # Correlations (also available: plot_heatmap and plot_pairplot)
-    # correlations.plot_correlations(avg_patient_cohort=avg_hemorrhage_cohort,
-    #                                    use_case_name = USE_CASE_NAME,
-    #                              cohort_title='avg_hemorrhage_cohort',
-    #                             selected_features=SELECTED_FEATURES,
-    #                            selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE, save_to_file=False)
+    # correlations.plot_correlations(avg_patient_cohort=complete_avg_patient_cohort,
+    #                             use_case_name=USE_CASE_NAME,
+    #                            cohort_title='complete_avg_patient_cohort',
+    #                           selected_features=SELECTED_FEATURES,
+    #                          selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE, save_to_file=False)
 
+    # Clustering kmeans
+    # clustering.plot_sh_score_kmeans(avg_patient_cohort=complete_avg_patient_cohort, cohort_title='complete_avg_patient_cohort',
+    #                             use_case_name = USE_CASE_NAME, selected_features=SELECTED_FEATURES,
+    #                           selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+    #                         filter_labels=False, save_to_file=True)
+    # manually checking silhouette score shows: 3 clusters is optimal
+    SELECTED_CLUSTERS_COUNT = 3
+    # clustering.plot_k_means_on_pacmap(avg_patient_cohort=complete_avg_patient_cohort,
+      #                                 cohort_title='complete_avg_patient_cohort',
+       #                                use_case_name=USE_CASE_NAME,
+        #                               selected_features=SELECTED_FEATURES,
+         #                              selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+          #                             selected_cluster_count=SELECTED_CLUSTERS_COUNT, filter_labels=False,
+           #                            save_to_file=False)
+
+    # Clustering DBSCAN
+    # todo: plot sh_score_DBSCAN
     # todo long term: Test DBSCAN Prototype, implement both available methods in one main-clustering method 'plot_clusters_on_pacmap'
-    # Clustering Prototype
-    # clustering.plot_sh_score_kmeans(avg_patient_cohort=avg_hemorrhage_cohort,
-    #                                    use_case_name = USE_CASE_NAME, cohort_title='avg_hemorrhage_cohort', selected_features=SELECTED_FEATURES, selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE, filter_labels=False, save_to_file=True)
-    # manually checking silhouette score shows: 4 clusters is optimal
-    # SELECTED_CLUSTERS_COUNT = 4
-    # clustering.plot_clusters_on_pacmap(avg_patient_cohort=avg_hemorrhage_cohort, cohort_title='avg_hemorrhage_cohort',
-    #                                    use_case_name = USE_CASE_NAME,
-    #                                   selected_features=SELECTED_FEATURES, selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-    #                                 selected_cluster_count=SELECTED_CLUSTERS_COUNT, filter_labels=False,
-    #                                save_to_file=False)
 
-    # Analysing Single Cluster Prototype        # todo check: why is cluster 1 in above example only 1 patient? -> icustay_id = 293675, but the patient actually has most data available. Where is this error coming from? Or is it an indicator that the cluster and icustay_id is not correctly mapped?
-    # cluster_to_analyse: int = 2
-    # #filtered_cluster_icustay_ids: list = clustering.get_ids_for_cluster(avg_patient_cohort=avg_hemorrhage_cohort,
-    #                                                                 cohort_title='avg_hemorrhage_cohort',
-    #                                    use_case_name = USE_CASE_NAME,
 
-    #                                                                selected_features=SELECTED_FEATURES,
-    #                                                               selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-    #                                                              selected_k_means_count=SELECTED_CLUSTERS_COUNT,
-    #                                                             selected_cluster=cluster_to_analyse,
-    #                                                            filter_labels=False)
-    # filtered_cluster_cohort = complete_avg_patient_cohort[
-    #    complete_avg_patient_cohort['icustay_id'].isin(filtered_cluster_icustay_ids)]
-    # general_statistics.calculate_feature_overview_table(selected_patient_cohort=filtered_cluster_cohort,
-    #                                    use_case_name = USE_CASE_NAME,
+    # Cluster Analysis
+    # todo: create a table to analyse the clusters. Rows = Features, columns = clusters (dynamic with for loop), cells = mean value of the feature - this is better than 'calculate_feature_overview_table' per cluster
 
-    #                                                   cohort_title='filtered_cluster_cohort',
-    #                                                  selected_features=SELECTED_FEATURES, save_to_file=False)
+
+    # Analysing Single Cluster Prototype
+    # TODO CHECK: why is cluster 1 in above example only 1 patient? -> icustay_id = 228194, but the patient actually has most data available. Where is this error coming from? Or is it an indicator that the cluster and icustay_id is not correctly mapped?
+    cluster_to_analyse: int = 1
+    filtered_cluster_icustay_ids: list = clustering.get_ids_for_cluster(avg_patient_cohort=complete_avg_patient_cohort,
+                                                                        cohort_title='complete_avg_patient_cohort',
+                                                                        selected_features=SELECTED_FEATURES,
+                                                                        selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                                        selected_k_means_count=SELECTED_CLUSTERS_COUNT,
+                                                                        selected_cluster=cluster_to_analyse,
+                                                                        filter_labels=False)
+
+    print('CHECK: icustay_ids in this cluster: ', filtered_cluster_icustay_ids)
+
+    filtered_cluster_cohort = complete_avg_patient_cohort[
+        complete_avg_patient_cohort['icustay_id'].isin(filtered_cluster_icustay_ids)]
+
+    general_statistics.calculate_feature_overview_table(selected_patient_cohort=filtered_cluster_cohort,
+                                                        use_case_name=USE_CASE_NAME,
+                                                        cohort_title='filtered_cluster_cohort',
+                                                        features_df=FEATURES_DF,
+                                                        selected_features=SELECTED_FEATURES,
+                                                        selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                        save_to_file=False)
 
     ### Machine Learning Predictions
     # Step 4.1) Random Forest
-    # classification.calculate_RF_on_cohort(avg_patient_cohort=avg_hemorrhage_cohort,
-    #                                    cohort_title='avg_hemorrhage_cohort',
-    #                                    use_case_name = USE_CASE_NAME,
-
+    # todo: decide if complete set with normalization is good enough? Further improvement possible? Or change to heart?
+    # classification.calculate_RF_on_cohort(avg_patient_cohort=complete_avg_patient_cohort,
+    #                                     cohort_title='complete_avg_patient_cohort',
+    #                                    use_case_name=USE_CASE_NAME,
     #                                   selected_features=SELECTED_FEATURES,
     #                                  selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
     #                                 save_to_file=True)

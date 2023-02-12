@@ -14,7 +14,7 @@ from imblearn.under_sampling import NearMiss
 from step_2_preprocessing.preprocessing_functions import cleanup_avg_df_for_classification
 
 
-def calculate_RF_on_cohort(avg_patient_cohort, cohort_title, selected_features, selected_dependent_variable, save_to_file):
+def calculate_RF_on_cohort(avg_patient_cohort, cohort_title, use_case_name, selected_features, selected_dependent_variable, save_to_file):
     # Classification/Prediction with RandomForest on avg_patient_cohort
     # Cleanup & filtering
     avg_df = cleanup_avg_df_for_classification(avg_patient_cohort, selected_features, selected_dependent_variable)      # todo: check if this still works after moving into function
@@ -29,10 +29,10 @@ def calculate_RF_on_cohort(avg_patient_cohort, cohort_title, selected_features, 
     clf.fit(X=x_train, y=y_train)
 
     # Classification Report
-    display_confusion_matrix(clf, x_test, y_test, cohort_title=cohort_title, save_to_file=save_to_file)
+    display_confusion_matrix(clf, x_test, y_test, cohort_title=cohort_title, use_case_name=use_case_name, save_to_file=save_to_file)
 
     # ROC/AUC Curve
-    display_roc_auc_curve(clf, x_test, y_test, cohort_title=cohort_title, save_to_file=save_to_file)
+    display_roc_auc_curve(clf, x_test, y_test, cohort_title=cohort_title, use_case_name=use_case_name, save_to_file=save_to_file)
 
     # todo: add over/undersampling
     """
@@ -62,7 +62,7 @@ def calculate_RF_on_cohort(avg_patient_cohort, cohort_title, selected_features, 
 
 
 
-def display_confusion_matrix(clf, x_test, y_test, cohort_title, save_to_file):
+def display_confusion_matrix(clf, x_test, y_test, cohort_title, use_case_name, save_to_file):
     cm: ndarray = confusion_matrix(y_test, clf.predict(x_test))
     fig, ax = plt.subplots()
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["No Death", "Death"])
@@ -71,7 +71,7 @@ def display_confusion_matrix(clf, x_test, y_test, cohort_title, save_to_file):
 
     current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
     if save_to_file:
-        plt.savefig(f'./output/classification/RF_{cohort_title}_{current_time}.png')
+        plt.savefig(f'./output/{use_case_name}/classification/RF_{cohort_title}_{current_time}.png')
     plt.show()
 
     # Print Confusion Matrix and Classification Report
@@ -87,20 +87,20 @@ def display_confusion_matrix(clf, x_test, y_test, cohort_title, save_to_file):
     print(report)
 
     if save_to_file:
-        cm_filename_string: str = f'./output/classification/RF_{cohort_title}_confusion_matrix_{current_time}.csv'
+        cm_filename_string: str = f'./output/{use_case_name}/classification/RF_{cohort_title}_confusion_matrix_{current_time}.csv'
         cm_filename = cm_filename_string.encode()
         with open(cm_filename, 'w', newline='') as output_file:
             cm_df.to_csv(output_file)
             print(f'STATUS: cm_df was saved to {cm_filename}')
 
-        report_filename_string: str = f'./output/classification/RF_{cohort_title}_report_{current_time}.csv'
+        report_filename_string: str = f'./output/{use_case_name}/classification/RF_{cohort_title}_report_{current_time}.csv'
         report_filename = report_filename_string.encode()
         with open(report_filename, 'w', newline='') as output_file:
             output_file.write(report)
             output_file.close()
 
 
-def display_roc_auc_curve(clf, x_test, y_test, cohort_title, save_to_file):
+def display_roc_auc_curve(clf, x_test, y_test, cohort_title, use_case_name, save_to_file):
     # todo: this is not correct yet!
     roc_auc = roc_auc_score(y_test, clf.predict_proba(x_test)[:, 1])
 

@@ -12,12 +12,15 @@ def get_correlations_on_cohort(avg_patient_cohort, selected_features_corr, selec
     # Preprocessing for correlation
     avg_patient_cohort = avg_patient_cohort.drop(columns=['icustay_id', 'stroke_type', 'infarct_type', 'dbsource'])   # these features are needed for clustering, not correlations
 
+    # todo: make drop and factorize dependent on another column in the feature_preprocessing table
+
     # todo: check/ask if there is better option? How to use non-numeric columns for correlation? Not really useful? But still needed for clustering right?
     avg_patient_cohort[['insurance', 'ethnicity']] = avg_patient_cohort[['insurance', 'ethnicity']].apply(lambda x: pd.factorize(x)[0])
     # insurance: medicare = 0, mediaid = 1, Government = 2, private = 3, Self Pay = 4
     # ethnicity: WHITE = 0, UNKNOWN/NOT SPECIFIED = 1, HISPANIC OR LATINO = 2, BLACK = 3, OTHER = 4, ASIAN = 5
 
     # Calculate correlation
+    selected_features_corr.append(selected_dependent_variable)
     avg_patient_cohort_corr = avg_patient_cohort[selected_features_corr].corr(numeric_only=False)
     death_corr = avg_patient_cohort_corr[selected_dependent_variable].round(2)     # only return correlation towards selected_dependent_variable
 
@@ -27,9 +30,14 @@ def get_correlations_on_cohort(avg_patient_cohort, selected_features_corr, selec
     # p = pval.applymap(lambda x: ''.join(['*' for t in [.05, .01, .001] if x <= t]))       # alternative to turn pval into stars *
     cleaned_df: dataframe = avg_patient_cohort.fillna(value=0)      # filling nan with 0 correct?
     validity_df: dataframe = pd.DataFrame()
-    for feature in avg_patient_cohort[selected_features_corr]:
-        r_val, p_val = stats.pearsonr(cleaned_df[feature], avg_patient_cohort[selected_dependent_variable])
-        validity_df[feature] = [round(r_val, 3), round(p_val, 3)]
+    try:
+        for feature in avg_patient_cohort[selected_features_corr]:
+            r_val, p_val = stats.pearsonr(cleaned_df[feature], avg_patient_cohort[selected_dependent_variable])
+            validity_df[feature] = [round(r_val, 3), round(p_val, 3)]
+    except ValueError as e:
+        print('WARNING: ValueError for r_val and p_val calculation. Cluster probably only one entity.')
+        for feature in avg_patient_cohort[selected_features_corr]:
+            validity_df[feature] = [np.nan, np.nan]
 
     validity_df = validity_df.rename({0: 'r_value', 1: 'p_value'}).transpose()
 

@@ -49,9 +49,17 @@ def cleanup_avg_df_for_classification(avg_patient_cohort, selected_features, sel
     except ValueError as e:
         print('WARNING: icustay_id has already been removed from dataframe.')
     try:
+        selected_features_final.remove('dbsource')
+    except ValueError as e:
+        print('WARNING: dbsource has already been removed from dataframe.')
+    try:
         selected_features_final.remove('stroke_type')
     except ValueError as e:
         print('WARNING: stroke_type has already been removed from dataframe.')
+    try:
+        selected_features_final.remove('infarct_type')
+    except ValueError as e:
+        print('WARNING: infarct_type has already been removed from dataframe.')
     try:
         selected_features_final.remove('ethnicity')
     except ValueError as e:

@@ -133,10 +133,11 @@ def plot_clusters_on_3D_pacmap(plot_title, pacmap_data_points, cluster_count, sh
     plt.close()
 
 
-def plot_sh_score_kmeans(avg_patient_cohort, cohort_title, selected_features, selected_dependent_variable,
+def plot_sh_score_kmeans(avg_patient_cohort, cohort_title, use_case_name, selected_features, selected_dependent_variable,
                             filter_labels: bool = False, save_to_file: bool = False):
     """
     This function displays the Silhouette Score curve. With this an optimal cluster count for k-means can be selected.
+    :param use_case_name:
     :param avg_patient_cohort:
     :param cohort_title:
     :param selected_features:
@@ -166,7 +167,7 @@ def plot_sh_score_kmeans(avg_patient_cohort, cohort_title, selected_features, se
     plt.xlabel("$k$")
     plt.ylabel("Average Silhouettes Score")
     if save_to_file:
-        plt.savefig(f'./output/clustering/{f"Silhouette Score for k-Means on {cohort_title}".replace(" ", "_")}.png',
+        plt.savefig(f'./output/{use_case_name}/clustering/{f"Silhouette Score for k-Means on {cohort_title}".replace(" ", "_")}.png',
                     bbox_inches="tight")
     plt.show()
     plt.close()
@@ -174,7 +175,7 @@ def plot_sh_score_kmeans(avg_patient_cohort, cohort_title, selected_features, se
     return None
 
 
-def plot_clusters_on_pacmap(avg_patient_cohort, cohort_title, selected_features, selected_dependent_variable,
+def plot_k_means_on_pacmap(avg_patient_cohort, cohort_title, use_case_name, selected_features, selected_dependent_variable,
                             selected_cluster_count: int, filter_labels: bool = False, save_to_file: bool = False):
     # Get cleaned avg_np
     avg_np = transform_df_to_np_for_clustering(avg_patient_cohort,
