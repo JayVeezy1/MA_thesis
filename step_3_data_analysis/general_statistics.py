@@ -1,4 +1,5 @@
 import datetime
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -146,19 +147,24 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, use_
         elif features_df['needs_binning'][features_df['feature_name'] == feature].item() == 'True':
 
             try:
+                warnings.filterwarnings(action='ignore', message='All-NaN slice encountered')
                 feature_min = int(np.nanmin(selected_patient_cohort[feature].values))
                 feature_max = int(np.nanmax(selected_patient_cohort[feature].values))
 
-                feature_appearances_series = selected_patient_cohort[feature].value_counts(bins=[feature_min,
-                                                                                                         feature_min + round(
-                                                                                                             (
-                                                                                                                     feature_max - feature_min) * 1 / 3,
-                                                                                                             0),
-                                                                                                         feature_min + round(
-                                                                                                             (
-                                                                                                                     feature_max - feature_min) * 2 / 3,
-                                                                                                             0),
-                                                                                                         feature_max])
+                if feature_min == feature_max:
+                    feature_appearances_series = selected_patient_cohort[feature].value_counts(bins=[feature_min,
+                                                                                                     feature_max])
+                else:
+                    feature_appearances_series = selected_patient_cohort[feature].value_counts(bins=[feature_min,
+                                                                                                             feature_min + round(
+                                                                                                                 (
+                                                                                                                         feature_max - feature_min) * 1 / 3,
+                                                                                                                 0),
+                                                                                                             feature_min + round(
+                                                                                                                 (
+                                                                                                                         feature_max - feature_min) * 2 / 3,
+                                                                                                                 0),
+                                                                                                             feature_max])
                 feature_appearances_df = pd.DataFrame()
                 feature_appearances_df['intervals'] = feature_appearances_series.keys()
                 feature_appearances_df['counts'] = feature_appearances_series.values
@@ -179,7 +185,7 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, use_
                     overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
 
             except ValueError as e:             # this happens if for the selected cohort (a small cluster) all patients have NaN
-                print(f'WARNING: Column found with All-NaN entries: {feature} with {e}')
+                print(f'WARNING: Column {feature} has Error-Message: {e}')
                 temp_df: dataframe = pd.DataFrame({'Variables': [feature],
                                                    'Classification': ['All Entries NaN'],
                                                    'Count': [0],

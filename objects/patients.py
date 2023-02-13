@@ -52,8 +52,6 @@ class Patient:
             Patient.all_patient_objs_set.remove(self)
 
     def get_clean_raw_data(self, patient_data: dataframe, feature_df: dataframe) -> dataframe:
-        # patient_data = patient_data.fillna(0)            # todo: check/ask if that is needed here? Or better after 'mean' calculation, for normalized df?
-
         # Remove strings from continuous columns
         numbers_data = patient_data.copy()
         continuous_features = feature_df.query('categorical_or_continuous=="continuous"')['feature_name']
@@ -103,6 +101,12 @@ class Patient:
                 print(f'CHECK: Replacing "ERROR" from feature {feature} for patient {cleaned_raw_data["icustay_id"][0]}')
                 cleaned_raw_data.loc[cleaned_raw_data[feature].isin(['ERROR']), feature] = np.nan
                 cleaned_raw_data[feature] = cleaned_raw_data[feature].astype(float)     # is the feature contained 'ERROR', all existing values were set as string
+
+
+        # Remove known Outliers -> todo maybe: make this automatic? If variance of a value > 1000 of mean, remove?
+        if cleaned_raw_data["icustay_id"][0] == int('228194'):
+            print(f'CHECK: Removing outliers for patient {cleaned_raw_data["icustay_id"][0]}')
+            cleaned_raw_data.loc[cleaned_raw_data['row_id'] == 198, 'O2 saturation pulseoxymetry'] = 0
 
         return cleaned_raw_data
 
@@ -173,19 +177,39 @@ class Patient:
         avg_dataframes: list = []
         for patient in selected_patients:
             avg_dataframes.append(patient.avg_data)
-        avg_patient_cohort_dataframe: dataframe = pd.concat(avg_dataframes)
-        avg_patient_cohort_dataframe = avg_patient_cohort_dataframe.sort_values(by=['icustay_id'], axis=0)
-        avg_patient_cohort_dataframe = avg_patient_cohort_dataframe.reset_index(drop=True)
+
+        avg_patient_cohort: dataframe = pd.concat(avg_dataframes)
+        avg_patient_cohort = avg_patient_cohort.sort_values(by=['icustay_id'], axis=0)
+        avg_patient_cohort = avg_patient_cohort.reset_index(drop=True)
 
         # Export avg_patient_cohort
         filename_string: str = f'{project_path}exports/{use_case_name}/avg_patient_cohort.csv'
         filename = filename_string.encode()
         with open(filename, 'w', newline='') as output_file:
-            avg_patient_cohort_dataframe.to_csv(output_file, index=False)
+            avg_patient_cohort.to_csv(output_file, index=False)
 
         print(f'STATUS: avg_patient_cohort file was saved to {project_path}exports/{use_case_name} \n')
 
-        return avg_patient_cohort_dataframe
+        return avg_patient_cohort
+
+    @classmethod
+    def get_avg_scaled_data(cls, project_path, use_case_name, selected_patients) -> dataframe:
+        avg_patient_cohort = cls.get_avg_patient_cohort(project_path, use_case_name, selected_patients)
+
+        # TODO: Choose which option!
+        # normalization (between 0 and 1)
+        # scaling (between -1 and 1) options:
+        # pandas (unbiased): (x-x.mean())/ x.std()
+        # sklearn (biased): scaler.fit_transform()
+        # min-max-scaling: (df - df.min()) / (df.max() - df.min())
+
+        # only scale numbers columns
+        avg_patient_cohort_num = avg_patient_cohort.select_dtypes(include='number')
+        scaled_avg_cohort_num = (avg_patient_cohort_num - avg_patient_cohort_num.min()) / (avg_patient_cohort_num.max() - avg_patient_cohort_num.min())
+        avg_patient_cohort[avg_patient_cohort_num.columns] = scaled_avg_cohort_num
+
+        return avg_patient_cohort
+
 
     @classmethod
     def get_NAN_for_feature_in_cohort(cls, avg_patient_cohort_dataframe: dataframe, selected_feature) -> int:
@@ -201,3 +225,7 @@ class Patient:
             # print(f'CHECK: Current count of Patient.all_patient_objs_set: {len(Patient.all_patient_objs_set)}')
             Patient.all_patient_ids_set.add(patient_obj.patient_id)
             Patient.all_patient_objs_set.add(patient_obj)
+
+    @classmethod
+    def get_avg_norm_data(self):
+        pass

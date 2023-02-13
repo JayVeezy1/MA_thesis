@@ -1,15 +1,18 @@
 import datetime
+import warnings
 
 import matplotlib
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt, cm
+from numpy import sort
 from pandas.core.interchange import dataframe
 from sklearn.cluster import KMeans, DBSCAN
 from sklearn.metrics import silhouette_score
 
 from step_2_preprocessing import preprocessing_functions
 from step_3_data_analysis import data_visualization
+from step_3_data_analysis.correlations import get_correlations_on_cohort
 
 
 def get_ids_for_cluster(avg_patient_cohort, cohort_title, selected_features, selected_dependent_variable,
@@ -28,7 +31,7 @@ def get_ids_for_cluster(avg_patient_cohort, cohort_title, selected_features, sel
 
     # connect k-means clusters back to icustay_ids
     # todo: recheck if this connection is correct, if sorting changed then wrong icustay_id to wrong cluster
-    clusters_df: dataframe = pd.DataFrame({'icustay_id': avg_patient_cohort['icustay_id'],'cluster': k_means_list})
+    clusters_df: dataframe = pd.DataFrame({'icustay_id': avg_patient_cohort['icustay_id'], 'cluster': k_means_list})
 
     print(
         f'CHECK: Count of patients for cluster {selected_cluster}: {len(clusters_df["icustay_id"][clusters_df["cluster"] == selected_cluster])}')
@@ -38,24 +41,14 @@ def get_ids_for_cluster(avg_patient_cohort, cohort_title, selected_features, sel
 
 def transform_df_to_np_for_clustering(avg_patient_cohort,
                                       selected_features,
-                                      selected_dependent_variable,
-                                      filter_labels: bool = False) -> np:
+                                      selected_dependent_variable) -> np:
     # Preprocessing of df for classification
     avg_df = preprocessing_functions.cleanup_avg_df(avg_patient_cohort, selected_features, selected_dependent_variable)
 
-    # Optional: Manually select Labels to focus clustering on
-    if filter_labels:
-        # labels_to_keep: List = ['Age', 'ethnicity', 'insurance', 'mechvent', 'White Blood Cells', 'sepsis_flag', 'cancer_flag', 'gender']
-        labels_to_keep = ['Age', 'gender']
-    else:
-        labels_to_keep = avg_df.columns.to_list()  # use this option if all labels wanted
-
     # Clean up df & transform to numpy
     avg_df_without_nan = avg_df.fillna(0)
-    filtered_df = avg_df_without_nan[avg_df_without_nan.columns.intersection(labels_to_keep)]
-    avg_np = filtered_df.to_numpy()
 
-    return avg_np
+    return avg_df_without_nan.to_numpy()
 
 
 def calculate_cluster_kmeans(avg_np: np.ndarray, cohort_title: str, n_clusters: int, verbose: bool = False):
@@ -72,7 +65,7 @@ def calculate_cluster_kmeans(avg_np: np.ndarray, cohort_title: str, n_clusters: 
 
     # Calculate KMeans
     kmeans_obj = KMeans(init="k-means++", n_clusters=n_clusters, n_init=4, random_state=0, max_iter=350).fit(avg_np)
-    clustering_labels_list = kmeans_obj.labels_             # todo: directly merge these labels back to the icustay_id -> one place. Not return of labels as list but series icustay_id | cluster_label
+    clustering_labels_list = kmeans_obj.labels_  # todo: directly merge these labels back to the icustay_id -> one place. Not return of labels as list but series icustay_id | cluster_label
 
     # get sh_score
     avg_np.reshape(avg_np.shape[0], -1)  # does this have an effect?
@@ -84,7 +77,8 @@ def calculate_cluster_kmeans(avg_np: np.ndarray, cohort_title: str, n_clusters: 
     return clustering_labels_list, sh_score
 
 
-def calculate_cluster_DBSCAN(avg_np: np.ndarray, cohort_title: str, eps: float, min_samples: int, verbose: bool = False):
+def calculate_cluster_DBSCAN(avg_np: np.ndarray, cohort_title: str, eps: float, min_samples: int,
+                             verbose: bool = False):
     """
     density Based Spatial Clustering of Applications with Noise. Instances in dense region get clustered.
     :param verbose: boolean for printing STATUS
@@ -98,7 +92,8 @@ def calculate_cluster_DBSCAN(avg_np: np.ndarray, cohort_title: str, eps: float, 
         print(f'STATUS: Calculating DBSCAN on {cohort_title} for {eps} epsilon with {min_samples} min_samples.')
 
     # Calculate DBSCAN
-    clustering_obj = DBSCAN(eps=eps, min_samples=min_samples).fit(avg_np)           # we could use weights per label to give imputed labels less weight?
+    clustering_obj = DBSCAN(eps=eps, min_samples=min_samples).fit(
+        avg_np)  # we could use weights per label to give imputed labels less weight?
     clustering_labels_list = clustering_obj.labels_
 
     # get sh_score
@@ -111,8 +106,9 @@ def calculate_cluster_DBSCAN(avg_np: np.ndarray, cohort_title: str, eps: float, 
     return clustering_labels_list, sh_score
 
 
-def plot_clusters_on_3D_pacmap(plot_title, pacmap_data_points, cluster_count, sh_score, coloring, save_to_file):
-    color_map = cm.get_cmap('brg', cluster_count)       # old: tab20c
+def plot_clusters_on_3D_pacmap(plot_title, use_case_name, pacmap_data_points, cluster_count, sh_score, coloring,
+                               save_to_file):
+    color_map = cm.get_cmap('brg', cluster_count)  # old: tab20c
 
     fig = plt.figure()
     fig.tight_layout(h_pad=2, w_pad=2)
@@ -121,20 +117,23 @@ def plot_clusters_on_3D_pacmap(plot_title, pacmap_data_points, cluster_count, sh
     ax1.scatter(pacmap_data_points[:, 0], pacmap_data_points[:, 1], pacmap_data_points[:, 2], cmap=color_map,
                 c=coloring, s=0.7, label='Patient')
 
-    cb = fig.colorbar(matplotlib.cm.ScalarMappable(cmap=color_map, norm=matplotlib.colors.Normalize(vmin=min(coloring), vmax=max(coloring))), ax=ax1)
+    cb = fig.colorbar(matplotlib.cm.ScalarMappable(cmap=color_map, norm=matplotlib.colors.Normalize(vmin=min(coloring),
+                                                                                                    vmax=max(
+                                                                                                        coloring))),
+                      ax=ax1)
     cb.set_label('Clusters')
     cb.set_ticks(list(set(coloring)))
     plt.legend()
 
     if save_to_file:
         plt.savefig(
-            f'./output/clustering/3D_clusters_kmeans_{plot_title.replace(" ", "_")}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
+            f'./output/{use_case_name}/clustering/3D_clusters_kmeans_{plot_title.replace(" ", "_")}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
     plt.show()
     plt.close()
 
 
-def plot_sh_score_kmeans(avg_patient_cohort, cohort_title, use_case_name, selected_features, selected_dependent_variable,
-                            filter_labels: bool = False, save_to_file: bool = False):
+def plot_sh_score_kmeans(avg_patient_cohort, cohort_title, use_case_name, selected_features,
+                         selected_dependent_variable, save_to_file: bool = False):
     """
     This function displays the Silhouette Score curve. With this an optimal cluster count for k-means can be selected.
     :param use_case_name:
@@ -142,7 +141,6 @@ def plot_sh_score_kmeans(avg_patient_cohort, cohort_title, use_case_name, select
     :param cohort_title:
     :param selected_features:
     :param selected_dependent_variable:
-    :param filter_labels:
     :param save_to_file:
     :return:
     """
@@ -150,8 +148,7 @@ def plot_sh_score_kmeans(avg_patient_cohort, cohort_title, use_case_name, select
     # Get cleaned avg_np
     avg_np = transform_df_to_np_for_clustering(avg_patient_cohort,
                                                selected_features,
-                                               selected_dependent_variable,
-                                               filter_labels)
+                                               selected_dependent_variable)
     # Find best k-means cluster option depending on sh_score
     krange = list(range(2, 13))  # choose multiple k-means cluster options to test
     avg_silhouettes = []
@@ -167,21 +164,22 @@ def plot_sh_score_kmeans(avg_patient_cohort, cohort_title, use_case_name, select
     plt.xlabel("$k$")
     plt.ylabel("Average Silhouettes Score")
     if save_to_file:
-        plt.savefig(f'./output/{use_case_name}/clustering/{f"Silhouette Score for k-Means on {cohort_title}".replace(" ", "_")}.png',
-                    bbox_inches="tight")
+        plt.savefig(
+            f'./output/{use_case_name}/clustering/{f"Silhouette Score for k-Means on {cohort_title}".replace(" ", "_")}.png',
+            bbox_inches="tight")
     plt.show()
     plt.close()
 
     return None
 
 
-def plot_k_means_on_pacmap(avg_patient_cohort, cohort_title, use_case_name, selected_features, selected_dependent_variable,
-                            selected_cluster_count: int, filter_labels: bool = False, save_to_file: bool = False):
+def plot_k_means_on_pacmap(avg_patient_cohort, cohort_title, use_case_name, selected_features,
+                           selected_dependent_variable,
+                           selected_cluster_count: int, save_to_file: bool = False):
     # Get cleaned avg_np
     avg_np = transform_df_to_np_for_clustering(avg_patient_cohort,
                                                selected_features,
-                                               selected_dependent_variable,
-                                               filter_labels)
+                                               selected_dependent_variable)
     # PacMap needed for visualization
     pacmap_data_points, death_list = data_visualization.calculate_pacmap(avg_patient_cohort=avg_patient_cohort,
                                                                          cohort_title=cohort_title,
@@ -191,7 +189,8 @@ def plot_k_means_on_pacmap(avg_patient_cohort, cohort_title, use_case_name, sele
     # Plot the cluster with best sh_score
     k_means_list, sh_score = calculate_cluster_kmeans(avg_np, cohort_title, n_clusters=selected_cluster_count)
     plot_title = f"k_Means_clusters_{selected_cluster_count} for {cohort_title}"
-    plot_clusters_on_3D_pacmap(plot_title=plot_title, pacmap_data_points=pacmap_data_points, cluster_count=selected_cluster_count,
+    plot_clusters_on_3D_pacmap(plot_title=plot_title, use_case_name=use_case_name,
+                               pacmap_data_points=pacmap_data_points, cluster_count=selected_cluster_count,
                                sh_score=sh_score, coloring=k_means_list, save_to_file=save_to_file)
 
     return None
@@ -252,5 +251,166 @@ def plot_cluster_details(plot_title: str, data: np.ndarray, death_list: list, sh
         plt.savefig(f'./output/clustering/overview_kmeans_{cohort_title}.png')
     plt.show()
     plt.close()
+
+    return None
+
+
+def get_base_overview_table(current_overview_table, selected_cluster, selected_features, features_df, selected_cohort):
+    # This is used only for the first creation of the clusters_overview_table for the 'Total' case
+    for feature in selected_features:
+        # normal case, no binning needed
+        if features_df['needs_binning'][features_df['feature_name'] == feature].item() == 'False':
+            for appearance in sort(pd.unique(selected_cohort[feature])):
+                temp_df: dataframe = pd.DataFrame({'Variables': [feature],
+                                                   'Classification': [appearance],
+                                                   f'cluster_{selected_cluster}': [selected_cohort[feature][
+                                                                                       selected_cohort[
+                                                                                           feature] == appearance].count()],
+                                                   })
+                current_overview_table = pd.concat([current_overview_table, temp_df], ignore_index=True)
+        # binning needed for vital signs, etc.
+        elif features_df['needs_binning'][features_df['feature_name'] == feature].item() == 'True':
+            try:
+                warnings.filterwarnings(action='ignore', message='All-NaN slice encountered')
+                feature_min = int(np.nanmin(selected_cohort[feature].values))
+                feature_max = int(np.nanmax(selected_cohort[feature].values))
+
+                if feature_min == feature_max:
+                    feature_appearances_series = selected_cohort[feature].value_counts(bins=[feature_min,
+                                                                                             feature_max])
+                else:
+                    feature_appearances_series = selected_cohort[feature].value_counts(bins=[feature_min,
+                                                                                             feature_min + round(
+                                                                                                 (
+                                                                                                         feature_max - feature_min) * 1 / 3,
+                                                                                                 0),
+                                                                                             feature_min + round(
+                                                                                                 (
+                                                                                                         feature_max - feature_min) * 2 / 3,
+                                                                                                 0),
+                                                                                             feature_max])
+                feature_appearances_df = pd.DataFrame()
+                feature_appearances_df['intervals'] = feature_appearances_series.keys()
+                feature_appearances_df['counts'] = feature_appearances_series.values
+                feature_appearances_df['interval_starts'] = feature_appearances_df['intervals'].map(lambda x: x.left)
+                feature_appearances_df = feature_appearances_df.sort_values(by='interval_starts')
+                binning_intervals: list = feature_appearances_df['intervals'].to_list()
+                binning_counts: list = feature_appearances_df['counts'].to_list()
+
+                for i in range(0, len(binning_intervals)):
+                    temp_df: dataframe = pd.DataFrame({'Variables': [feature],
+                                                       'Classification': [str(binning_intervals[i])],
+                                                       f'cluster_{selected_cluster}': [binning_counts[i]],
+                                                       })
+                    current_overview_table = pd.concat([current_overview_table, temp_df], ignore_index=True)
+
+            except ValueError as e:  # this happens if for the selected cohort (a small cluster) all patients have NaN
+                print(f'WARNING: Column {feature} has Error-Message: {e}')
+                temp_df: dataframe = pd.DataFrame({'Variables': [feature],
+                                                   'Classification': ['All Entries NaN'],
+                                                   f'cluster_{selected_cluster}': [0],
+                                                   })
+                current_overview_table = pd.concat([current_overview_table, temp_df], ignore_index=True)
+
+    return current_overview_table
+
+
+def get_overview_for_cluster(current_overview_table: dataframe, selected_cluster, features_df, selected_features,
+                             selected_cohort, complete_cohort):
+    # This is used only for the creation of new columns for the clusters_overview_table for a single cluster
+
+    # current_overview_table[f'cluster_{selected_cluster}'] = np.nan
+    for feature in selected_features:
+        # normal case, no binning needed
+        if features_df['needs_binning'][features_df['feature_name'] == feature].item() == 'False':
+            for appearance in sort(pd.unique(selected_cohort[feature])):
+                current_overview_table.loc[(current_overview_table['Variables'] == feature) & (current_overview_table['Classification'] == appearance), f'cluster_{selected_cluster}'] = [(selected_cohort[feature][selected_cohort[feature] == appearance].count())]
+
+        # binning needed for vital signs, etc.
+        elif features_df['needs_binning'][features_df['feature_name'] == feature].item() == 'True':
+            try:
+                warnings.filterwarnings(action='ignore', message='All-NaN slice encountered')
+                feature_min = int(np.nanmin(complete_cohort[feature].values))  # important: use complete_cohort here!
+                feature_max = int(np.nanmax(complete_cohort[feature].values))
+
+                if feature_min == feature_max:
+                    feature_appearances_series = selected_cohort[feature].value_counts(bins=[feature_min,
+                                                                                             feature_max])
+                else:
+                    feature_appearances_series = selected_cohort[feature].value_counts(bins=[feature_min,
+                                                                                             feature_min + round(
+                                                                                                 (
+                                                                                                         feature_max - feature_min) * 1 / 3,
+                                                                                                 0),
+                                                                                             feature_min + round(
+                                                                                                 (
+                                                                                                         feature_max - feature_min) * 2 / 3,
+                                                                                                 0),
+                                                                                             feature_max])
+                feature_appearances_df = pd.DataFrame()
+                feature_appearances_df['intervals'] = feature_appearances_series.keys()
+                feature_appearances_df['counts'] = feature_appearances_series.values
+                feature_appearances_df['interval_starts'] = feature_appearances_df['intervals'].map(lambda x: x.left)
+                feature_appearances_df = feature_appearances_df.sort_values(by='interval_starts')
+                binning_intervals: list = feature_appearances_df['intervals'].to_list()
+                binning_counts: list = feature_appearances_df['counts'].to_list()
+
+                for i in range(0, len(binning_intervals)):
+                    current_overview_table.loc[(current_overview_table['Variables'] == feature) & (current_overview_table['Classification'] == str(binning_intervals[i])), f'cluster_{selected_cluster}'] = binning_counts[i]
+
+            except ValueError as e:  # this happens if for the selected cohort (a small cluster) all patients have NaN
+                print(f'WARNING: Column {feature} has Error-Message: {e}')
+                current_overview_table.loc[(current_overview_table['Variables'] == feature), f'cluster_{selected_cluster}'] = 0
+
+    # Cleanup
+    # current_overview_table[f'cluster_{selected_cluster}'].astype(dtype='Int64')       # does not work somehow
+
+    return current_overview_table
+
+
+def calculate_clusters_overview_table(selected_cohort, cohort_title, use_case_name, selected_clusters_count,
+                                      features_df, selected_dependent_variable, save_to_file: False):
+    # get correlations per feature
+    selected_features = features_df['feature_name'].loc[features_df['selected_for_analysis'] == 'yes'].to_list()
+
+    # step 1: get counts for complete dataset -> based on general_statistics.calculate_feature_overview_table
+    clusters_overview_table: dataframe = pd.DataFrame()
+    # todo: add row 'Total'
+
+    single_cluster_overview = get_base_overview_table(current_overview_table=clusters_overview_table,
+                                                      selected_cluster='TOTAL',
+                                                      features_df=features_df, selected_features=selected_features,
+                                                      selected_cohort=selected_cohort)
+    clusters_overview_table = pd.concat([clusters_overview_table, single_cluster_overview], ignore_index=True)
+
+    for selected_cluster in range(0, selected_clusters_count):
+        # step 2: get each cluster as df
+        filtered_cluster_icustay_ids: list = get_ids_for_cluster(
+            avg_patient_cohort=selected_cohort,
+            cohort_title='selected_patient_cohort',
+            selected_features=selected_features,
+            selected_dependent_variable=selected_dependent_variable,
+            selected_k_means_count=selected_clusters_count,
+            selected_cluster=selected_cluster,
+            filter_labels=False)
+        filtered_cluster_cohort = selected_cohort[selected_cohort['icustay_id'].isin(filtered_cluster_icustay_ids)]
+
+        # step 3: get count of occurrences per bin for this cluster
+        clusters_overview_table: dataframe = get_overview_for_cluster(current_overview_table=clusters_overview_table,
+                                                                      selected_cluster=selected_cluster,
+                                                                      features_df=features_df,
+                                                                      selected_features=selected_features,
+                                                                      selected_cohort=filtered_cluster_cohort,
+                                                                      complete_cohort=selected_cohort)
+
+    if save_to_file:
+        current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
+        filename_string: str = f'./output/{use_case_name}/clustering/clusters_overview_table_{cohort_title}_{current_time}.csv'
+        filename = filename_string.encode()
+        with open(filename, 'w', newline='') as output_file:
+            clusters_overview_table.to_csv(output_file, index=False)
+            print(f'STATUS: clusters_overview_table was saved to {filename_string}')
+    else:
+        print(clusters_overview_table)
 
     return None
