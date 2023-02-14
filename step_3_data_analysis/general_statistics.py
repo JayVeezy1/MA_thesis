@@ -10,15 +10,9 @@ from objects.patients import Patient
 from step_3_data_analysis.correlations import get_correlations_on_cohort
 
 
-def calculate_deaths_table(selected_patient_cohort, cohort_title, use_case_name, selected_features, save_to_file):
-    # include dependent_variables (they are also used in the separate death_overview)
-    available_dependent_variables: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
-                                           'death_365_days']
-    selected_features.extend(available_dependent_variables)
-
+def calculate_deaths_table(selected_patient_cohort, cohort_title, use_case_name, save_to_file):
     # create deaths_df
-    deaths_df: dataframe = pd.DataFrame(
-        columns=['case', 'total', 'death_3_days', 'death_30_days', 'death_180_days', 'death_365_days'])
+    deaths_df: dataframe = pd.DataFrame(columns=['case', 'total', 'death_3_days', 'death_30_days', 'death_180_days', 'death_365_days'])
 
     # fill the counters = respective cells in final table
     alive_counter = 0
@@ -113,36 +107,60 @@ def calculate_deaths_table(selected_patient_cohort, cohort_title, use_case_name,
 
 def calculate_feature_overview_table(selected_patient_cohort, cohort_title, use_case_name, features_df, selected_features, selected_dependent_variable, save_to_file: False):
     # todo maybe: add patients_in_training_set (count/occurrence) and chi-squared-value (for categorical features) to overview_table, and also R-Value from correlation?
-
     # get correlations per feature
-    selected_features_corr = selected_features.copy()
-    selected_features_corr.remove('icustay_id')
-    selected_features_corr.remove('dbsource')
-    selected_features_corr.remove('stroke_type')
-    selected_features_corr.remove('infarct_type')
-    deaths_correlation_df, p_value, r_value = get_correlations_on_cohort(avg_patient_cohort=selected_patient_cohort.copy(),
-                                                                         selected_features_corr=selected_features_corr,
+    deaths_correlation_df, p_value, r_value = get_correlations_on_cohort(avg_cohort=selected_patient_cohort,
+                                                                         selected_features=selected_features,
+                                                                         features_df=features_df,
                                                                          selected_dependent_variable=selected_dependent_variable)
 
     # create overview_df
-    data = {'Variables': ['Total'], 'Classification': ['Patients'], 'Count': [len(selected_patient_cohort.index)], 'NaN_Count': ['-'],
+    data = {'Variables': ['total_count'], 'Classification': ['icustay_ids'], 'Count': [len(selected_patient_cohort.index)], 'NaN_Count': ['0'],
             f'Correlation_to_{selected_dependent_variable}': ['-'], 'p_value': ['-']}
     overview_df: dataframe = pd.DataFrame(data)
 
+    # get features_to_factorize
+    factorization_df = pd.read_csv(f'./supplements/factorization_table_{cohort_title}.csv')
+    features_to_remove = features_df['feature_name'].loc[features_df['must_be_removed'] == 'yes'].to_list()
+    features_to_factorize = features_df['feature_name'].loc[
+        features_df['categorical_or_continuous'] == 'categorical'].to_list()
+    features_to_factorize = [x for x in features_to_factorize if
+                             x not in features_to_remove]  # drop features_to_remove from factorization
+
     # fill the overview_df
-    for feature in selected_features_corr:  # todo: also put features into categories to sort them (general_info, vital_signs, laboratory_results)
+    for feature in selected_features:  # todo maybe: also put features into categories to sort them (general_info, vital_signs, laboratory_results)
         # normal case, no binning needed
         if features_df['needs_binning'][features_df['feature_name'] == feature].item() == 'False':
-            for appearance in sort(pd.unique(selected_patient_cohort[feature])):
-                temp_df: dataframe = pd.DataFrame({'Variables': [feature],
-                                                   'Classification': [appearance],
-                                                   'Count': [selected_patient_cohort[feature][
-                                                                 selected_patient_cohort[
-                                                                     feature] == appearance].count()],
-                                                   'NaN_Count': Patient.get_NAN_for_feature_in_cohort(selected_patient_cohort, feature),
-                                                   f'Correlation_to_{selected_dependent_variable}': [deaths_correlation_df[feature].item()],
-                                                   'p_value': [p_value[feature].item()]})
-                overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
+            # use unfactorized name from supplements factorization_table
+            if feature in features_to_factorize:
+                for appearance in sort(pd.unique(selected_patient_cohort[feature])):
+                    appearance_name = factorization_df.loc[(factorization_df['feature'] == feature) & (
+                            factorization_df['factorized_values'] == appearance), 'unfactorized_value'].item()
+
+                    temp_df: dataframe = pd.DataFrame({'Variables': [feature],
+                                                       'Classification': [appearance_name],
+                                                       'Count': [selected_patient_cohort[feature][
+                                                                     selected_patient_cohort[
+                                                                         feature] == appearance].count()],
+                                                       'NaN_Count': Patient.get_NAN_for_feature_in_cohort(
+                                                           selected_patient_cohort, feature),
+                                                       f'Correlation_to_{selected_dependent_variable}': [
+                                                           deaths_correlation_df[feature].item()],
+                                                       'p_value': [p_value[feature].item()]})
+                    overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
+            else:
+                for appearance in sort(pd.unique(selected_patient_cohort[feature])):
+                    temp_df: dataframe = pd.DataFrame({'Variables': [feature],
+                                                       'Classification': [appearance],
+                                                       'Count': [selected_patient_cohort[feature][
+                                                                     selected_patient_cohort[
+                                                                         feature] == appearance].count()],
+                                                       'NaN_Count': Patient.get_NAN_for_feature_in_cohort(
+                                                           selected_patient_cohort, feature),
+                                                       f'Correlation_to_{selected_dependent_variable}': [
+                                                           deaths_correlation_df[feature].item()],
+                                                       'p_value': [p_value[feature].item()]})
+                    overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
+
         # binning needed for vital signs, etc.
         elif features_df['needs_binning'][features_df['feature_name'] == feature].item() == 'True':
 
@@ -159,11 +177,11 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, use_
                                                                                                              feature_min + round(
                                                                                                                  (
                                                                                                                          feature_max - feature_min) * 1 / 3,
-                                                                                                                 0),
+                                                                                                                 2),
                                                                                                              feature_min + round(
                                                                                                                  (
                                                                                                                          feature_max - feature_min) * 2 / 3,
-                                                                                                                 0),
+                                                                                                                 2),
                                                                                                              feature_max])
                 feature_appearances_df = pd.DataFrame()
                 feature_appearances_df['intervals'] = feature_appearances_series.keys()
@@ -185,7 +203,7 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, use_
                     overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
 
             except ValueError as e:             # this happens if for the selected cohort (a small cluster) all patients have NaN
-                print(f'WARNING: Column {feature} has Error-Message: {e}')
+                # print(f'WARNING: Column {feature} probably is all-NaN or only one entry. Error-Message: {e}')
                 temp_df: dataframe = pd.DataFrame({'Variables': [feature],
                                                    'Classification': ['All Entries NaN'],
                                                    'Count': [0],
@@ -213,8 +231,9 @@ def calculate_feature_overview_table(selected_patient_cohort, cohort_title, use_
         filename = filename_string.encode()
         with open(filename, 'w', newline='') as output_file:
             overview_df.to_csv(output_file, index=False)
-            print(f'STATUS: features_overview_table was saved to {filename_string}')
+            print(f'CHECK: features_overview_table was saved to {filename_string}')
     else:
+        print('CHECK: features_overview_table:')
         print(overview_df.to_string())
 
     return None

@@ -52,6 +52,14 @@ class Patient:
             Patient.all_patient_objs_set.remove(self)
 
     def get_clean_raw_data(self, patient_data: dataframe, feature_df: dataframe) -> dataframe:
+        # Transform datetime to int     -> does not work, preiculos is 'string' in format day:hour:minute, this feature is not that important
+        # try:
+        #     patient_data['preiculos'] = pd.to_timedelta(patient_data['preiculos'])
+        #     patient_data['preiculos'] = patient_data['preiculos'].dt.total_seconds() / (24 * 60 * 60)
+        #     patient_data['preiculos'].astype('int64')
+        # except KeyError as e:
+        #    pass
+
         # Remove strings from continuous columns
         numbers_data = patient_data.copy()
         continuous_features = feature_df.query('categorical_or_continuous=="continuous"')['feature_name']
@@ -143,6 +151,9 @@ class Patient:
             elif feature_type == 'single_value':
                 # simply take first available value
                 avg_df.insert(len(avg_df.columns), feature, self.raw_data[feature][0])
+            elif feature_type == 'categorical':
+                # simply take first available value
+                avg_df.insert(len(avg_df.columns), feature, self.raw_data[feature][0])
             elif feature_type == 'flag_value':
                 # if ever there is a row with positive flag -> complete column positive = 1
                 if self.raw_data[feature].sum() > 0:
@@ -188,25 +199,32 @@ class Patient:
         with open(filename, 'w', newline='') as output_file:
             avg_patient_cohort.to_csv(output_file, index=False)
 
-        print(f'STATUS: avg_patient_cohort file was saved to {project_path}exports/{use_case_name} \n')
+        print(f'CHECK: avg_patient_cohort file was saved to {project_path}exports/{use_case_name}')
 
         return avg_patient_cohort
 
     @classmethod
-    def get_avg_scaled_data(cls, project_path, use_case_name, selected_patients) -> dataframe:
-        avg_patient_cohort = cls.get_avg_patient_cohort(project_path, use_case_name, selected_patients)
-
+    def get_avg_scaled_data(cls, avg_patient_cohort) -> dataframe:
         # TODO: Choose which option!
-        # normalization (between 0 and 1)
+        # normalization (between 0 and 1):
+        # min-max-scaling: (df - df.min()) / (df.max() - df.min())
+
         # scaling (between -1 and 1) options:
         # pandas (unbiased): (x-x.mean())/ x.std()
         # sklearn (biased): scaler.fit_transform()
-        # min-max-scaling: (df - df.min()) / (df.max() - df.min())
 
         # only scale numbers columns
         avg_patient_cohort_num = avg_patient_cohort.select_dtypes(include='number')
-        scaled_avg_cohort_num = (avg_patient_cohort_num - avg_patient_cohort_num.min()) / (avg_patient_cohort_num.max() - avg_patient_cohort_num.min())
-        avg_patient_cohort[avg_patient_cohort_num.columns] = scaled_avg_cohort_num
+
+        # scaling method: min-max-normalization
+        scaled_avg_cohort_num = (avg_patient_cohort_num - avg_patient_cohort_num.min()) / (
+                    avg_patient_cohort_num.max() - avg_patient_cohort_num.min())
+
+        avg_patient_cohort[avg_patient_cohort_num.columns] = scaled_avg_cohort_num   # throws SettingWithCopyWarning but works as intended   # todo: check again
+
+        # still SettingWithCopyWarning
+        # for column in avg_patient_cohort_num.columns:
+          #  avg_patient_cohort.loc[:, column] = scaled_avg_cohort_num.loc[:, column]
 
         return avg_patient_cohort
 

@@ -8,35 +8,40 @@ from pandas.core.interchange import dataframe
 from scipy.stats import stats
 
 
-def get_correlations_on_cohort(avg_patient_cohort, selected_features_corr, selected_dependent_variable) -> dataframe:
-    # Preprocessing for correlation
-    avg_patient_cohort = avg_patient_cohort.drop(columns=['icustay_id', 'stroke_type', 'infarct_type', 'dbsource'])   # these features are needed for clustering, not correlations
+def get_correlations_on_cohort(avg_cohort, selected_features, features_df, selected_dependent_variable) -> dataframe:
+    # Preprocessing for Correlation: Remove the not selected prediction_variables and icustay_id
+    prediction_variables = features_df['feature_name'].loc[features_df['potential_for_analysis'] == 'prediction_variable'].to_list()
+    for feature in prediction_variables:
+        try:
+            selected_features.remove(feature)
+        except ValueError as e:
+            pass
+    selected_features.append(selected_dependent_variable)
+    try:
+        selected_features.remove('icustay_id')
+    except ValueError as e:
+        pass
 
-    # todo: make drop and factorize dependent on another column in the feature_preprocessing table
-
-    # todo: check/ask if there is better option? How to use non-numeric columns for correlation? Not really useful? But still needed for clustering right?
-    avg_patient_cohort[['insurance', 'ethnicity']] = avg_patient_cohort[['insurance', 'ethnicity']].apply(lambda x: pd.factorize(x)[0])
-    # insurance: medicare = 0, mediaid = 1, Government = 2, private = 3, Self Pay = 4
-    # ethnicity: WHITE = 0, UNKNOWN/NOT SPECIFIED = 1, HISPANIC OR LATINO = 2, BLACK = 3, OTHER = 4, ASIAN = 5
+    avg_cohort = avg_cohort[selected_features]
 
     # Calculate correlation
-    selected_features_corr.append(selected_dependent_variable)
-    avg_patient_cohort_corr = avg_patient_cohort[selected_features_corr].corr(numeric_only=False)
+    avg_patient_cohort_corr = avg_cohort[selected_features].corr(numeric_only=False)
     death_corr = avg_patient_cohort_corr[selected_dependent_variable].round(2)     # only return correlation towards selected_dependent_variable
 
-    # Calculate r-values & p-values
-    # todo: Are these calculations correct?
-    # pval = avg_patient_cohort[selected_features_corr].corr(method=lambda x, y: pearsonr(x, y)[1]) - np.eye(*avg_patient_cohort_corr.shape)        #  old calculation, unclear results
+    # Calculate r-values & p-values             # todo check: Are these calculations correct?
+    # old calculation, unclear results
+    # pval = avg_patient_cohort[selected_features_corr].corr(method=lambda x, y: pearsonr(x, y)[1]) - np.eye(*avg_patient_cohort_corr.shape)
     # p = pval.applymap(lambda x: ''.join(['*' for t in [.05, .01, .001] if x <= t]))       # alternative to turn pval into stars *
-    cleaned_df: dataframe = avg_patient_cohort.fillna(value=0)      # filling nan with 0 correct?
+
+    cleaned_df: dataframe = avg_cohort.fillna(value=0)
     validity_df: dataframe = pd.DataFrame()
     try:
-        for feature in avg_patient_cohort[selected_features_corr]:
-            r_val, p_val = stats.pearsonr(cleaned_df[feature], avg_patient_cohort[selected_dependent_variable])
+        for feature in avg_cohort[selected_features]:
+            r_val, p_val = stats.pearsonr(cleaned_df[feature], avg_cohort[selected_dependent_variable])
             validity_df[feature] = [round(r_val, 3), round(p_val, 3)]
     except ValueError as e:
         print('WARNING: ValueError for r_val and p_val calculation. Cluster probably only one entity.')
-        for feature in avg_patient_cohort[selected_features_corr]:
+        for feature in avg_cohort[selected_features]:
             validity_df[feature] = [np.nan, np.nan]
 
     validity_df = validity_df.rename({0: 'r_value', 1: 'p_value'}).transpose()
@@ -44,14 +49,10 @@ def get_correlations_on_cohort(avg_patient_cohort, selected_features_corr, selec
     return death_corr.sort_values(ascending=False), validity_df['p_value'], validity_df['r_value']
 
 
-def plot_correlations(avg_patient_cohort, cohort_title, use_case_name, selected_features, selected_dependent_variable, save_to_file):
-    selected_features_corr = selected_features.copy()
-    selected_features_corr.remove('icustay_id')
-    selected_features_corr.remove('dbsource')
-    selected_features_corr.remove('stroke_type')
-    selected_features_corr.remove('infarct_type')
+def plot_correlations(avg_patient_cohort, cohort_title, selected_features, use_case_name, features_df, selected_dependent_variable, save_to_file):
+    # Calculate Correlations
+    sorted_death_corr, p_value, r_value = get_correlations_on_cohort(avg_patient_cohort, selected_features, features_df, selected_dependent_variable)
 
-    sorted_death_corr, p_value, r_value = get_correlations_on_cohort(avg_patient_cohort, selected_features_corr, selected_dependent_variable)
     # todo: also add pval to plot?
 
     # Plot of correlation

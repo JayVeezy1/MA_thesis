@@ -1,80 +1,52 @@
-from pandas.core.interchange import dataframe
+import pandas as pd
 
 
-def cleanup_avg_df(avg_patient_cohort, selected_features, selected_dependent_variable) -> dataframe:
-    # Preprocessing for classification
-    avg_df = avg_patient_cohort.copy()
-    avg_df = avg_df.drop(columns=['ethnicity', 'insurance'])  # todo: these features can only be used if numeric - any good way to include?
-    selected_features_final = selected_features.copy()
-    try:
-        selected_features_final.remove('icustay_id')
-    except ValueError as e:
-        print('WARNING: icustay_id has already been removed from dataframe.')
-    try:
-        selected_features_final.remove('dbsource')
-    except ValueError as e:
-        print('WARNING: dbsource has already been removed from dataframe.')
-    try:
-        selected_features_final.remove('stroke_type')
-    except ValueError as e:
-        print('WARNING: stroke_type has already been removed from dataframe.')
-    try:
-        selected_features_final.remove('infarct_type')
-    except ValueError as e:
-        print('WARNING: infarct_type has already been removed from dataframe.')
-    try:
-        selected_features_final.remove('ethnicity')
-    except ValueError as e:
-        print('WARNING: ethnicity has already been removed from dataframe.')
-    try:
-        selected_features_final.remove('insurance')
-    except ValueError as e:
-        print('WARNING: insurance has already been removed from dataframe.')
+def create_factorization_table(avg_cohort_factorized, features_to_factorize, cohort_title):
+    # create 'factorization_table'
+    value_combination_dicts: list = []
+    for feature in features_to_factorize:
+        for factorized_value in avg_cohort_factorized[feature].unique():
+            value_combination_dicts.append(
+                {'feature': feature,
+                'factorized_values': factorized_value,
+                'unfactorized_value': avg_cohort_factorized[avg_cohort_factorized[feature] == factorized_value][f'{feature}_unfactorized'].iloc[0]}
+            )
+    factorization_table = pd.DataFrame(value_combination_dicts)
+    factorization_table.loc[factorization_table['unfactorized_value'].isnull(), 'unfactorized_value'] = 'no_data'
 
-    selected_features_final.append(selected_dependent_variable)
-    avg_df = avg_df[selected_features_final]
-    avg_df = avg_df.fillna(0)
-
-    return avg_df
+    filename_string: str = f'./supplements/factorization_table_{cohort_title}.csv'
+    filename = filename_string.encode()
+    with open(filename, 'w', newline='') as output_file:
+        factorization_table.to_csv(output_file, index=False)
+        print(f'CHECK: factorization_table was updated in {filename_string} \n')
 
 
-def cleanup_avg_df_for_classification(avg_patient_cohort, selected_features, selected_dependent_variable) -> dataframe:
-    # Preprocessing for classification
-    # here also the other available_dependent_variables must be removed from df, not so for clustering etc.
-    avg_df = avg_patient_cohort.copy()
-    avg_df = avg_df.drop(columns=['ethnicity', 'insurance'])  # todo: these features can only be used if numeric - any good way to include?
-    selected_features_final = selected_features.copy()
-    try:
-        selected_features_final.remove('icustay_id')
-    except ValueError as e:
-        print('WARNING: icustay_id has already been removed from dataframe.')
-    try:
-        selected_features_final.remove('dbsource')
-    except ValueError as e:
-        print('WARNING: dbsource has already been removed from dataframe.')
-    try:
-        selected_features_final.remove('stroke_type')
-    except ValueError as e:
-        print('WARNING: stroke_type has already been removed from dataframe.')
-    try:
-        selected_features_final.remove('infarct_type')
-    except ValueError as e:
-        print('WARNING: infarct_type has already been removed from dataframe.')
-    try:
-        selected_features_final.remove('ethnicity')
-    except ValueError as e:
-        print('WARNING: ethnicity has already been removed from dataframe.')
-    try:
-        selected_features_final.remove('insurance')
-    except ValueError as e:
-        print('WARNING: insurance has already been removed from dataframe.')
+def get_preprocessed_avg_cohort_and_features(avg_cohort, features_df, cohort_title):
+    # Features that must always be removed
+    features_to_remove = features_df['feature_name'].loc[features_df['must_be_removed'] == 'yes'].to_list()
+    for feature in features_to_remove:
+        try:
+            avg_cohort = avg_cohort.drop(columns=feature)
+        except KeyError as e:
+            pass
 
-    selected_features_final.append(selected_dependent_variable)
-    available_dependent_variables: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
-                                           'death_365_days']
-    available_dependent_variables.remove(selected_dependent_variable)
-    avg_df = avg_df.drop(columns=available_dependent_variables)
-    avg_df = avg_df[selected_features_final]
-    avg_df = avg_df.fillna(0)
+    features_to_factorize = features_df['feature_name'].loc[features_df['categorical_or_continuous'] == 'categorical'].to_list()
+    features_to_factorize = [x for x in features_to_factorize if x not in features_to_remove]       # drop features_to_remove from factorization
+    for feature in features_to_factorize:
+        avg_cohort.loc[:, f'{feature}_unfactorized'] = avg_cohort[feature]       # keep old columns without factorization
 
-    return avg_df
+    # Factorize the columns, lookup old values with the 'factorization_table' in supplements
+    avg_cohort[features_to_factorize] = avg_cohort[features_to_factorize].apply(lambda x: pd.factorize(x)[0])
+
+    # Features that need factorization          # todo check: if factorization is a good solution for categorical features? Does it even make sense to use non-numeric columns for correlation? But still needed for clustering right?
+    create_factorization_table(avg_cohort, features_to_factorize, cohort_title)
+
+    # Select final features in a list, drop features_to_remove
+    selected_features = features_df['feature_name'].loc[features_df['selected_for_analysis'] == 'yes'].to_list()
+    for feature in features_to_remove:
+        try:
+            selected_features.remove(feature)
+        except ValueError as e:
+            pass
+
+    return avg_cohort[selected_features], selected_features       # output: only filtered selected_features inside df and list

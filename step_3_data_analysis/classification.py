@@ -1,4 +1,3 @@
-import csv
 import datetime
 
 import pandas as pd
@@ -11,13 +10,30 @@ from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import NearMiss
 
-from step_2_preprocessing.preprocessing_functions import cleanup_avg_df_for_classification
+
+def preprocess_for_classification(avg_cohort, features_df, selected_features, selected_dependent_variable):
+    # Preprocessing for Clustering: Remove the not selected prediction_variables and icustay_id
+    prediction_variables = features_df['feature_name'].loc[
+        features_df['potential_for_analysis'] == 'prediction_variable'].to_list()
+    for feature in prediction_variables:
+        try:
+            selected_features.remove(feature)
+        except ValueError as e:
+            pass
+    selected_features.append(selected_dependent_variable)           # keeping selected_dependent_variable for clustering?
+    try:
+        selected_features.remove('icustay_id')
+    except ValueError as e:
+        pass
+
+    return avg_cohort[selected_features].fillna(0)
 
 
-def calculate_RF_on_cohort(avg_patient_cohort, cohort_title, use_case_name, selected_features, selected_dependent_variable, save_to_file):
+def calculate_RF_on_cohort(avg_cohort, cohort_title, use_case_name, features_df, selected_features, selected_dependent_variable, save_to_file):
     # Classification/Prediction with RandomForest on avg_patient_cohort
     # Cleanup & filtering
-    avg_df = cleanup_avg_df_for_classification(avg_patient_cohort, selected_features, selected_dependent_variable)      # todo: check if this still works after moving into function
+    avg_df = preprocess_for_classification(avg_cohort, features_df, selected_features, selected_dependent_variable)
+
     death_df = avg_df[selected_dependent_variable]         # death_label as its own df y_data
     avg_df_filtered = avg_df.drop([selected_dependent_variable], axis=1)   # death_label not inside x_data
 
@@ -59,7 +75,6 @@ def calculate_RF_on_cohort(avg_patient_cohort, cohort_title, use_case_name, sele
         display_roc_auc_curve(clf, new_x_test, new_y_test, version="NearMiss"+str(version), plotting=True, set=set)
     """
     return None
-
 
 
 def display_confusion_matrix(clf, x_test, y_test, cohort_title, use_case_name, save_to_file):
