@@ -8,9 +8,11 @@ from pandas.core.interchange import dataframe
 from scipy.stats import stats
 
 
-def get_correlations_on_cohort(avg_cohort, selected_features, features_df, selected_dependent_variable) -> dataframe:
+def preprocess_for_correlation(avg_cohort: dataframe, features_df: dataframe, selected_features: list,
+                               selected_dependent_variable: str):
     # Preprocessing for Correlation: Remove the not selected prediction_variables and icustay_id
-    prediction_variables = features_df['feature_name'].loc[features_df['potential_for_analysis'] == 'prediction_variable'].to_list()
+    prediction_variables = features_df['feature_name'].loc[
+        features_df['potential_for_analysis'] == 'prediction_variable'].to_list()
     for feature in prediction_variables:
         try:
             selected_features.remove(feature)
@@ -22,11 +24,24 @@ def get_correlations_on_cohort(avg_cohort, selected_features, features_df, selec
     except ValueError as e:
         pass
 
+    temp_selected_features = selected_features.copy()
+    temp_selected_features.remove(selected_dependent_variable)
+    print(
+        f'CHECK: {len(temp_selected_features)} features used for Correlation.')  # dependent_variable is not used for its own correlation
+
     avg_cohort = avg_cohort[selected_features]
+
+    return avg_cohort.fillna(0), selected_features
+
+
+def get_correlations_on_cohort(avg_cohort: dataframe, features_df: dataframe, selected_features: list,
+                               selected_dependent_variable: str) -> dataframe:
+    avg_cohort, selected_features = preprocess_for_correlation(avg_cohort, selected_features, features_df,
+                                                               selected_dependent_variable)
 
     # Calculate correlation
     avg_patient_cohort_corr = avg_cohort[selected_features].corr(numeric_only=False)
-    death_corr = avg_patient_cohort_corr[selected_dependent_variable].round(2)     # only return correlation towards selected_dependent_variable
+    death_corr = avg_patient_cohort_corr[selected_dependent_variable].round(2)  # only return correlation towards selected_dependent_variable
 
     # Calculate r-values & p-values             # todo check: Are these calculations correct?
     # old calculation, unclear results
@@ -49,9 +64,15 @@ def get_correlations_on_cohort(avg_cohort, selected_features, features_df, selec
     return death_corr.sort_values(ascending=False), validity_df['p_value'], validity_df['r_value']
 
 
-def plot_correlations(avg_patient_cohort, cohort_title, selected_features, use_case_name, features_df, selected_dependent_variable, save_to_file):
+def plot_correlations(use_this_function: False, use_plot_heatmap: False, use_plot_pairplot: False, cohort_title: str,
+                      avg_cohort: dataframe, features_df: dataframe, selected_features: list,
+                      selected_dependent_variable: str, use_case_name: str, save_to_file: bool = False):
+    if not use_this_function:
+        return None
+
     # Calculate Correlations
-    sorted_death_corr, p_value, r_value = get_correlations_on_cohort(avg_patient_cohort, selected_features, features_df, selected_dependent_variable)
+    print('STATUS: Calculating Correlations.')
+    sorted_death_corr, p_value, r_value = get_correlations_on_cohort(avg_cohort, selected_features, features_df, selected_dependent_variable)
 
     # todo: also add pval to plot?
 
@@ -61,6 +82,8 @@ def plot_correlations(avg_patient_cohort, cohort_title, selected_features, use_c
     color = plt.get_cmap('RdYlGn_r')
     max_value = plot_death_corr.max()
     min_value = plot_death_corr.min()
+
+    # make certain minimum of x_axis is 0.4
     y_axis = max(max_value, min_value) + 0.05
     if y_axis < 0.4:
         y_axis = 0.4
@@ -79,26 +102,44 @@ def plot_correlations(avg_patient_cohort, cohort_title, selected_features, use_c
             f'./output/{use_case_name}/correlations/correlation_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
     plt.show()
 
-    print('STATUS: calculate_correlations_on_cohort executed.')
+    if use_plot_heatmap:
+        plot_heatmap(cohort_title, avg_cohort, features_df, selected_features,
+                     selected_dependent_variable, use_case_name,
+                     save_to_file)
+    if use_plot_pairplot:
+        if len(selected_features) > 20:
+            print(
+                f'WARNING: {len(selected_features)} selected_features were selected for plot_pairplot(). Calculation might take a moment.')
+        plot_pairplot(cohort_title, avg_cohort, features_df, selected_features,
+                      selected_dependent_variable, use_case_name,
+                      save_to_file)
+
     return None
 
 
-def plot_heatmap(avg_patient_cohort, cohort_title, use_case_name, selected_features, selected_dependent_variable, save_to_file):
-    # Preprocessing (not inside the normal correlation function, because here ALL correlations needed, not just death)
-    selected_features_corr = selected_features.copy()
-    selected_features_corr.remove('icustay_id')
-    selected_features_corr.remove('stroke_type')
-    selected_features_corr.append(selected_dependent_variable)
+def plot_heatmap(cohort_title: str, avg_cohort: dataframe, features_df: dataframe, selected_features: list,
+                 selected_dependent_variable: str, use_case_name: str,
+                 save_to_file: bool = False):
+    print('STATUS: Plotting plot_heatmap.')
+
+    # Preprocessing
+    avg_cohort, selected_features = preprocess_for_correlation(avg_cohort, features_df, selected_features,
+                                                               selected_dependent_variable)
+    try:
+        selected_features.remove('icustay_id')
+    except ValueError as e:
+        pass
 
     # Calculate ALL correlations
-    avg_patient_cohort_corr = avg_patient_cohort[selected_features_corr].corr(numeric_only=False)
+    avg_patient_cohort_corr = avg_cohort[selected_features].corr(numeric_only=False)
     avg_df_corr_without_nan = avg_patient_cohort_corr.fillna(0)
-    triangle_mask = np.triu(avg_df_corr_without_nan)       # Getting the Upper Triangle of the co-relation matrix to use as mask
+    triangle_mask = np.triu(avg_df_corr_without_nan)  # Getting the Upper Triangle of the co-relation matrix as mask
 
     # heatmap for ALL labels
     fig, ax2 = plt.subplots()
     sns.heatmap(data=avg_df_corr_without_nan.to_numpy(), vmin=-1, vmax=1, linewidths=0.5,
-                cmap='bwr', yticklabels=selected_features_corr, xticklabels=selected_features_corr, ax=ax2, mask=triangle_mask)
+                cmap='bwr', yticklabels=selected_features, xticklabels=selected_features, ax=ax2,
+                mask=triangle_mask)
     ax2.set_title(f'Correlations in {cohort_title}')
     fig.tight_layout()
 
@@ -107,18 +148,25 @@ def plot_heatmap(avg_patient_cohort, cohort_title, use_case_name, selected_featu
             f'./output/{use_case_name}/correlations/heatmap_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
     plt.show()
 
-    print('STATUS: plot_heatmap executed.')
     return None
 
 
-def plot_pairplot(avg_patient_cohort, cohort_title, use_case_name, selected_features, selected_dependent_variable, save_to_file):
-    selected_features_pair = selected_features.copy()
-    selected_features_pair.remove('icustay_id')
-    selected_features_pair.remove('stroke_type')
-    selected_features_pair.append(selected_dependent_variable)
+def plot_pairplot(cohort_title: str, avg_cohort: dataframe, features_df: dataframe, selected_features: list,
+                  selected_dependent_variable: str, use_case_name: str,
+                  save_to_file: bool = False):
+    print('STATUS: Plotting plot_pairplot.')
 
-    selected_labels_df = avg_patient_cohort.filter(selected_features_pair, axis=1)
-    avg_df_small = selected_labels_df.iloc[:150]  # scatter plot nur 100 patients
+    # Preprocessing
+    avg_cohort, selected_features = preprocess_for_correlation(avg_cohort, features_df, selected_features,
+                                                               selected_dependent_variable)
+    try:
+        selected_features.remove('icustay_id')
+    except ValueError as e:
+        pass
+
+    # Get selected_labels_df
+    selected_labels_df = avg_cohort.filter(selected_features, axis=1)
+    avg_df_small = selected_labels_df.iloc[:100]  # scatter plot nur 100 patients
 
     # Pairplot of selected_features
     sns.set_style('darkgrid')
@@ -129,5 +177,4 @@ def plot_pairplot(avg_patient_cohort, cohort_title, use_case_name, selected_feat
             f'./output/{use_case_name}/correlations/pairplot_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
     plt.show()
 
-    print('STATUS: plot_pairplot executed.')
     return None

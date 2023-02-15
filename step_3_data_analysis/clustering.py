@@ -118,13 +118,18 @@ def preprocess_for_clustering(avg_cohort, features_df, selected_features, select
     except ValueError as e:
         pass
 
+    print(f'CHECK: {len(selected_features)} features used for Clustering.')
+    # print(f'CHECK: {len(selected_features)} features used for Clustering: ', selected_features)  # dependent_variable might be removed outside
     avg_cohort_without_nan = avg_cohort[selected_features].fillna(0)
 
     return avg_cohort_without_nan.to_numpy()
 
 
-def plot_sh_score_kmeans(avg_patient_cohort, cohort_title, use_case_name, features_df, selected_features,
+def plot_sh_score_kmeans(use_this_function: False, avg_patient_cohort, cohort_title, use_case_name, features_df, selected_features,
                          selected_dependent_variable, save_to_file: bool = False):
+    if not use_this_function:
+        return None
+
     # This function displays the Silhouette Score curve. With this an optimal cluster count for k-means can be selected.
     print("STATUS: Calculating Silhouette Scores for k-means.")
     # Get cleaned avg_np
@@ -154,9 +159,12 @@ def plot_sh_score_kmeans(avg_patient_cohort, cohort_title, use_case_name, featur
     return None
 
 
-def plot_k_means_on_pacmap(avg_patient_cohort, cohort_title, use_case_name, features_df, selected_features,
+def plot_k_means_on_pacmap(use_this_function: False, avg_patient_cohort, cohort_title, use_case_name, features_df, selected_features,
                            selected_dependent_variable,
-                           selected_cluster_count: int, save_to_file: bool = False):
+                           selected_cluster_count, save_to_file: False):
+    if not use_this_function:
+        return None
+
     # Clean up df & transform to numpy
     avg_np = preprocess_for_clustering(avg_patient_cohort, features_df, selected_features, selected_dependent_variable)
 
@@ -413,9 +421,12 @@ def get_overview_for_cluster(cluster_cohort, selected_features, features_df, cur
     return current_overview_table
 
 
-def calculate_clusters_overview_table(selected_cohort, cohort_title, use_case_name,
+def calculate_clusters_overview_table(use_this_function: False, selected_cohort, cohort_title, use_case_name,
                                       selected_clusters_count, features_df,
                                       selected_features, selected_dependent_variable, save_to_file: False):
+    if not use_this_function:
+        return None
+
     # step 1: get counts for complete dataset -> based on general_statistics.calculate_feature_overview_table
     features_overview_table = get_features_overview(selected_cohort=selected_cohort,
                                                     selected_features=selected_features,

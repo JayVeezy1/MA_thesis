@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from numpy import ndarray
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import ConfusionMatrixDisplay, classification_report, confusion_matrix, \
-    roc_auc_score, RocCurveDisplay
+    roc_auc_score, roc_curve, RocCurveDisplay
 from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import NearMiss
@@ -27,6 +27,10 @@ def preprocess_for_classification(avg_cohort, features_df, selected_features, se
     except ValueError as e:
         pass
 
+    temp_selected_features = selected_features.copy()
+    temp_selected_features.remove(selected_dependent_variable)
+    # print(f'CHECK: {len(temp_selected_features)} features used for Classification: ', temp_selected_features)  # dependent_variable will be removed outside
+
     return avg_cohort[selected_features].fillna(0)
 
 
@@ -41,8 +45,8 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
     elif sampling_method == 'oversampling':  # Oversampling: SMOTE
         print(f'STATUS: Implementing SMOTE oversampling for {cohort_title}.')
         smote = SMOTE(random_state=1321)
-        smote_x_data, smote_y_data = smote.fit_resample(basic_x_train, basic_y_train)
-        new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(smote_x_data, smote_y_data, test_size=0.2,
+        smote_x_resampled, smote_y_resampled = smote.fit_resample(basic_x_train, basic_y_train)
+        new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(smote_x_resampled, smote_y_resampled, test_size=0.2,
                                                                             random_state=1321)
         x_train_final = new_x_train
         y_train_final = new_y_train
@@ -62,9 +66,9 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
         # try all 3 nearmiss versions
         for version in versions:
             print(f'STATUS: Implementing NearMiss {version} oversampling for {cohort_title}.')
-            near_miss = NearMiss(version=version)
-            near_miss_x_data, near_miss_y_data = near_miss.fit_resample(basic_x_train, basic_y_train)
-            new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(near_miss_x_data, near_miss_y_data,
+            nearmiss = NearMiss(version=version)
+            nearmiss_x_resampled, nearmiss_y_resampled = nearmiss.fit_resample(basic_x_train, basic_y_train)
+            new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(nearmiss_x_resampled, nearmiss_y_resampled,
                                                                                 test_size=0.2, random_state=1321)
             clf.fit(X=new_x_train, y=new_y_train)
 
@@ -87,9 +91,12 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
     return x_train_final, x_test_final, y_train_final, y_test_final, sampling_title
 
 
-def calculate_classification_on_cohort(avg_cohort, cohort_title, use_case_name, features_df, selected_features,
+def calculate_classification_on_cohort(use_this_function: False, avg_cohort, cohort_title, use_case_name, features_df, selected_features,
                                        selected_dependent_variable, save_to_file, classification_method: str,
                                        sampling_method: str):
+    if not use_this_function:
+        return None
+
     # Classification/Prediction with RandomForest on avg_patient_cohort
     # Cleanup & filtering
     avg_df = preprocess_for_classification(avg_cohort, features_df, selected_features, selected_dependent_variable)
@@ -98,26 +105,24 @@ def calculate_classification_on_cohort(avg_cohort, cohort_title, use_case_name, 
 
     # Create basic training_test_split
     if classification_method == 'RandomForest':
-        clf = RandomForestClassifier(n_estimators=100, max_depth=5, bootstrap=True,
-                                     random_state=1321)  # todo: why boostrap=True ? == CrossValidation?
+        clf = RandomForestClassifier(random_state=1321)  # old settings: n_estimators=100, max_depth=5, bootstrap=True,
     elif classification_method == 'XGBoost':
         clf = XGBClassifier()
     else:
-        print(
-            f'ERROR: classification_method "{classification_method}" not valid. Choose from options: "RandomForest" or "XGBoost".')
+        print(f'ERROR: classification_method "{classification_method}" not valid. Choose from options: "RandomForest" or "XGBoost".')
         return None
 
     # Split training/test-data
-    basic_x_train, basic_x_test, basic_y_train, basic_y_test = train_test_split(avg_df_filtered, death_df,
+    x_train_basic, x_test_basic, y_train_basic, y_test_basic = train_test_split(avg_df_filtered, death_df,
                                                                                 test_size=0.2, random_state=1321)
     # If selected, get over-/under-sampled data
     try:
         x_train_final, x_test_final, y_train_final, y_test_final, sampling_title = get_sampled_data(clf,
                                                                                                     sampling_method,
-                                                                                                    basic_x_train,
-                                                                                                    basic_x_test,
-                                                                                                    basic_y_train,
-                                                                                                    basic_y_test,
+                                                                                                    x_train_basic,
+                                                                                                    x_test_basic,
+                                                                                                    y_train_basic,
+                                                                                                    y_test_basic,
                                                                                                     cohort_title)
     except TypeError as e:
         return None
@@ -125,65 +130,87 @@ def calculate_classification_on_cohort(avg_cohort, cohort_title, use_case_name, 
     # this is the training step, prediction will be inside the Classification Report
     clf.fit(X=x_train_final, y=y_train_final)
     # Classification Report
-    display_confusion_matrix(clf, x_test_final, y_test_final, cohort_title=cohort_title, use_case_name=use_case_name,
-                             sampling_title=sampling_title, save_to_file=save_to_file)
+    display_confusion_matrix(clf, x_test_basic, y_test_basic, cohort_title=cohort_title, use_case_name=use_case_name,       # important: use text_basics here
+                             classification_method=classification_method, sampling_title=sampling_title,
+                             save_to_file=save_to_file)
     # ROC/AUC Curve
-    display_roc_auc_curve(clf, x_test_final, y_test_final, cohort_title=cohort_title, use_case_name=use_case_name,
-                          sampling_title=sampling_title, save_to_file=save_to_file)
+    display_roc_auc_curve(clf, x_test_basic, y_test_basic, cohort_title=cohort_title, use_case_name=use_case_name,          # important: use text_basics here
+                          classification_method=classification_method, sampling_title=sampling_title,
+                          save_to_file=save_to_file)
 
     return None
 
 
-def display_confusion_matrix(clf, x_test, y_test, cohort_title, use_case_name, sampling_title, save_to_file):
+def display_confusion_matrix(clf, x_test, y_test, cohort_title, use_case_name, classification_method, sampling_title,
+                             save_to_file):
     cm: ndarray = confusion_matrix(y_test, clf.predict(x_test))
     fig, ax = plt.subplots()
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["No Death", "Death"])
     disp.plot(ax=ax)  # todo: any option to make "true" case at top and "false (no_death)" to bottom row?
-    ax.set_title(f"RandomForest Classification for {cohort_title}, {sampling_title}")
+    ax.set_title(f"{classification_method} on {cohort_title}, {sampling_title}")
 
     current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
     if save_to_file:
-        plt.savefig(f'./output/{use_case_name}/classification/RF_{cohort_title}_{sampling_title}_{current_time}.png')
+        if classification_method == 'RandomForest': classification_method = 'RF'
+        plt.savefig(f'./output/{use_case_name}/classification/CM_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png')
     plt.show()
 
     # Print Confusion Matrix and Classification Report
-    print(f'Confusion Matrix for {cohort_title}, {sampling_title}:')
+    print(f'\n Confusion Matrix for {classification_method} on {cohort_title}, {sampling_title}:')
     cm_df = pd.DataFrame({
         "predicts_true": {"is_true": cm[1][1], "is_false": cm[0][1]},
         "predicts_false": {"is_true": cm[1][0], "is_false": cm[0][0]}
     })
     print(cm_df)
 
-    print(f'\n Classification Report for {cohort_title}, {sampling_title}:')
+    print(f'\n Classification Report for {classification_method} on {cohort_title}, {sampling_title}:')
     report = classification_report(y_test, clf.predict(x_test))
     print(report)
 
     if save_to_file:
-        cm_filename_string: str = f'./output/{use_case_name}/classification/RF_{cohort_title}_{sampling_title}_confusion_matrix_{current_time}.csv'
+        cm_filename_string: str = f'./output/{use_case_name}/classification/CM_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
         cm_filename = cm_filename_string.encode()
         with open(cm_filename, 'w', newline='') as output_file:
             cm_df.to_csv(output_file)
             print(f'STATUS: cm_df was saved to {cm_filename}')
 
-        report_filename_string: str = f'./output/{use_case_name}/classification/RF_{cohort_title}_{sampling_title}_report_{current_time}.csv'
+        report_filename_string: str = f'./output/{use_case_name}/classification/REPORT_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
         report_filename = report_filename_string.encode()
         with open(report_filename, 'w', newline='') as output_file:
             output_file.write(report)
             output_file.close()
+            print(f'STATUS: report was saved to {report_filename}')
 
 
-# todo: this is not correct yet!
-def display_roc_auc_curve(clf, x_test, y_test, cohort_title, use_case_name, sampling_title, save_to_file):
-    roc_auc = roc_auc_score(y_test, clf.predict_proba(x_test)[:, 1])
+def display_roc_auc_curve(clf, x_test, y_test, cohort_title, use_case_name, classification_method, sampling_title, save_to_file):
+    # Calculate predictions for x_test
+    clf_probs = clf.predict_proba(x_test)                   # Prediction probabilities (= estimated values of prediction)
+    clf_probs = clf_probs[:, 1]                             # Only the probabilities for positive outcome are kept
 
-    disp = RocCurveDisplay.from_predictions(y_true=y_test, y_pred=clf.predict(x_test),
-                                            name=f'Random Forest for {cohort_title}, {sampling_title}')
+    # Get auc_score for probabilities compared to real values
+    auc_score = roc_auc_score(y_test, clf_probs)            # ROC = receiver operating characteristic, AUROC = area under the ROC curve
+    # print(f'CHECK: {classification_method}: AUROC = %.3f' % auc_score)
 
-    plt.title(f"RandomForest for {cohort_title} AUC: {round(roc_auc, 4)}, {sampling_title}")
+    # Get false-positive-rate = x-axis and true-positive-rate = y-axis
+    clf_fpr, clf_tpr, _ = roc_curve(y_test, clf_probs)
+    plt.plot(clf_fpr, clf_tpr, marker='.', label='Random Forest (AUROC = %0.3f)' % auc_score)
+
+    # Add a random predictor line to plot
+    random_probs = [0 for _ in range(len(y_test))]
+    random_auc = roc_auc_score(y_test, random_probs)
+    random_fpr, random_tpr, _ = roc_curve(y_test, random_probs)
+    plt.plot(random_fpr, random_tpr, linestyle='--', label='Random prediction (AUROC = %0.3f)' % random_auc)
+
+    # Plot Settings
+    plt.title(f"{classification_method} for {cohort_title} AUROC: {round(auc_score, 3)}, {sampling_title}")
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.legend()
 
     if save_to_file:
-        # save disp once its correct
-        # plt.savefig(f'./output/{use_case_name}/classification/random_forest_{cohort_title}_{sampling_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
-        pass
-
+        auroc_filename = f'./output/{use_case_name}/classification/AUROC_{classification_method}_{cohort_title}_{sampling_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png'
+        plt.savefig(auroc_filename)
+        print(f'STATUS: AUROC was saved to {auroc_filename}')
     plt.show()
+
+    return None

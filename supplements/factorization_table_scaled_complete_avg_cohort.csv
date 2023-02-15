@@ -1,4 +1,7 @@
 feature,factorized_values,unfactorized_value
+admission_type,0,EMERGENCY
+admission_type,1,ELECTIVE
+admission_type,2,URGENT
 ethnicity,0,WHITE
 ethnicity,1,UNKNOWN/NOT SPECIFIED
 ethnicity,2,BLACK
@@ -6,14 +9,19 @@ ethnicity,3,OTHER
 ethnicity,4,HISPANIC OR LATINO
 ethnicity,5,ASIAN
 ethnicity,6,HISPANIC/LATINO - COLOMBIAN
-admission_type,0,EMERGENCY
-admission_type,1,ELECTIVE
-admission_type,2,URGENT
 insurance,0,Medicare
 insurance,1,Private
 insurance,2,Medicaid
 insurance,3,Government
 insurance,4,Self Pay
+marital_status,-1,no_data
+marital_status,0,DIVORCED
+marital_status,1,WIDOWED
+marital_status,2,MARRIED
+marital_status,3,SINGLE
+marital_status,4,UNKNOWN (DEFAULT)
+marital_status,5,LIFE PARTNER
+marital_status,6,SEPARATED
 religion,0,UNOBTAINABLE
 religion,1,CATHOLIC
 religion,2,OTHER
@@ -32,11 +40,3 @@ religion,13,UNITARIAN-UNIVERSALIST
 religion,14,ROMANIAN EAST. ORTH
 religion,15,BAPTIST
 religion,16,7TH DAY ADVENTIST
-marital_status,-1,no_data
-marital_status,0,DIVORCED
-marital_status,1,WIDOWED
-marital_status,2,MARRIED
-marital_status,3,SINGLE
-marital_status,4,UNKNOWN (DEFAULT)
-marital_status,5,LIFE PARTNER
-marital_status,6,SEPARATED

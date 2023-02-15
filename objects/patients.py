@@ -3,11 +3,6 @@ import numpy as np
 from pandas.core.interchange import dataframe
 
 
-class NotUniqueIDError(Exception):
-    # is this really necessary?
-    pass
-
-
 class Patient:
     """
     Class containing all patients that are imported from the .csv files.
@@ -15,15 +10,14 @@ class Patient:
     Note: The .csv files/ids are actually based on icustays. A real patient might have had multiple icustays,
     but only their first icustay will be included in this analysis. Meaning the icustay_id will be used as 'patient_id'.
     """
-
     # CLASS FEATURES
     all_patient_ids_set: set = set()                  # not really needed, could be derived with a function get_ids_from_objs_set
     all_patient_objs_set: set = set()                 # keys from the cache file should be patients_ids
 
     def __init__(self, patient_id: str, patient_data: dataframe, features_df: dataframe):
         self.features: list = list(patient_data.columns.values)
-
-        # todo: idea: set stroke_type or infarct_type here when first loading patient -> not needed inside Postgres/raw.csv -> but useful if also available for cohort somehow?
+        # todo future work: maybe move filtering of stroke_type and infarct_type from SQL Script into Patient Class -> PRO: more flexible for future use-cases instead of SQL, CON: but must also be inside cohort.csv for filtering
+        # todo future work: add interpolation/imputation(depending on NaN)/outliers to timeseries -> use timeseries for analysis
 
         if patient_id not in Patient.all_patient_ids_set:
             self.patient_id = patient_id
@@ -35,7 +29,7 @@ class Patient:
             self.patient_id = None
             print(f'CHECK: Patient {patient_id} already exists.')
             # simply not add this ID to all_patient_ids, much easier than throwing of an exception
-            # raise NotUniqueIDError(f'Icustay ID {patient_id} already exists in all_patients_set')
+            # Idea: raise NotUniqueIDError(f'Icustay ID {patient_id} already exists in all_patients_set')
 
         # patient related datasets
         self.raw_data: dataframe = self.get_clean_raw_data(patient_data, features_df)  # raw = timeseries & no imputation/interpolation

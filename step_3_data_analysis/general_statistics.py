@@ -10,7 +10,11 @@ from objects.patients import Patient
 from step_3_data_analysis.correlations import get_correlations_on_cohort
 
 
-def calculate_deaths_table(selected_patient_cohort, cohort_title, use_case_name, save_to_file):
+# todo long term: second type of Deaths table: cluster1/column1 = survived, cluster2/column2 = death, rows = features
+def calculate_deaths_table(use_this_function: False, selected_patient_cohort, cohort_title, use_case_name, save_to_file):
+    if not use_this_function:
+        return None
+
     # create deaths_df
     deaths_df: dataframe = pd.DataFrame(columns=['case', 'total', 'death_3_days', 'death_30_days', 'death_180_days', 'death_365_days'])
 
@@ -105,7 +109,10 @@ def calculate_deaths_table(selected_patient_cohort, cohort_title, use_case_name,
     return None
 
 
-def calculate_feature_overview_table(selected_patient_cohort, cohort_title, use_case_name, features_df, selected_features, selected_dependent_variable, save_to_file: False):
+def calculate_feature_overview_table(use_this_function: False, selected_patient_cohort, cohort_title, use_case_name, features_df, selected_features, selected_dependent_variable, save_to_file: False):
+    if not use_this_function:
+        return None
+
     # todo maybe: add patients_in_training_set (count/occurrence) and chi-squared-value (for categorical features) to overview_table, and also R-Value from correlation?
     # get correlations per feature
     deaths_correlation_df, p_value, r_value = get_correlations_on_cohort(avg_cohort=selected_patient_cohort,

@@ -25,6 +25,8 @@ def preprocess_for_pacmap(avg_cohort, features_df, selected_features, selected_d
 
     avg_cohort_without_nan = avg_cohort[selected_features].fillna(0)
 
+    # print(f'CHECK: {len(selected_features)} features used for PacMap.')
+
     return avg_cohort_without_nan.to_numpy()
 
 
@@ -50,8 +52,12 @@ def calculate_pacmap(avg_cohort, cohort_title, features_df, selected_features, s
     return pacmap_data_points, death_list  # pacmap_data_points = data points, death_list = markings
 
 
-def display_pacmap(avg_patient_cohort, cohort_title, use_case_name, features_df, selected_features, selected_dependent_variable,
+def display_pacmap(use_this_function: False, avg_patient_cohort, cohort_title, use_case_name, features_df, selected_features, selected_dependent_variable,
                    save_to_file):
+    if not use_this_function:
+        return None
+
+    # Calculate PacMap
     pacmap_data_points, death_list = calculate_pacmap(avg_patient_cohort, cohort_title, features_df, selected_features, selected_dependent_variable)
 
     # Plot PacMap
