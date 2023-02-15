@@ -53,7 +53,7 @@ if __name__ == '__main__':
     # Choose: Cohort Parameters
     SELECTED_COHORT = scaled_complete_avg_cohort
     SELECTED_COHORT_TITLE = 'scaled_complete_avg_cohort'
-    SELECT_SAVE_FILES = True
+    SELECT_SAVE_FILES = False
     # Automated: Preprocessed Cohort
     SELECTED_COHORT_preprocessed, SELECTED_FEATURES = get_preprocessed_avg_cohort_and_features(
         avg_cohort=SELECTED_COHORT,
@@ -133,19 +133,19 @@ if __name__ == '__main__':
     #                                                                save_to_file=SELECT_SAVE_FILES)
 
     ### Machine Learning Predictions
-    # Step 4.1) Random Forest
-    # todo long term: add SMOTE & nearMiss
-    # classification.calculate_RF_on_cohort(avg_cohort=SELECTED_COHORT_preprocessed,
-    #                                     cohort_title=SELECTED_COHORT_TITLE,
-    #                                    use_case_name=USE_CASE_NAME,
-    #                                   features_df=FEATURES_DF,
-    #                                  selected_features=SELECTED_FEATURES,
-    #                                 selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-    #                                save_to_file=SELECT_SAVE_FILES)
-
-    # TODO 1: Add XGBoost
-# Step 4.2) XGBoost
-
+    # Step 4.1) Classification: RandomForest & XGBoost
+    SELECTED_CLASSIFICATION_METHOD = 'RandomForest'  # options: RandomForest | XGBoost
+    SELECTED_SAMPLING_METHOD = 'no_sampling'         # options: no_sampling | oversampling | undersampling
+    classification.calculate_classification_on_cohort(classification_method=SELECTED_CLASSIFICATION_METHOD,
+                                                      sampling_method=SELECTED_SAMPLING_METHOD,
+                                                      avg_cohort=SELECTED_COHORT_preprocessed,
+                                                      cohort_title=SELECTED_COHORT_TITLE,
+                                                      use_case_name=USE_CASE_NAME,
+                                                      features_df=FEATURES_DF,
+                                                      selected_features=SELECTED_FEATURES,
+                                                      selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                      save_to_file=SELECT_SAVE_FILES
+                                                      )
 
 # todo after XGBoost: classification comparison table: list[all_cohorts], list[prediction_types], list[dependent_variables] -> for each ... for each ... -> one final overview table to compare all accuracy & recall results
 # Step 4.3) Deep Learning/Neural Network
