@@ -12,8 +12,7 @@ if __name__ == '__main__':
     USE_CASE_NAME: str = 'stroke_all_systems'  # stroke_patients_data       # heart_infarct_patients_data
     FEATURES_DF = pd.read_excel('./supplements/feature_preprocessing_table.xlsx')
     SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'  # death_3_days, death_in_hosp
-    ALL_DEPENDENT_VARIABLES: list = FEATURES_DF.loc[
-        FEATURES_DF['potential_for_analysis'] == 'prediction_variable', 'feature_name'].to_list()
+    ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days', 'death_365_days']   # FEATURES_DF.loc[FEATURES_DF['potential_for_analysis'] == 'prediction_variable', 'feature_name'].to_list()
 
     ### Setup, MIMIC-III Export from DB, Load from Cache
     # Step 0) Setup when first time using db:
@@ -52,11 +51,13 @@ if __name__ == '__main__':
     scaled_complete_avg_cohort = Patient.get_avg_scaled_data(complete_avg_cohort.copy())
     scaled_hemorrhage_avg_cohort = Patient.get_avg_scaled_data(hemorrhage_avg_cohort.copy())
     scaled_ischemic_avg_cohort = Patient.get_avg_scaled_data(ischemic_avg_cohort.copy())
-    ALL_COHORTS: list = [scaled_complete_avg_cohort, scaled_hemorrhage_avg_cohort, scaled_ischemic_avg_cohort]
+    ALL_COHORTS_WITH_TITLES: dict = {'scaled_complete_avg_cohort': scaled_complete_avg_cohort,
+                                     'scaled_hemorrhage_avg_cohort': scaled_hemorrhage_avg_cohort,
+                                     'scaled_ischemic_avg_cohort': scaled_ischemic_avg_cohort}
     # Choose: Cohort Parameters
     SELECTED_COHORT = scaled_complete_avg_cohort
     SELECTED_COHORT_TITLE = 'scaled_complete_avg_cohort'
-    SELECT_SAVE_FILES = False
+    SELECT_SAVE_FILES = True
     # Automated: Preprocessed Cohort
     SELECTED_COHORT_preprocessed, SELECTED_FEATURES = get_preprocessed_avg_cohort_and_features(
         avg_cohort=SELECTED_COHORT,
@@ -120,7 +121,7 @@ if __name__ == '__main__':
                                     selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                     save_to_file=SELECT_SAVE_FILES)
     # kmeans: plotting
-    SELECTED_KMEANS_CLUSTERS_COUNT = 8              # manually checking silhouette score shows optimal cluster count (higher is better)
+    SELECTED_KMEANS_CLUSTERS_COUNT = 8  # manually checking silhouette score shows optimal cluster count (higher is better)
     clustering.plot_k_means_on_pacmap(use_this_function=False,  # True | False
                                       avg_patient_cohort=SELECTED_COHORT_preprocessed,
                                       cohort_title=SELECTED_COHORT_TITLE,
@@ -141,7 +142,7 @@ if __name__ == '__main__':
                                     selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                     save_to_file=SELECT_SAVE_FILES)
     # DBSCAN: plotting
-    SELECTED_EPS = 0.5          # manually checking silhouette score shows optimal epsilon-min_sample-combination
+    SELECTED_EPS = 0.5  # manually checking silhouette score shows optimal epsilon-min_sample-combination
     SELECTED_MIN_SAMPLE = 5
     clustering.plot_DBSCAN_on_pacmap(use_this_function=False,  # True | False
                                      avg_patient_cohort=SELECTED_COHORT_preprocessed,
@@ -170,34 +171,47 @@ if __name__ == '__main__':
     SELECTED_CLASSIFICATION_METHOD = 'XGBoost'  # options: RandomForest | XGBoost
     SELECTED_SAMPLING_METHOD = 'oversampling'  # options: no_sampling | oversampling | undersampling   -> estimation: oversampling > no_sampling > undersampling (very bad results)
     ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'XGBoost']
-    classification.calculate_classification_on_cohort(use_this_function=False,  # True | False
-                                                      classification_method=SELECTED_CLASSIFICATION_METHOD,
-                                                      sampling_method=SELECTED_SAMPLING_METHOD,
-                                                      avg_cohort=SELECTED_COHORT_preprocessed,
-                                                      cohort_title=SELECTED_COHORT_TITLE,
-                                                      use_case_name=USE_CASE_NAME,
-                                                      features_df=FEATURES_DF,
-                                                      selected_features=SELECTED_FEATURES,
-                                                      selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                                      save_to_file=SELECT_SAVE_FILES
-                                                      )
+    # Confusion Matrix (CM & Report)
+    cm = classification.get_confusion_matrix(use_this_function=False,  # True | False
+                                             classification_method=SELECTED_CLASSIFICATION_METHOD,
+                                             sampling_method=SELECTED_SAMPLING_METHOD,
+                                             avg_cohort=SELECTED_COHORT_preprocessed,
+                                             cohort_title=SELECTED_COHORT_TITLE,
+                                             use_case_name=USE_CASE_NAME,
+                                             features_df=FEATURES_DF,
+                                             selected_features=SELECTED_FEATURES,
+                                             selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                             save_to_file=SELECT_SAVE_FILES
+                                             )
+    # AUROC (plot & score)
+    auc_score = classification.get_auc_score(use_this_function=False,  # True | False
+                                             classification_method=SELECTED_CLASSIFICATION_METHOD,
+                                             sampling_method=SELECTED_SAMPLING_METHOD,
+                                             avg_cohort=SELECTED_COHORT_preprocessed,
+                                             cohort_title=SELECTED_COHORT_TITLE,
+                                             use_case_name=USE_CASE_NAME,
+                                             features_df=FEATURES_DF,
+                                             selected_features=SELECTED_FEATURES,
+                                             selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                             show_plot=True,
+                                             save_to_file=SELECT_SAVE_FILES
+                                             )
 
     # Step 4.2) Deep Learning/Neural Network (might also be inside 4.1? Or only useful if based on timeseries?)
     # ...
 
-
-    # TODO 1: classification_report
+    # TODO 1: finish classification_models_overview -> ERROR with martial status -> have to factorize this again?
     # Step 4.3) Model Comparison -> classification_report: overview table to compare all accuracy & recall results
-    classification.create_classification_report(use_this_function=True,  # True | False
-                                                use_case_name=USE_CASE_NAME,
-                                                features_df=FEATURES_DF,
-                                                all_cohorts=ALL_COHORTS,
-                                                all_classification_methods=ALL_CLASSIFICATION_METHODS,
-                                                all_dependent_variables=ALL_DEPENDENT_VARIABLES,
-                                                save_to_file=SELECT_SAVE_FILES)
+    classification.create_classification_models_overview(use_this_function=True,  # True | False
+                                                         use_case_name=USE_CASE_NAME,
+                                                         features_df=FEATURES_DF,
+                                                         selected_features=SELECTED_FEATURES,               # todo: maybe even iterate through features?
+                                                         all_cohorts_with_titles=ALL_COHORTS_WITH_TITLES,
+                                                         all_classification_methods=ALL_CLASSIFICATION_METHODS,
+                                                         all_dependent_variables=ALL_DEPENDENT_VARIABLES,
+                                                         save_to_file=SELECT_SAVE_FILES)
 
 # TODO: use ALL_SUBGROUPS for classification_report instead of ALL_COHORTS? -> subgroups-list could come from clustering method (based on icustay_ids lists) -> then this used for the predictions -> better predictions based on clustered groups?
-
 
 
 ### Fairness Metrics

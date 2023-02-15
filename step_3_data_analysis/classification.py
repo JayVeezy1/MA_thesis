@@ -3,6 +3,7 @@ import datetime
 import pandas as pd
 from matplotlib import pyplot as plt
 from numpy import ndarray
+from pandas.core.interchange import dataframe
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import ConfusionMatrixDisplay, classification_report, confusion_matrix, \
     roc_auc_score, roc_curve, RocCurveDisplay
@@ -46,7 +47,8 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
         print(f'STATUS: Implementing SMOTE oversampling for {cohort_title}.')
         smote = SMOTE(random_state=1321)
         smote_x_resampled, smote_y_resampled = smote.fit_resample(basic_x_train, basic_y_train)
-        new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(smote_x_resampled, smote_y_resampled, test_size=0.2,
+        new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(smote_x_resampled, smote_y_resampled,
+                                                                            test_size=0.2,
                                                                             random_state=1321)
         x_train_final = new_x_train
         y_train_final = new_y_train
@@ -68,7 +70,8 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
             print(f'STATUS: Implementing NearMiss {version} oversampling for {cohort_title}.')
             nearmiss = NearMiss(version=version)
             nearmiss_x_resampled, nearmiss_y_resampled = nearmiss.fit_resample(basic_x_train, basic_y_train)
-            new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(nearmiss_x_resampled, nearmiss_y_resampled,
+            new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(nearmiss_x_resampled,
+                                                                                nearmiss_y_resampled,
                                                                                 test_size=0.2, random_state=1321)
             clf.fit(X=new_x_train, y=new_y_train)
 
@@ -91,13 +94,9 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
     return x_train_final, x_test_final, y_train_final, y_test_final, sampling_title
 
 
-def calculate_classification_on_cohort(use_this_function: False, avg_cohort, cohort_title, use_case_name, features_df, selected_features,
-                                       selected_dependent_variable, save_to_file, classification_method: str,
-                                       sampling_method: str):
-    if not use_this_function:
-        return None
-
-    # Classification/Prediction with RandomForest on avg_patient_cohort
+def split_classification_data(avg_cohort: dataframe, cohort_title: str, features_df: dataframe, selected_features: list,
+                              selected_dependent_variable: str, classification_method: str, sampling_method: str):
+    # Classification/Prediction on avg_patient_cohort
     # Cleanup & filtering
     avg_df = preprocess_for_classification(avg_cohort, features_df, selected_features, selected_dependent_variable)
     death_df = avg_df[selected_dependent_variable]  # death_label as its own df y_data
@@ -109,7 +108,8 @@ def calculate_classification_on_cohort(use_this_function: False, avg_cohort, coh
     elif classification_method == 'XGBoost':
         clf = XGBClassifier()
     else:
-        print(f'ERROR: classification_method "{classification_method}" not valid. Choose from options: "RandomForest" or "XGBoost".')
+        print(
+            f'ERROR: classification_method "{classification_method}" not valid. Choose from options: "RandomForest" or "XGBoost".')
         return None
 
     # Split training/test-data
@@ -129,21 +129,24 @@ def calculate_classification_on_cohort(use_this_function: False, avg_cohort, coh
 
     # this is the training step, prediction will be inside the Classification Report
     clf.fit(X=x_train_final, y=y_train_final)
-    # Classification Report
-    display_confusion_matrix(clf, x_test_basic, y_test_basic, cohort_title=cohort_title, use_case_name=use_case_name,       # important: use text_basics here
-                             classification_method=classification_method, sampling_title=sampling_title,
-                             save_to_file=save_to_file)
-    # ROC/AUC Curve
-    display_roc_auc_curve(clf, x_test_basic, y_test_basic, cohort_title=cohort_title, use_case_name=use_case_name,          # important: use text_basics here
-                          classification_method=classification_method, sampling_title=sampling_title,
-                          save_to_file=save_to_file)
 
-    return None
+    return clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic
 
 
-def display_confusion_matrix(clf, x_test, y_test, cohort_title, use_case_name, classification_method, sampling_title,
-                             save_to_file):
-    cm: ndarray = confusion_matrix(y_test, clf.predict(x_test))
+def get_confusion_matrix(use_this_function: False, avg_cohort: dataframe, cohort_title: str, features_df: dataframe,
+                         selected_features: list, selected_dependent_variable: str, classification_method: str,
+                         sampling_method: str, use_case_name, save_to_file):
+    # calculate the CM and the corresponding ClassificationReport, return: CM
+    if not use_this_function:
+        return None
+
+    # get_classification_basics
+    clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
+        avg_cohort, cohort_title, features_df, selected_features,
+        selected_dependent_variable, classification_method, sampling_method)
+
+    cm: ndarray = confusion_matrix(y_test_basic,
+                                   clf.predict(x_test_basic))  # important: use test_basic here, not the sampled version
     fig, ax = plt.subplots()
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["No Death", "Death"])
     disp.plot(ax=ax)  # todo: any option to make "true" case at top and "false (no_death)" to bottom row?
@@ -152,7 +155,8 @@ def display_confusion_matrix(clf, x_test, y_test, cohort_title, use_case_name, c
     current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
     if save_to_file:
         if classification_method == 'RandomForest': classification_method = 'RF'
-        plt.savefig(f'./output/{use_case_name}/classification/CM_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png')
+        plt.savefig(
+            f'./output/{use_case_name}/classification/CM_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png')
     plt.show()
 
     # Print Confusion Matrix and Classification Report
@@ -164,7 +168,7 @@ def display_confusion_matrix(clf, x_test, y_test, cohort_title, use_case_name, c
     print(cm_df)
 
     print(f'\n Classification Report for {classification_method} on {cohort_title}, {sampling_title}:')
-    report = classification_report(y_test, clf.predict(x_test))
+    report = classification_report(y_test_basic, clf.predict(x_test_basic))
     print(report)
 
     if save_to_file:
@@ -181,24 +185,38 @@ def display_confusion_matrix(clf, x_test, y_test, cohort_title, use_case_name, c
             output_file.close()
             print(f'STATUS: report was saved to {report_filename}')
 
+    return cm_df
 
-def display_roc_auc_curve(clf, x_test, y_test, cohort_title, use_case_name, classification_method, sampling_title, save_to_file):
+
+def get_auc_score(use_this_function: False, avg_cohort: dataframe, cohort_title: str, features_df: dataframe,
+                  selected_features: list, selected_dependent_variable: str, classification_method: str,
+                  sampling_method: str, use_case_name, show_plot: False, save_to_file: False):
+    # calculate & plot the AUROC, return: auc_score
+    if not use_this_function:
+        return None
+
+    # split_classification_data
+    clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
+        avg_cohort, cohort_title, features_df, selected_features,
+        selected_dependent_variable, classification_method, sampling_method)
+
     # Calculate predictions for x_test
-    clf_probs = clf.predict_proba(x_test)                   # Prediction probabilities (= estimated values of prediction)
-    clf_probs = clf_probs[:, 1]                             # Only the probabilities for positive outcome are kept
+    clf_probs = clf.predict_proba(x_test_basic)  # Prediction probabilities (= estimated values of prediction)
+    clf_probs = clf_probs[:, 1]  # Only the probabilities for positive outcome are kept
 
     # Get auc_score for probabilities compared to real values
-    auc_score = roc_auc_score(y_test, clf_probs)            # ROC = receiver operating characteristic, AUROC = area under the ROC curve
+    auc_score = roc_auc_score(y_test_basic,
+                              clf_probs)  # ROC = receiver operating characteristic, AUROC = area under the ROC curve
     # print(f'CHECK: {classification_method}: AUROC = %.3f' % auc_score)
 
     # Get false-positive-rate = x-axis and true-positive-rate = y-axis
-    clf_fpr, clf_tpr, _ = roc_curve(y_test, clf_probs)
+    clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, clf_probs)
     plt.plot(clf_fpr, clf_tpr, marker='.', label='Random Forest (AUROC = %0.3f)' % auc_score)
 
     # Add a random predictor line to plot
-    random_probs = [0 for _ in range(len(y_test))]
-    random_auc = roc_auc_score(y_test, random_probs)
-    random_fpr, random_tpr, _ = roc_curve(y_test, random_probs)
+    random_probs = [0 for _ in range(len(y_test_basic))]
+    random_auc = roc_auc_score(y_test_basic, random_probs)
+    random_fpr, random_tpr, _ = roc_curve(y_test_basic, random_probs)
     plt.plot(random_fpr, random_tpr, linestyle='--', label='Random prediction (AUROC = %0.3f)' % random_auc)
 
     # Plot Settings
@@ -211,11 +229,74 @@ def display_roc_auc_curve(clf, x_test, y_test, cohort_title, use_case_name, clas
         auroc_filename = f'./output/{use_case_name}/classification/AUROC_{classification_method}_{cohort_title}_{sampling_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png'
         plt.savefig(auroc_filename)
         print(f'STATUS: AUROC was saved to {auroc_filename}')
-    plt.show()
 
-    return None
+    if show_plot:
+        plt.show()
+
+    return auc_score
 
 
-def create_classification_report(use_this_function, use_case_name, features_df, all_cohorts, all_classification_methods,
-                                 all_dependent_variables, save_to_file):
+def create_classification_models_overview(use_this_function, use_case_name, features_df, selected_features, all_cohorts_with_titles,
+                                          all_classification_methods,
+                                          all_dependent_variables, save_to_file):
+    # calculate & plot the AUROC, return: auc_score
+    if not use_this_function:
+        return None
+
+    classification_models_overview: dataframe = pd.DataFrame()  # columns: cohort | classification_method | dependent_variable | auc_score -> to add: accuracy | recall
+
+    for title_with_cohort in all_cohorts_with_titles.items():
+        for classification_method in all_classification_methods:
+            for dependent_variable in all_dependent_variables:
+                print(
+                    f'STATUS: Calculating auc_score for model settings: {title_with_cohort[0]}, {classification_method}, {dependent_variable}')
+                # get auc_score
+                auc_score = get_auc_score(use_this_function=True,  # True | False
+                                          classification_method=classification_method,
+                                          sampling_method='oversampling',  # SELECTED_SAMPLING_METHOD
+                                          avg_cohort=title_with_cohort[1],
+                                          cohort_title=f'{title_with_cohort[0]}',
+                                          use_case_name=use_case_name,
+                                          features_df=features_df,
+                                          selected_features=selected_features,
+                                          selected_dependent_variable=dependent_variable,
+                                          show_plot=False,
+                                          save_to_file=False
+                                          )
+
+                # todo: add Accuracy & Recall Values
+                # get CM -> Accuracy & Recall Values
+                # cm = get_confusion_matrix(use_this_function=False,  # True | False
+                #                                        classification_method=SELECTED_CLASSIFICATION_METHOD,
+                #                                       sampling_method=SELECTED_SAMPLING_METHOD,
+                #                                      avg_cohort=SELECTED_COHORT_preprocessed,
+                #                                     cohort_title=SELECTED_COHORT_TITLE,
+                #                                    use_case_name=USE_CASE_NAME,
+                #                                   features_df=FEATURES_DF,
+                #                                  selected_features=SELECTED_FEATURES,
+                #                                 selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                #                                save_to_file=SELECT_SAVE_FILES
+                #                               )
+
+                current_settings = pd.DataFrame([{'cohort': f'{title_with_cohort[0]}',
+                                                  'classification_method': classification_method,
+                                                  'dependent_variable': dependent_variable,
+                                                  'auc_score': auc_score
+                                                  # add accuracy & recall here
+                                                  }])
+                print('Current result: ', current_settings)
+                classification_models_overview = pd.concat([classification_models_overview, current_settings],
+                                                           ignore_index=True)
+
+    if save_to_file:
+        current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
+        filename_string: str = f'./output/{use_case_name}/classification/models_overview_{current_time}.csv'
+        filename = filename_string.encode()
+        with open(filename, 'w', newline='') as output_file:
+            classification_models_overview.to_csv(output_file, index=False)
+            print(f'STATUS: classification_models_overview was saved to {filename_string}')
+    else:
+        print('CHECK: classification_models_overview:')
+        print(classification_models_overview)
+
     return None
