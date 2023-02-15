@@ -12,6 +12,8 @@ if __name__ == '__main__':
     USE_CASE_NAME: str = 'stroke_all_systems'  # stroke_patients_data       # heart_infarct_patients_data
     FEATURES_DF = pd.read_excel('./supplements/feature_preprocessing_table.xlsx')
     SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'  # death_3_days, death_in_hosp
+    ALL_DEPENDENT_VARIABLES: list = FEATURES_DF.loc[
+        FEATURES_DF['potential_for_analysis'] == 'prediction_variable', 'feature_name'].to_list()
 
     ### Setup, MIMIC-III Export from DB, Load from Cache
     # Step 0) Setup when first time using db:
@@ -50,6 +52,7 @@ if __name__ == '__main__':
     scaled_complete_avg_cohort = Patient.get_avg_scaled_data(complete_avg_cohort.copy())
     scaled_hemorrhage_avg_cohort = Patient.get_avg_scaled_data(hemorrhage_avg_cohort.copy())
     scaled_ischemic_avg_cohort = Patient.get_avg_scaled_data(ischemic_avg_cohort.copy())
+    ALL_COHORTS: list = [scaled_complete_avg_cohort, scaled_hemorrhage_avg_cohort, scaled_ischemic_avg_cohort]
     # Choose: Cohort Parameters
     SELECTED_COHORT = scaled_complete_avg_cohort
     SELECTED_COHORT_TITLE = 'scaled_complete_avg_cohort'
@@ -60,21 +63,21 @@ if __name__ == '__main__':
         cohort_title=SELECTED_COHORT_TITLE,
         features_df=FEATURES_DF)
 
-    # TODO NEXT STEP: XGBoost + normalized data + hemorrhagic + filtered_features + scaling? -> better results?
-    # todo: correlation flag-features must be calculated differently than continuous! -> How?
+    # TODO: correlation flag-features must be calculated differently than continuous! -> How?
+
+    # TODO NEXT STEP: which model gives best results for now? -> this is a first part-result, should be comparable to papers
 
     # todo check: are the hemorrhagic filters for stroke use-case correct?
-    # todo small: use use_this_function=True instead of commenting
 
     ### Data Analysis
     # Step 3.1) General Statistics
-    general_statistics.calculate_deaths_table(use_this_function=False,      # True | False
+    general_statistics.calculate_deaths_table(use_this_function=False,  # True | False
                                               selected_patient_cohort=SELECTED_COHORT_preprocessed,
                                               cohort_title=SELECTED_COHORT_TITLE,
                                               use_case_name=USE_CASE_NAME,
                                               save_to_file=True)
 
-    general_statistics.calculate_feature_overview_table(use_this_function=False,    # True | False
+    general_statistics.calculate_feature_overview_table(use_this_function=False,  # True | False
                                                         selected_patient_cohort=SELECTED_COHORT_preprocessed,
                                                         features_df=FEATURES_DF,
                                                         selected_features=SELECTED_FEATURES,
@@ -85,7 +88,7 @@ if __name__ == '__main__':
 
     # Step 3.2) Correlation
     # Correlations
-    correlations.plot_correlations(use_this_function=True,         # True | False
+    correlations.plot_correlations(use_this_function=False,  # True | False
                                    use_plot_heatmap=False,
                                    use_plot_pairplot=False,
                                    cohort_title=SELECTED_COHORT_TITLE,
@@ -97,7 +100,7 @@ if __name__ == '__main__':
                                    save_to_file=SELECT_SAVE_FILES)
 
     # Step 3.3) Visualization (PacMap)
-    data_visualization.display_pacmap(use_this_function=False,      # True | False
+    data_visualization.display_pacmap(use_this_function=False,  # True | False
                                       avg_patient_cohort=SELECTED_COHORT_preprocessed,
                                       use_case_name=USE_CASE_NAME,
                                       cohort_title=SELECTED_COHORT_TITLE,
@@ -107,8 +110,8 @@ if __name__ == '__main__':
                                       save_to_file=SELECT_SAVE_FILES)
 
     # Step 3.4) Clustering (kmeans, DBSCAN, ...)
-    # kmeans
-    clustering.plot_sh_score_kmeans(use_this_function=False,        # True | False
+    # kmeans: sh_score
+    clustering.plot_sh_score_kmeans(use_this_function=False,  # True | False
                                     avg_patient_cohort=SELECTED_COHORT_preprocessed,
                                     cohort_title=SELECTED_COHORT_TITLE,
                                     use_case_name=USE_CASE_NAME,
@@ -116,37 +119,58 @@ if __name__ == '__main__':
                                     selected_features=SELECTED_FEATURES,
                                     selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                     save_to_file=SELECT_SAVE_FILES)
-    SELECTED_CLUSTERS_COUNT = 8  # manually checking silhouette score shows optimal cluster count (higher is better)
-    clustering.plot_k_means_on_pacmap(use_this_function=False,      # True | False
+    # kmeans: plotting
+    SELECTED_KMEANS_CLUSTERS_COUNT = 8              # manually checking silhouette score shows optimal cluster count (higher is better)
+    clustering.plot_k_means_on_pacmap(use_this_function=False,  # True | False
                                       avg_patient_cohort=SELECTED_COHORT_preprocessed,
                                       cohort_title=SELECTED_COHORT_TITLE,
                                       use_case_name=USE_CASE_NAME,
                                       features_df=FEATURES_DF,
                                       selected_features=SELECTED_FEATURES,
                                       selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                      selected_cluster_count=SELECTED_CLUSTERS_COUNT,
+                                      selected_cluster_count=SELECTED_KMEANS_CLUSTERS_COUNT,
                                       save_to_file=SELECT_SAVE_FILES)
 
-    # DBSCAN
-    # todo long term: plot sh_score_DBSCAN
-    # todo long term: Test DBSCAN Prototype, implement both available methods in one main-clustering method 'plot_clusters_on_pacmap'
+    # DBSCAN: sh_score
+    clustering.plot_sh_score_DBSCAN(use_this_function=False,  # True | False
+                                    avg_patient_cohort=SELECTED_COHORT_preprocessed,
+                                    cohort_title=SELECTED_COHORT_TITLE,
+                                    use_case_name=USE_CASE_NAME,
+                                    features_df=FEATURES_DF,
+                                    selected_features=SELECTED_FEATURES,
+                                    selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                    save_to_file=SELECT_SAVE_FILES)
+    # DBSCAN: plotting
+    SELECTED_EPS = 0.5          # manually checking silhouette score shows optimal epsilon-min_sample-combination
+    SELECTED_MIN_SAMPLE = 5
+    clustering.plot_DBSCAN_on_pacmap(use_this_function=False,  # True | False
+                                     avg_patient_cohort=SELECTED_COHORT_preprocessed,
+                                     cohort_title=SELECTED_COHORT_TITLE,
+                                     use_case_name=USE_CASE_NAME,
+                                     features_df=FEATURES_DF,
+                                     selected_features=SELECTED_FEATURES,
+                                     selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                     selected_eps=SELECTED_EPS,
+                                     selected_min_sample=SELECTED_MIN_SAMPLE,
+                                     save_to_file=SELECT_SAVE_FILES)
 
-    # Cluster Comparison
-    clusters_overview_table = clustering.calculate_clusters_overview_table(use_this_function=False,      # True | False
+    # Cluster Comparison (only for manually selected_cluster_count -> only kmeans)
+    clusters_overview_table = clustering.calculate_clusters_overview_table(use_this_function=False,  # True | False
                                                                            selected_cohort=SELECTED_COHORT_preprocessed,
                                                                            cohort_title=SELECTED_COHORT_TITLE,
                                                                            use_case_name=USE_CASE_NAME,
-                                                                           selected_clusters_count=SELECTED_CLUSTERS_COUNT,
                                                                            features_df=FEATURES_DF,
                                                                            selected_features=SELECTED_FEATURES,
                                                                            selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                                           selected_clusters_count=SELECTED_KMEANS_CLUSTERS_COUNT,
                                                                            save_to_file=SELECT_SAVE_FILES)
 
     ### Machine Learning Predictions
-    # Step 4.1) Classification: RandomForest & XGBoost
+    # Step 4.1) Classification: (RandomForest, XGBoost, ...)
     SELECTED_CLASSIFICATION_METHOD = 'XGBoost'  # options: RandomForest | XGBoost
     SELECTED_SAMPLING_METHOD = 'oversampling'  # options: no_sampling | oversampling | undersampling   -> estimation: oversampling > no_sampling > undersampling (very bad results)
-    classification.calculate_classification_on_cohort(use_this_function=False,          # True | False
+    ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'XGBoost']
+    classification.calculate_classification_on_cohort(use_this_function=False,  # True | False
                                                       classification_method=SELECTED_CLASSIFICATION_METHOD,
                                                       sampling_method=SELECTED_SAMPLING_METHOD,
                                                       avg_cohort=SELECTED_COHORT_preprocessed,
@@ -158,12 +182,22 @@ if __name__ == '__main__':
                                                       save_to_file=SELECT_SAVE_FILES
                                                       )
 
-# todo: create model-comparison function, also use AUC score to find best model settings?
-# todo: classification comparison table: list[all_cohorts], list[prediction_types], list[dependent_variables] -> for each ... for each ... -> one final overview table to compare all accuracy & recall results
-# todo: use subgroups for predictions instead of list[all_cohorts]? -> could be put into a subgroups-list -> could come from clustering method -> then used for the predictions
+    # Step 4.2) Deep Learning/Neural Network (might also be inside 4.1? Or only useful if based on timeseries?)
+    # ...
 
 
-# Step 4.3) Deep Learning/Neural Network
+    # TODO 1: classification_report
+    # Step 4.3) Model Comparison -> classification_report: overview table to compare all accuracy & recall results
+    classification.create_classification_report(use_this_function=True,  # True | False
+                                                use_case_name=USE_CASE_NAME,
+                                                features_df=FEATURES_DF,
+                                                all_cohorts=ALL_COHORTS,
+                                                all_classification_methods=ALL_CLASSIFICATION_METHODS,
+                                                all_dependent_variables=ALL_DEPENDENT_VARIABLES,
+                                                save_to_file=SELECT_SAVE_FILES)
+
+# TODO: use ALL_SUBGROUPS for classification_report instead of ALL_COHORTS? -> subgroups-list could come from clustering method (based on icustay_ids lists) -> then this used for the predictions -> better predictions based on clustered groups?
+
 
 
 ### Fairness Metrics

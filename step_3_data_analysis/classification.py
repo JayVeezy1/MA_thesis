@@ -214,3 +214,8 @@ def display_roc_auc_curve(clf, x_test, y_test, cohort_title, use_case_name, clas
     plt.show()
 
     return None
+
+
+def create_classification_report(use_this_function, use_case_name, features_df, all_cohorts, all_classification_methods,
+                                 all_dependent_variables, save_to_file):
+    return None
