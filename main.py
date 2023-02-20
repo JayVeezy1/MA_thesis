@@ -2,7 +2,7 @@ import pandas as pd
 
 from objects.patients import Patient
 from step_1_setup_data import cache_IO, mimic_to_csv, select_relevant_features
-from step_2_preprocessing.preprocessing_functions import get_preprocessed_avg_cohort_and_features
+from step_2_preprocessing.preprocessing_functions import get_preprocessed_avg_cohort
 from step_3_data_analysis import correlations, classification, clustering, general_statistics, data_visualization
 from supplements import selection_icd9_codes
 
@@ -12,7 +12,8 @@ if __name__ == '__main__':
     USE_CASE_NAME: str = 'stroke_all_systems'  # stroke_patients_data       # heart_infarct_patients_data
     FEATURES_DF = pd.read_excel('./supplements/feature_preprocessing_table.xlsx')
     SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'  # death_3_days, death_in_hosp
-    ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days', 'death_365_days']   # FEATURES_DF.loc[FEATURES_DF['potential_for_analysis'] == 'prediction_variable', 'feature_name'].to_list()
+    ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
+                                     'death_365_days']  # FEATURES_DF.loc[FEATURES_DF['potential_for_analysis'] == 'prediction_variable', 'feature_name'].to_list()
 
     ### Setup, MIMIC-III Export from DB, Load from Cache
     # Step 0) Setup when first time using db:
@@ -40,46 +41,61 @@ if __name__ == '__main__':
 
     ### Preprocessing
     # Step 2) Calculate Avg, Filter, Scale, Impute & Interpolate for each patient
-    # Choose: dbsource filter
+    # Options: dbsource filter
     complete_avg_cohort = Patient.get_avg_patient_cohort(PROJECT_PATH, USE_CASE_NAME, selected_patients=[])  # empty=all
     metavision_avg_cohort = complete_avg_cohort[complete_avg_cohort['dbsource'] == 'metavision']
     carevue_avg_cohort = complete_avg_cohort[complete_avg_cohort['dbsource'] == 'carevue']
-    # Choose: stroke_type filter, also option: change complete_avg_cohort to metavision_avg_cohort or carevue_avg_cohort
+    # Options: stroke_type filter, also option: change complete_avg_cohort to metavision_avg_cohort or carevue_avg_cohort
     hemorrhage_avg_cohort = complete_avg_cohort[complete_avg_cohort['stroke_type'] == 'hemorrhagic']
     ischemic_avg_cohort = complete_avg_cohort[complete_avg_cohort['stroke_type'] == 'ischemic']
-    # Choose: scaled_cohort
+    # Options: scaled_cohort (recommended)
     scaled_complete_avg_cohort = Patient.get_avg_scaled_data(complete_avg_cohort.copy())
     scaled_hemorrhage_avg_cohort = Patient.get_avg_scaled_data(hemorrhage_avg_cohort.copy())
     scaled_ischemic_avg_cohort = Patient.get_avg_scaled_data(ischemic_avg_cohort.copy())
-    ALL_COHORTS_WITH_TITLES: dict = {'scaled_complete_avg_cohort': scaled_complete_avg_cohort,
-                                     'scaled_hemorrhage_avg_cohort': scaled_hemorrhage_avg_cohort,
-                                     'scaled_ischemic_avg_cohort': scaled_ischemic_avg_cohort}
-    # Choose: Cohort Parameters
+
+    # CHOOSE: Cohort Parameters
     SELECTED_COHORT = scaled_complete_avg_cohort
     SELECTED_COHORT_TITLE = 'scaled_complete_avg_cohort'
     SELECT_SAVE_FILES = True
     # Automated: Preprocessed Cohort
-    SELECTED_COHORT_preprocessed, SELECTED_FEATURES = get_preprocessed_avg_cohort_and_features(
-        avg_cohort=SELECTED_COHORT,
-        cohort_title=SELECTED_COHORT_TITLE,
-        features_df=FEATURES_DF)
+    SELECTED_COHORT_preprocessed = get_preprocessed_avg_cohort(avg_cohort=SELECTED_COHORT,
+                                                               cohort_title=SELECTED_COHORT_TITLE,
+                                                               features_df=FEATURES_DF)
+    SELECTED_FEATURES = list(SELECTED_COHORT_preprocessed.columns)
 
-    # TODO: correlation flag-features must be calculated differently than continuous! -> How?
+    # Automated: List of all cohorts_preprocessed for model comparison
+    scaled_complete_cohort_preprocessed = get_preprocessed_avg_cohort(avg_cohort=scaled_complete_avg_cohort,
+                                                                      cohort_title='scaled_complete_avg_cohort',
+                                                                      features_df=FEATURES_DF)
+    scaled_hemorrhage_cohort_preprocessed = get_preprocessed_avg_cohort(avg_cohort=scaled_hemorrhage_avg_cohort,
+                                                                        cohort_title='scaled_hemorrhage_avg_cohort',
+                                                                        features_df=FEATURES_DF)
+    scaled_ischemic_cohort_preprocessed = get_preprocessed_avg_cohort(avg_cohort=scaled_ischemic_avg_cohort,
+                                                                      cohort_title='scaled_ischemic_avg_cohort',
+                                                                      features_df=FEATURES_DF)
+    ALL_COHORTS_WITH_TITLES: dict = {'scaled_complete_avg_cohort': scaled_complete_cohort_preprocessed,
+                                     'scaled_hemorrhage_avg_cohort': scaled_hemorrhage_cohort_preprocessed,
+                                     'scaled_ischemic_avg_cohort': scaled_ischemic_cohort_preprocessed}
+    print('STATUS: Preprocessing finished. \n')
 
-    # TODO NEXT STEP: which model gives best results for now? -> this is a first part-result, should be comparable to papers
+    # TODO NEXT: correlation of flag-features must be calculated differently than continuous! -> How? -> then add these into predictions as well!
+    # TODO NEXT: add Deep Learning model
+    # TODO THEN: write: which model has best results for now? -> this is a first part-result, should be comparable to papers
 
-    # todo check: are the hemorrhagic filters for stroke use-case correct?
+    # todo after: optimize the process A: use/find clusters and try better prediction | B: use time-series | C: optimize the features further
+
+    # todo check: are the hemorrhagic filters for stroke actually correct?
 
     ### Data Analysis
     # Step 3.1) General Statistics
     general_statistics.calculate_deaths_table(use_this_function=False,  # True | False
-                                              selected_patient_cohort=SELECTED_COHORT_preprocessed,
+                                              selected_cohort=SELECTED_COHORT_preprocessed,
                                               cohort_title=SELECTED_COHORT_TITLE,
                                               use_case_name=USE_CASE_NAME,
                                               save_to_file=True)
 
     general_statistics.calculate_feature_overview_table(use_this_function=False,  # True | False
-                                                        selected_patient_cohort=SELECTED_COHORT_preprocessed,
+                                                        selected_cohort=SELECTED_COHORT_preprocessed,
                                                         features_df=FEATURES_DF,
                                                         selected_features=SELECTED_FEATURES,
                                                         cohort_title=SELECTED_COHORT_TITLE,
@@ -93,7 +109,7 @@ if __name__ == '__main__':
                                    use_plot_heatmap=False,
                                    use_plot_pairplot=False,
                                    cohort_title=SELECTED_COHORT_TITLE,
-                                   avg_cohort=SELECTED_COHORT_preprocessed,
+                                   selected_cohort=SELECTED_COHORT_preprocessed,
                                    features_df=FEATURES_DF,
                                    selected_features=SELECTED_FEATURES,
                                    selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
@@ -102,7 +118,7 @@ if __name__ == '__main__':
 
     # Step 3.3) Visualization (PacMap)
     data_visualization.display_pacmap(use_this_function=False,  # True | False
-                                      avg_patient_cohort=SELECTED_COHORT_preprocessed,
+                                      selected_cohort=SELECTED_COHORT_preprocessed,
                                       use_case_name=USE_CASE_NAME,
                                       cohort_title=SELECTED_COHORT_TITLE,
                                       features_df=FEATURES_DF,
@@ -113,7 +129,7 @@ if __name__ == '__main__':
     # Step 3.4) Clustering (kmeans, DBSCAN, ...)
     # kmeans: sh_score
     clustering.plot_sh_score_kmeans(use_this_function=False,  # True | False
-                                    avg_patient_cohort=SELECTED_COHORT_preprocessed,
+                                    selected_cohort=SELECTED_COHORT_preprocessed,
                                     cohort_title=SELECTED_COHORT_TITLE,
                                     use_case_name=USE_CASE_NAME,
                                     features_df=FEATURES_DF,
@@ -123,7 +139,7 @@ if __name__ == '__main__':
     # kmeans: plotting
     SELECTED_KMEANS_CLUSTERS_COUNT = 8  # manually checking silhouette score shows optimal cluster count (higher is better)
     clustering.plot_k_means_on_pacmap(use_this_function=False,  # True | False
-                                      avg_patient_cohort=SELECTED_COHORT_preprocessed,
+                                      selected_cohort=SELECTED_COHORT_preprocessed,
                                       cohort_title=SELECTED_COHORT_TITLE,
                                       use_case_name=USE_CASE_NAME,
                                       features_df=FEATURES_DF,
@@ -134,7 +150,7 @@ if __name__ == '__main__':
 
     # DBSCAN: sh_score
     clustering.plot_sh_score_DBSCAN(use_this_function=False,  # True | False
-                                    avg_patient_cohort=SELECTED_COHORT_preprocessed,
+                                    selected_cohort=SELECTED_COHORT_preprocessed,
                                     cohort_title=SELECTED_COHORT_TITLE,
                                     use_case_name=USE_CASE_NAME,
                                     features_df=FEATURES_DF,
@@ -145,7 +161,7 @@ if __name__ == '__main__':
     SELECTED_EPS = 0.5  # manually checking silhouette score shows optimal epsilon-min_sample-combination
     SELECTED_MIN_SAMPLE = 5
     clustering.plot_DBSCAN_on_pacmap(use_this_function=False,  # True | False
-                                     avg_patient_cohort=SELECTED_COHORT_preprocessed,
+                                     selected_cohort=SELECTED_COHORT_preprocessed,
                                      cohort_title=SELECTED_COHORT_TITLE,
                                      use_case_name=USE_CASE_NAME,
                                      features_df=FEATURES_DF,
@@ -163,7 +179,7 @@ if __name__ == '__main__':
                                                                            features_df=FEATURES_DF,
                                                                            selected_features=SELECTED_FEATURES,
                                                                            selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                                                           selected_clusters_count=SELECTED_KMEANS_CLUSTERS_COUNT,
+                                                                           selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
                                                                            save_to_file=SELECT_SAVE_FILES)
 
     ### Machine Learning Predictions
@@ -171,54 +187,76 @@ if __name__ == '__main__':
     SELECTED_CLASSIFICATION_METHOD = 'XGBoost'  # options: RandomForest | XGBoost
     SELECTED_SAMPLING_METHOD = 'oversampling'  # options: no_sampling | oversampling | undersampling   -> estimation: oversampling > no_sampling > undersampling (very bad results)
     ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'XGBoost']
-    # Confusion Matrix (CM & Report)
+    # Confusion Matrix (CM)
     cm = classification.get_confusion_matrix(use_this_function=False,  # True | False
                                              classification_method=SELECTED_CLASSIFICATION_METHOD,
                                              sampling_method=SELECTED_SAMPLING_METHOD,
-                                             avg_cohort=SELECTED_COHORT_preprocessed,
+                                             selected_cohort=SELECTED_COHORT_preprocessed,
                                              cohort_title=SELECTED_COHORT_TITLE,
                                              use_case_name=USE_CASE_NAME,
                                              features_df=FEATURES_DF,
                                              selected_features=SELECTED_FEATURES,
                                              selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                             verbose=True,
                                              save_to_file=SELECT_SAVE_FILES
                                              )
+    # Classification Report
+    report = classification.get_classification_report(use_this_function=True,  # True | False
+                                                      classification_method=SELECTED_CLASSIFICATION_METHOD,
+                                                      sampling_method=SELECTED_SAMPLING_METHOD,
+                                                      selected_cohort=SELECTED_COHORT_preprocessed,
+                                                      cohort_title=SELECTED_COHORT_TITLE,
+                                                      use_case_name=USE_CASE_NAME,
+                                                      features_df=FEATURES_DF,
+                                                      selected_features=SELECTED_FEATURES,
+                                                      selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                      verbose=True,
+                                                      save_to_file=SELECT_SAVE_FILES
+                                                      )
     # AUROC (plot & score)
     auc_score = classification.get_auc_score(use_this_function=False,  # True | False
                                              classification_method=SELECTED_CLASSIFICATION_METHOD,
                                              sampling_method=SELECTED_SAMPLING_METHOD,
-                                             avg_cohort=SELECTED_COHORT_preprocessed,
+                                             selected_cohort=SELECTED_COHORT_preprocessed,
                                              cohort_title=SELECTED_COHORT_TITLE,
                                              use_case_name=USE_CASE_NAME,
                                              features_df=FEATURES_DF,
                                              selected_features=SELECTED_FEATURES,
                                              selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                              show_plot=True,
+                                             verbose=True,
                                              save_to_file=SELECT_SAVE_FILES
                                              )
 
     # Step 4.2) Deep Learning/Neural Network (might also be inside 4.1? Or only useful if based on timeseries?)
     # ...
 
-    # TODO 1: finish classification_models_overview -> ERROR with martial status -> have to factorize this again?
-    # Step 4.3) Model Comparison -> classification_report: overview table to compare all accuracy & recall results
-    classification.create_classification_models_overview(use_this_function=True,  # True | False
-                                                         use_case_name=USE_CASE_NAME,
-                                                         features_df=FEATURES_DF,
-                                                         selected_features=SELECTED_FEATURES,               # todo: maybe even iterate through features?
-                                                         all_cohorts_with_titles=ALL_COHORTS_WITH_TITLES,
-                                                         all_classification_methods=ALL_CLASSIFICATION_METHODS,
-                                                         all_dependent_variables=ALL_DEPENDENT_VARIABLES,
-                                                         save_to_file=SELECT_SAVE_FILES)
+    # Step 4.3) Models Overview -> table to compare all accuracy & recall results
+    classification.compare_classification_models_on_cohort(use_this_function=False,  # True | False
+                                                           use_case_name=USE_CASE_NAME,
+                                                           features_df=FEATURES_DF,
+                                                           selected_features=SELECTED_FEATURES,
+                                                           all_cohorts_with_titles=ALL_COHORTS_WITH_TITLES,
+                                                           all_classification_methods=ALL_CLASSIFICATION_METHODS,
+                                                           all_dependent_variables=ALL_DEPENDENT_VARIABLES,
+                                                           save_to_file=SELECT_SAVE_FILES)
 
-# TODO: use ALL_SUBGROUPS for classification_report instead of ALL_COHORTS? -> subgroups-list could come from clustering method (based on icustay_ids lists) -> then this used for the predictions -> better predictions based on clustered groups?
+    # TODO: use ALL_SUBGROUPS for classification_report instead of ALL_COHORTS? -> subgroups-list could come from clustering method (based on icustay_ids lists) -> then this used for the predictions -> better predictions based on clustered groups?
+    # Input: selected_cohort and its ideal kmeans cluster-count
+    # Output: table of prediction quality per cluster, rows = different model configs (per classification_method and dependent_variable)
+    classification.compare_classification_models_on_clusters(use_this_function=False,  # True | False
+                                                             use_case_name=USE_CASE_NAME,
+                                                             features_df=FEATURES_DF,
+                                                             selected_features=SELECTED_FEATURES,
+                                                             selected_cohort=SELECTED_COHORT_preprocessed,
+                                                             all_classification_methods=ALL_CLASSIFICATION_METHODS,
+                                                             all_dependent_variables=ALL_DEPENDENT_VARIABLES,
+                                                             save_to_file=SELECT_SAVE_FILES)
 
+    ### Fairness Metrics
+    # Step 5.1) Calculate Fairness for manual Subgroups
 
-### Fairness Metrics
-# Step 5.1) Calculate Fairness for manual Subgroups
+    ### Automated Subgroup detection
+    # Step 6.1) Calculate automated Subgroups and related fairness metrics
 
-
-### Automated Subgroup detection
-# Step 6.1) Calculate automated Subgroups and related fairness metrics
-
-# Step 6.2) Include ASDF-Dashboard as frontend
+    # Step 6.2) Include ASDF-Dashboard as frontend

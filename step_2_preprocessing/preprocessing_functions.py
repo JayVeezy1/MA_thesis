@@ -8,8 +8,9 @@ def create_factorization_table(avg_cohort_factorized, features_to_factorize, coh
         for factorized_value in avg_cohort_factorized[feature].unique():
             value_combination_dicts.append(
                 {'feature': feature,
-                'factorized_values': factorized_value,
-                'unfactorized_value': avg_cohort_factorized[avg_cohort_factorized[feature] == factorized_value][f'{feature}_unfactorized'].iloc[0]}
+                 'factorized_values': factorized_value,
+                 'unfactorized_value': avg_cohort_factorized[avg_cohort_factorized[feature] == factorized_value][
+                     f'{feature}_unfactorized'].iloc[0]}
             )
     factorization_table = pd.DataFrame(value_combination_dicts)
     factorization_table.loc[factorization_table['unfactorized_value'].isnull(), 'unfactorized_value'] = 'no_data'
@@ -18,10 +19,10 @@ def create_factorization_table(avg_cohort_factorized, features_to_factorize, coh
     filename = filename_string.encode()
     with open(filename, 'w', newline='') as output_file:
         factorization_table.to_csv(output_file, index=False)
-        print(f'CHECK: factorization_table was updated in {filename_string} \n')
+        print(f'CHECK: factorization_table was updated in {filename_string}')
 
 
-def get_preprocessed_avg_cohort_and_features(avg_cohort, features_df, cohort_title):
+def get_preprocessed_avg_cohort(avg_cohort, features_df, cohort_title):
     # Features that must always be removed
     features_to_remove = features_df['feature_name'].loc[features_df['must_be_removed'] == 'yes'].to_list()
     for feature in features_to_remove:
@@ -30,12 +31,14 @@ def get_preprocessed_avg_cohort_and_features(avg_cohort, features_df, cohort_tit
         except KeyError as e:
             pass
 
-    features_to_factorize = features_df['feature_name'].loc[features_df['categorical_or_continuous'] == 'categorical'].to_list()
-    features_to_factorize = [x for x in features_to_factorize if x not in features_to_remove]       # drop features_to_remove from factorization
+    features_to_factorize = features_df['feature_name'].loc[
+        features_df['categorical_or_continuous'] == 'categorical'].to_list()
+    features_to_factorize = [x for x in features_to_factorize if
+                             x not in features_to_remove]  # drop features_to_remove from factorization
     for feature in features_to_factorize:
-        avg_cohort.loc[:, f'{feature}_unfactorized'] = avg_cohort[feature]       # keep old columns without factorization
+        avg_cohort.loc[:, f'{feature}_unfactorized'] = avg_cohort[feature]  # keep old columns without factorization
 
-    # Factorize the columns, lookup old values with the 'factorization_table' in supplements
+    # Factorize the columns, save old values with the 'factorization_table' in supplements
     avg_cohort[features_to_factorize] = avg_cohort[features_to_factorize].apply(lambda x: pd.factorize(x)[0])
 
     # Features that need factorization          # todo check: if factorization is a good solution for categorical features? Does it even make sense to use non-numeric columns for correlation? But still needed for clustering right?
@@ -49,4 +52,4 @@ def get_preprocessed_avg_cohort_and_features(avg_cohort, features_df, cohort_tit
         except ValueError as e:
             pass
 
-    return avg_cohort[selected_features], selected_features       # output: only filtered selected_features inside df and list
+    return avg_cohort[selected_features]  # output: only filtered selected_features inside df

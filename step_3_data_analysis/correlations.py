@@ -8,7 +8,7 @@ from pandas.core.interchange import dataframe
 from scipy.stats import stats
 
 
-def preprocess_for_correlation(avg_cohort: dataframe, features_df: dataframe, selected_features: list,
+def preprocess_for_correlation(selected_cohort: dataframe, features_df: dataframe, selected_features: list,
                                selected_dependent_variable: str):
     # Preprocessing for Correlation: Remove the not selected prediction_variables and icustay_id
     prediction_variables = features_df['feature_name'].loc[
@@ -29,14 +29,14 @@ def preprocess_for_correlation(avg_cohort: dataframe, features_df: dataframe, se
     print(
         f'CHECK: {len(temp_selected_features)} features used for Correlation.')  # dependent_variable is not used for its own correlation
 
-    avg_cohort = avg_cohort[selected_features]
+    selected_cohort = selected_cohort[selected_features]
 
-    return avg_cohort.fillna(0), selected_features
+    return selected_cohort.fillna(0), selected_features
 
 
-def get_correlations_on_cohort(avg_cohort: dataframe, features_df: dataframe, selected_features: list,
+def get_correlations_on_cohort(selected_cohort: dataframe, features_df: dataframe, selected_features: list,
                                selected_dependent_variable: str) -> dataframe:
-    avg_cohort, selected_features = preprocess_for_correlation(avg_cohort, selected_features, features_df,
+    avg_cohort, selected_features = preprocess_for_correlation(selected_cohort, selected_features, features_df,
                                                                selected_dependent_variable)
 
     # Calculate correlation
@@ -65,14 +65,14 @@ def get_correlations_on_cohort(avg_cohort: dataframe, features_df: dataframe, se
 
 
 def plot_correlations(use_this_function: False, use_plot_heatmap: False, use_plot_pairplot: False, cohort_title: str,
-                      avg_cohort: dataframe, features_df: dataframe, selected_features: list,
+                      selected_cohort: dataframe, features_df: dataframe, selected_features: list,
                       selected_dependent_variable: str, use_case_name: str, save_to_file: bool = False):
     if not use_this_function:
         return None
 
     # Calculate Correlations
     print('STATUS: Calculating Correlations.')
-    sorted_death_corr, p_value, r_value = get_correlations_on_cohort(avg_cohort, selected_features, features_df, selected_dependent_variable)
+    sorted_death_corr, p_value, r_value = get_correlations_on_cohort(selected_cohort, selected_features, features_df, selected_dependent_variable)
 
     # todo: also add pval to plot?
 
@@ -103,27 +103,27 @@ def plot_correlations(use_this_function: False, use_plot_heatmap: False, use_plo
     plt.show()
 
     if use_plot_heatmap:
-        plot_heatmap(cohort_title, avg_cohort, features_df, selected_features,
+        plot_heatmap(cohort_title, selected_cohort, features_df, selected_features,
                      selected_dependent_variable, use_case_name,
                      save_to_file)
     if use_plot_pairplot:
         if len(selected_features) > 20:
             print(
                 f'WARNING: {len(selected_features)} selected_features were selected for plot_pairplot(). Calculation might take a moment.')
-        plot_pairplot(cohort_title, avg_cohort, features_df, selected_features,
+        plot_pairplot(cohort_title, selected_cohort, features_df, selected_features,
                       selected_dependent_variable, use_case_name,
                       save_to_file)
 
     return None
 
 
-def plot_heatmap(cohort_title: str, avg_cohort: dataframe, features_df: dataframe, selected_features: list,
+def plot_heatmap(cohort_title: str, selected_cohort: dataframe, features_df: dataframe, selected_features: list,
                  selected_dependent_variable: str, use_case_name: str,
                  save_to_file: bool = False):
     print('STATUS: Plotting plot_heatmap.')
 
     # Preprocessing
-    avg_cohort, selected_features = preprocess_for_correlation(avg_cohort, features_df, selected_features,
+    avg_cohort, selected_features = preprocess_for_correlation(selected_cohort, features_df, selected_features,
                                                                selected_dependent_variable)
     try:
         selected_features.remove('icustay_id')
@@ -151,13 +151,13 @@ def plot_heatmap(cohort_title: str, avg_cohort: dataframe, features_df: datafram
     return None
 
 
-def plot_pairplot(cohort_title: str, avg_cohort: dataframe, features_df: dataframe, selected_features: list,
+def plot_pairplot(cohort_title: str, selected_cohort: dataframe, features_df: dataframe, selected_features: list,
                   selected_dependent_variable: str, use_case_name: str,
                   save_to_file: bool = False):
     print('STATUS: Plotting plot_pairplot.')
 
     # Preprocessing
-    avg_cohort, selected_features = preprocess_for_correlation(avg_cohort, features_df, selected_features,
+    avg_cohort, selected_features = preprocess_for_correlation(selected_cohort, features_df, selected_features,
                                                                selected_dependent_variable)
     try:
         selected_features.remove('icustay_id')

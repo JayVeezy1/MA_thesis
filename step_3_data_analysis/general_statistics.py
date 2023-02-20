@@ -11,7 +11,7 @@ from step_3_data_analysis.correlations import get_correlations_on_cohort
 
 
 # todo long term: second type of Deaths table: cluster1/column1 = survived, cluster2/column2 = death, rows = features
-def calculate_deaths_table(use_this_function: False, selected_patient_cohort, cohort_title, use_case_name, save_to_file):
+def calculate_deaths_table(use_this_function: False, selected_cohort, cohort_title, use_case_name, save_to_file):
     if not use_this_function:
         return None
 
@@ -31,7 +31,7 @@ def calculate_deaths_table(use_this_function: False, selected_patient_cohort, co
     death_180_days_counter_outside = 0
     death_360_days_counter_outside = 0
 
-    for index, row in selected_patient_cohort.iterrows():
+    for index, row in selected_cohort.iterrows():
         if row['death_in_hosp'] == 1:
             if row['death_3_days'] == 1:
                 death_in_hosp_counter += 1
@@ -84,17 +84,17 @@ def calculate_deaths_table(use_this_function: False, selected_patient_cohort, co
                                      death_360_days_counter_inside + death_360_days_counter_outside]
     deaths_df.loc[len(deaths_df)] = ['total_deaths_perc',
                                      round((death_in_hosp_counter + death_not_in_hosp_counter) / len(
-                                         selected_patient_cohort.index), 2),
+                                         selected_cohort.index), 2),
                                      round((death_3_days_counter_inside + death_3_days_counter_outside) / len(
-                                         selected_patient_cohort.index), 2),
+                                         selected_cohort.index), 2),
                                      round((death_30_days_counter_inside + death_30_days_counter_outside) / len(
-                                         selected_patient_cohort.index), 2),
+                                         selected_cohort.index), 2),
                                      round((death_180_days_counter_inside + death_180_days_counter_outside) / len(
-                                         selected_patient_cohort.index), 2),
+                                         selected_cohort.index), 2),
                                      round((death_360_days_counter_inside + death_360_days_counter_outside) / len(
-                                         selected_patient_cohort.index), 2)]
+                                         selected_cohort.index), 2)]
     deaths_df.loc[len(deaths_df)] = ['alive', alive_counter, '-', '-', '-', '-']
-    deaths_df.loc[len(deaths_df)] = ['total', len(selected_patient_cohort.index), '-', '-', '-', '-']
+    deaths_df.loc[len(deaths_df)] = ['total', len(selected_cohort.index), '-', '-', '-', '-']
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
@@ -109,19 +109,19 @@ def calculate_deaths_table(use_this_function: False, selected_patient_cohort, co
     return None
 
 
-def calculate_feature_overview_table(use_this_function: False, selected_patient_cohort, cohort_title, use_case_name, features_df, selected_features, selected_dependent_variable, save_to_file: False):
+def calculate_feature_overview_table(use_this_function: False, selected_cohort, cohort_title, use_case_name, features_df, selected_features, selected_dependent_variable, save_to_file: False):
     if not use_this_function:
         return None
 
     # todo maybe: add patients_in_training_set (count/occurrence) and chi-squared-value (for categorical features) to overview_table, and also R-Value from correlation?
     # get correlations per feature
-    deaths_correlation_df, p_value, r_value = get_correlations_on_cohort(avg_cohort=selected_patient_cohort,
+    deaths_correlation_df, p_value, r_value = get_correlations_on_cohort(selected_cohort=selected_cohort,
                                                                          selected_features=selected_features,
                                                                          features_df=features_df,
                                                                          selected_dependent_variable=selected_dependent_variable)
 
     # create overview_df
-    data = {'Variables': ['total_count'], 'Classification': ['icustay_ids'], 'Count': [len(selected_patient_cohort.index)], 'NaN_Count': ['0'],
+    data = {'Variables': ['total_count'], 'Classification': ['icustay_ids'], 'Count': [len(selected_cohort.index)], 'NaN_Count': ['0'],
             f'Correlation_to_{selected_dependent_variable}': ['-'], 'p_value': ['-']}
     overview_df: dataframe = pd.DataFrame(data)
 
@@ -139,30 +139,30 @@ def calculate_feature_overview_table(use_this_function: False, selected_patient_
         if features_df['needs_binning'][features_df['feature_name'] == feature].item() == 'False':
             # use unfactorized name from supplements factorization_table
             if feature in features_to_factorize:
-                for appearance in sort(pd.unique(selected_patient_cohort[feature])):
+                for appearance in sort(pd.unique(selected_cohort[feature])):
                     appearance_name = factorization_df.loc[(factorization_df['feature'] == feature) & (
                             factorization_df['factorized_values'] == appearance), 'unfactorized_value'].item()
 
                     temp_df: dataframe = pd.DataFrame({'Variables': [feature],
                                                        'Classification': [appearance_name],
-                                                       'Count': [selected_patient_cohort[feature][
-                                                                     selected_patient_cohort[
+                                                       'Count': [selected_cohort[feature][
+                                                                     selected_cohort[
                                                                          feature] == appearance].count()],
                                                        'NaN_Count': Patient.get_NAN_for_feature_in_cohort(
-                                                           selected_patient_cohort, feature),
+                                                           selected_cohort, feature),
                                                        f'Correlation_to_{selected_dependent_variable}': [
                                                            deaths_correlation_df[feature].item()],
                                                        'p_value': [p_value[feature].item()]})
                     overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
             else:
-                for appearance in sort(pd.unique(selected_patient_cohort[feature])):
+                for appearance in sort(pd.unique(selected_cohort[feature])):
                     temp_df: dataframe = pd.DataFrame({'Variables': [feature],
                                                        'Classification': [appearance],
-                                                       'Count': [selected_patient_cohort[feature][
-                                                                     selected_patient_cohort[
+                                                       'Count': [selected_cohort[feature][
+                                                                     selected_cohort[
                                                                          feature] == appearance].count()],
                                                        'NaN_Count': Patient.get_NAN_for_feature_in_cohort(
-                                                           selected_patient_cohort, feature),
+                                                           selected_cohort, feature),
                                                        f'Correlation_to_{selected_dependent_variable}': [
                                                            deaths_correlation_df[feature].item()],
                                                        'p_value': [p_value[feature].item()]})
@@ -173,14 +173,14 @@ def calculate_feature_overview_table(use_this_function: False, selected_patient_
 
             try:
                 warnings.filterwarnings(action='ignore', message='All-NaN slice encountered')
-                feature_min = int(np.nanmin(selected_patient_cohort[feature].values))
-                feature_max = int(np.nanmax(selected_patient_cohort[feature].values))
+                feature_min = int(np.nanmin(selected_cohort[feature].values))
+                feature_max = int(np.nanmax(selected_cohort[feature].values))
 
                 if feature_min == feature_max:
-                    feature_appearances_series = selected_patient_cohort[feature].value_counts(bins=[feature_min,
+                    feature_appearances_series = selected_cohort[feature].value_counts(bins=[feature_min,
                                                                                                      feature_max])
                 else:
-                    feature_appearances_series = selected_patient_cohort[feature].value_counts(bins=[feature_min,
+                    feature_appearances_series = selected_cohort[feature].value_counts(bins=[feature_min,
                                                                                                              feature_min + round(
                                                                                                                  (
                                                                                                                          feature_max - feature_min) * 1 / 3,
@@ -199,7 +199,7 @@ def calculate_feature_overview_table(use_this_function: False, selected_patient_
                 binning_counts: list = feature_appearances_df['counts'].to_list()
 
                 # add all bins for the features
-                temp_nan: int = Patient.get_NAN_for_feature_in_cohort(selected_patient_cohort, feature)     # NaN is the same for each bin
+                temp_nan: int = Patient.get_NAN_for_feature_in_cohort(selected_cohort, feature)     # NaN is the same for each bin
                 for i in range(0, len(binning_intervals)):
                     temp_df: dataframe = pd.DataFrame({'Variables': [feature],
                                                        'Classification': [str(binning_intervals[i])],
@@ -214,7 +214,7 @@ def calculate_feature_overview_table(use_this_function: False, selected_patient_
                 temp_df: dataframe = pd.DataFrame({'Variables': [feature],
                                                    'Classification': ['All Entries NaN'],
                                                    'Count': [0],
-                                                   'NaN_Count': len(selected_patient_cohort),
+                                                   'NaN_Count': len(selected_cohort),
                                                    f'Correlation_to_{selected_dependent_variable}': ['-'],
                                                    'p_value': ['-']})
                 overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
