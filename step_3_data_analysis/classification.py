@@ -157,8 +157,8 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
                                    clf.predict(x_test_basic))  # important: use test_basic here, not the sampled version
     # Get CM as table
     cm_df = pd.DataFrame({
-        "predicts_true": {"is_true": cm[1][1], "is_false": cm[0][1]},
-        "predicts_false": {"is_true": cm[1][0], "is_false": cm[0][0]}
+        "predicts_death": {"death": cm[1][1], "no_death": cm[0][1]},
+        "predicts_no_death": {"death": cm[1][0], "no_death": cm[0][0]}
     })
     if verbose:
         print(f'\n Confusion Matrix for {classification_method} on {cohort_title}, {sampling_title}:')
@@ -303,17 +303,18 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
 
 def get_accuracy(cm_df):
     # (TP + TN) / (TP + FP + FN + TN)
-    return round((cm_df['predicts_true']['is_true'] + cm_df['predicts_false']['is_false']) / (cm_df.to_numpy().sum()), 3)
+    sum_all_cases = (cm_df['predicts_death']['death'] + cm_df['predicts_no_death']['no_death'] + cm_df['predicts_no_death']['death'] + cm_df['predicts_death']['no_death'])
+    return round((cm_df['predicts_death']['death'] + cm_df['predicts_no_death']['no_death']) / sum_all_cases, 3)
 
 
 def get_recall(cm_df):
     # TP / (TP + FN)
-    return round(cm_df['predicts_true']['is_true'] / (cm_df['predicts_true']['is_true'] + cm_df['predicts_false']['is_true']), 3)
+    return round(cm_df['predicts_death']['death'] / (cm_df['predicts_death']['death'] + cm_df['predicts_no_death']['death']), 3)
 
 
 def get_precision(cm_df):
     # TP / (TP + FP)
-    return round(cm_df['predicts_true']['is_true'] / (cm_df['predicts_true']['is_true'] + cm_df['predicts_true']['is_false']), 3)
+    return round(cm_df['predicts_death']['death'] / (cm_df['predicts_death']['death'] + cm_df['predicts_death']['no_death']), 3)
 
 
 def compare_classification_models_on_cohort(use_this_function, use_case_name, features_df, selected_features,

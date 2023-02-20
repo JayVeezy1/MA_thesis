@@ -56,7 +56,7 @@ if __name__ == '__main__':
     # CHOOSE: Cohort Parameters
     SELECTED_COHORT = scaled_complete_avg_cohort
     SELECTED_COHORT_TITLE = 'scaled_complete_avg_cohort'
-    SELECT_SAVE_FILES = True
+    SELECT_SAVE_FILES = False
     # Automated: Preprocessed Cohort
     SELECTED_COHORT_preprocessed = get_preprocessed_avg_cohort(avg_cohort=SELECTED_COHORT,
                                                                cohort_title=SELECTED_COHORT_TITLE,
@@ -188,7 +188,7 @@ if __name__ == '__main__':
     SELECTED_SAMPLING_METHOD = 'oversampling'  # options: no_sampling | oversampling | undersampling   -> estimation: oversampling > no_sampling > undersampling (very bad results)
     ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'XGBoost']
     # Confusion Matrix (CM)
-    cm = classification.get_confusion_matrix(use_this_function=False,  # True | False
+    cm = classification.get_confusion_matrix(use_this_function=True,  # True | False
                                              classification_method=SELECTED_CLASSIFICATION_METHOD,
                                              sampling_method=SELECTED_SAMPLING_METHOD,
                                              selected_cohort=SELECTED_COHORT_preprocessed,
@@ -201,7 +201,7 @@ if __name__ == '__main__':
                                              save_to_file=SELECT_SAVE_FILES
                                              )
     # Classification Report
-    report = classification.get_classification_report(use_this_function=True,  # True | False
+    report = classification.get_classification_report(use_this_function=False,  # True | False
                                                       classification_method=SELECTED_CLASSIFICATION_METHOD,
                                                       sampling_method=SELECTED_SAMPLING_METHOD,
                                                       selected_cohort=SELECTED_COHORT_preprocessed,
