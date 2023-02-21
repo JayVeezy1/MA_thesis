@@ -11,8 +11,7 @@ from scipy.stats import stats
 def preprocess_for_correlation(selected_cohort: dataframe, features_df: dataframe, selected_features: list,
                                selected_dependent_variable: str):
     # Preprocessing for Correlation: Remove the not selected prediction_variables and icustay_id
-    prediction_variables = features_df['feature_name'].loc[
-        features_df['potential_for_analysis'] == 'prediction_variable'].to_list()
+    prediction_variables = features_df['feature_name'].loc[features_df['potential_for_analysis'] == 'prediction_variable'].to_list()
     for feature in prediction_variables:
         try:
             selected_features.remove(feature)
@@ -36,8 +35,10 @@ def preprocess_for_correlation(selected_cohort: dataframe, features_df: datafram
 
 def get_correlations_on_cohort(selected_cohort: dataframe, features_df: dataframe, selected_features: list,
                                selected_dependent_variable: str) -> dataframe:
-    avg_cohort, selected_features = preprocess_for_correlation(selected_cohort, selected_features, features_df,
-                                                               selected_dependent_variable)
+    avg_cohort, selected_features = preprocess_for_correlation(selected_cohort=selected_cohort,
+                                                               features_df=features_df,
+                                                               selected_features=selected_features,
+                                                               selected_dependent_variable=selected_dependent_variable)
 
     # Calculate correlation
     avg_patient_cohort_corr = avg_cohort[selected_features].corr(numeric_only=False)
@@ -74,7 +75,7 @@ def plot_correlations(use_this_function: False, use_plot_heatmap: False, use_plo
     print('STATUS: Calculating Correlations.')
     sorted_death_corr, p_value, r_value = get_correlations_on_cohort(selected_cohort, selected_features, features_df, selected_dependent_variable)
 
-    # todo: also add pval to plot?
+    # todo maybe: also add pval to correlation plot?
 
     # Plot of correlation
     plot_death_corr = sorted_death_corr.drop(selected_dependent_variable)
@@ -123,8 +124,10 @@ def plot_heatmap(cohort_title: str, selected_cohort: dataframe, features_df: dat
     print('STATUS: Plotting plot_heatmap.')
 
     # Preprocessing
-    avg_cohort, selected_features = preprocess_for_correlation(selected_cohort, features_df, selected_features,
-                                                               selected_dependent_variable)
+    avg_cohort, selected_features = preprocess_for_correlation(selected_cohort=selected_cohort,
+                                                               features_df=features_df,
+                                                               selected_features=selected_features,
+                                                               selected_dependent_variable=selected_dependent_variable)
     try:
         selected_features.remove('icustay_id')
     except ValueError as e:
@@ -157,8 +160,10 @@ def plot_pairplot(cohort_title: str, selected_cohort: dataframe, features_df: da
     print('STATUS: Plotting plot_pairplot.')
 
     # Preprocessing
-    avg_cohort, selected_features = preprocess_for_correlation(selected_cohort, features_df, selected_features,
-                                                               selected_dependent_variable)
+    avg_cohort, selected_features = preprocess_for_correlation(selected_cohort=selected_cohort,
+                                                               features_df=features_df,
+                                                               selected_features=selected_features,
+                                                               selected_dependent_variable=selected_dependent_variable)
     try:
         selected_features.remove('icustay_id')
     except ValueError as e:

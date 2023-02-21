@@ -261,7 +261,7 @@ begin
 	FOR v_icustay_id IN (SELECT temp_filtered_patient_cohort.icustay_id FROM public.temp_filtered_patient_cohort) LOOP
 		
 		SELECT 
-			count(oasis.icustay_id) 				-- TODO: might not be needed here at all
+			count(oasis.icustay_id) 				-- Task: might not be needed here at all
 		FROM mimiciii.oasis WHERE mimiciii.oasis.icustay_id = v_icustay_id 
 		INTO v_days_counter;
 		

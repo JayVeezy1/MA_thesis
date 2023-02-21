@@ -30,7 +30,10 @@ def calculate_pacmap(selected_cohort, cohort_title, features_df, selected_featur
     # Returns: pacmap_data_points = data points, and death_list = markings
 
     # Filter and transform df to avg_np
-    avg_np = preprocess_for_pacmap(selected_cohort, features_df, selected_features, selected_dependent_variable)
+    avg_np = preprocess_for_pacmap(selected_cohort=selected_cohort,
+                                   features_df=features_df,
+                                   selected_features=selected_features,
+                                   selected_dependent_variable=selected_dependent_variable)
 
     print(f'STATUS: Conducting PaCMAP on {cohort_title}')
     embedding = pacmap.PaCMAP(n_components=3, n_neighbors=10, MN_ratio=0.5, FP_ratio=2.0, verbose=False,
@@ -48,13 +51,17 @@ def calculate_pacmap(selected_cohort, cohort_title, features_df, selected_featur
     return pacmap_data_points, death_list  # pacmap_data_points = data points, death_list = markings
 
 
-def display_pacmap(use_this_function: False, selected_cohort, cohort_title, use_case_name, features_df, selected_features, selected_dependent_variable,
+def display_pacmap(use_this_function: False, selected_cohort, cohort_title, use_case_name, features_df,
+                   selected_features, selected_dependent_variable,
                    save_to_file):
+    # plot the instances with pacmap, mark the death-cases for visualization
+
     if not use_this_function:
         return None
 
     # Calculate PacMap
-    pacmap_data_points, death_list = calculate_pacmap(selected_cohort, cohort_title, features_df, selected_features, selected_dependent_variable)
+    pacmap_data_points, death_list = calculate_pacmap(selected_cohort, cohort_title, features_df, selected_features,
+                                                      selected_dependent_variable)
 
     # Plot PacMap
     fig = plt.figure()

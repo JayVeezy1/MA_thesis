@@ -22,7 +22,7 @@ def preprocess_for_clustering(avg_cohort, features_df, selected_features, select
             selected_features.remove(feature)
         except ValueError as e:
             pass
-    selected_features.append(selected_dependent_variable)  # keeping selected_dependent_variable for clustering?
+    # selected_features.append(selected_dependent_variable)     # if used for prediction selected_dependent_variable can not be included
     try:
         selected_features.remove('icustay_id')
     except ValueError as e:
@@ -35,8 +35,8 @@ def preprocess_for_clustering(avg_cohort, features_df, selected_features, select
     return avg_cohort_without_nan.to_numpy()
 
 
-def get_ids_for_cluster(avg_patient_cohort, cohort_title, features_df, selected_features,
-                        selected_dependent_variable, selected_k_means_count, selected_cluster) -> list | None:
+def get_ids_for_cluster(avg_patient_cohort, cohort_title, features_df, selected_features, selected_dependent_variable,
+                        selected_k_means_count, selected_cluster, verbose: False) -> list | None:
     if selected_cluster > selected_k_means_count - 1:
         print('ERROR: selected_cluster number must be < selected_k_means_count.')
         return None
@@ -51,8 +51,8 @@ def get_ids_for_cluster(avg_patient_cohort, cohort_title, features_df, selected_
     # connect k-means clusters back to icustay_ids
     clusters_df: dataframe = pd.DataFrame({'icustay_id': avg_patient_cohort['icustay_id'], 'cluster': k_means_list})
 
-    print(
-        f'CHECK: Count of patients for cluster {selected_cluster}: {len(clusters_df["icustay_id"][clusters_df["cluster"] == selected_cluster])}')
+    if verbose:
+        print(f'CHECK: Count of patients for cluster {selected_cluster}: {len(clusters_df["icustay_id"][clusters_df["cluster"] == selected_cluster])}')
 
     return clusters_df['icustay_id'][clusters_df['cluster'] == selected_cluster].to_list()
 
@@ -116,7 +116,7 @@ def plot_sh_score_kmeans(use_this_function: False, selected_cohort, cohort_title
     avg_np = preprocess_for_clustering(selected_cohort, features_df, selected_features, selected_dependent_variable)
 
     # Find best k-means cluster option depending on sh_score -> check plot manually
-    krange = list(range(2, 13))  # choose multiple k-means cluster options to test
+    krange = list(range(2, 15))  # choose multiple k-means cluster options to test
     avg_silhouettes = []
     for n in krange:
         k_means_list, sh_score = calculate_cluster_kmeans(avg_np, cohort_title, n_clusters=n,
@@ -344,7 +344,7 @@ def get_overview_for_cluster(cluster_cohort, selected_features, features_df, cur
 
 
 def get_kmeans_clusters(original_cohort, features_df, selected_features, selected_dependent_variable,
-                        selected_k_means_count):
+                        selected_k_means_count, verbose: False):
     # returns a list of clusters [dataframe, ...]
     kmeans_clusters: list = []
     for selected_cluster in range(0, selected_k_means_count):
@@ -355,7 +355,8 @@ def get_kmeans_clusters(original_cohort, features_df, selected_features, selecte
             selected_features=selected_features,
             selected_dependent_variable=selected_dependent_variable,
             selected_k_means_count=selected_k_means_count,
-            selected_cluster=selected_cluster)
+            selected_cluster=selected_cluster,
+            verbose=verbose)
 
         filtered_cluster_cohort = original_cohort[original_cohort['icustay_id'].isin(filtered_cluster_icustay_ids)]
         kmeans_clusters.append(filtered_cluster_cohort)
@@ -364,8 +365,8 @@ def get_kmeans_clusters(original_cohort, features_df, selected_features, selecte
 
 
 def calculate_clusters_overview_table(use_this_function: False, selected_cohort, cohort_title, use_case_name,
-                                      features_df, selected_features, selected_dependent_variable, save_to_file: False,
-                                      selected_k_means_count):
+                                      features_df, selected_features, selected_dependent_variable,
+                                      save_to_file: False, selected_k_means_count):
     # currently this function is only usable for manually selected cluster_count -> kmeans but not DBSCAN
     if not use_this_function:
         return None
@@ -382,7 +383,8 @@ def calculate_clusters_overview_table(use_this_function: False, selected_cohort,
         features_df=features_df,
         selected_features=selected_features,
         selected_dependent_variable=selected_dependent_variable,
-        selected_k_means_count=selected_k_means_count)
+        selected_k_means_count=selected_k_means_count,
+        verbose=True)
 
     for i, cluster in enumerate(kmeans_clusters):
         # step 3: get count of occurrences per bin for this cluster

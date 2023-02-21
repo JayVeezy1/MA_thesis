@@ -1,4 +1,5 @@
 import datetime
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -8,10 +9,12 @@ from pandas.core.interchange import dataframe
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve
 from sklearn.model_selection import train_test_split
-from imblearn.over_sampling import SMOTE
+from imblearn.over_sampling import SMOTE, RandomOverSampler
 from imblearn.under_sampling import NearMiss
 from xgboost import XGBClassifier
 import seaborn as sn
+
+from step_3_data_analysis.clustering import get_kmeans_clusters, plot_sh_score_kmeans
 
 
 def preprocess_for_classification(selected_cohort: dataframe, features_df: dataframe, selected_features: list,
@@ -49,16 +52,34 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
     elif sampling_method == 'oversampling':  # Oversampling: SMOTE
         if verbose:
             print(f'STATUS: Implementing SMOTE oversampling for {cohort_title}.')
-        smote = SMOTE(random_state=1321)
-        smote_x_resampled, smote_y_resampled = smote.fit_resample(basic_x_train, basic_y_train)
-        new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(smote_x_resampled, smote_y_resampled,
-                                                                            test_size=0.2,
-                                                                            random_state=1321)
-        x_train_final = new_x_train
-        y_train_final = new_y_train
-        x_test_final = new_x_test
-        y_test_final = new_y_test
-        sampling_title = 'oversampling_smote'
+
+        if basic_y_train.sum() < 5:
+            if verbose:
+                print(
+                    f'WARNING: SMOTE can not be implemented for {cohort_title} because not enough death-cases for train-test-split. '
+                    f'At least 5 cases needed. '
+                    f'RandomOversampling is implemented instead.')
+            ros = RandomOverSampler(random_state=1321)
+            x_res, y_res = ros.fit_resample(basic_x_train, basic_y_train)
+            new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(x_res, y_res,
+                                                                                test_size=0.2,
+                                                                                random_state=1321)
+            x_train_final = new_x_train
+            y_train_final = new_y_train
+            x_test_final = new_x_test
+            y_test_final = new_y_test
+            sampling_title = 'random_oversampling'
+        else:
+            smote = SMOTE(random_state=1321)
+            smote_x_resampled, smote_y_resampled = smote.fit_resample(basic_x_train, basic_y_train)
+            new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(smote_x_resampled, smote_y_resampled,
+                                                                                test_size=0.2,
+                                                                                random_state=1321)
+            x_train_final = new_x_train
+            y_train_final = new_y_train
+            x_test_final = new_x_test
+            y_test_final = new_y_test
+            sampling_title = 'oversampling_smote'
 
     elif sampling_method == 'undersampling':  # Undersampling: NearMiss
         # Undersampling: NearMiss
@@ -99,12 +120,16 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
     return x_train_final, x_test_final, y_train_final, y_test_final, sampling_title
 
 
-def split_classification_data(selected_cohort: dataframe, cohort_title: str, features_df: dataframe, selected_features: list,
+def split_classification_data(selected_cohort: dataframe, cohort_title: str, features_df: dataframe,
+                              selected_features: list,
                               selected_dependent_variable: str, classification_method: str, sampling_method: str,
                               verbose: True):
     # Classification/Prediction on avg_patient_cohort
     # Cleanup & filtering
-    avg_df = preprocess_for_classification(selected_cohort, features_df, selected_features, selected_dependent_variable)
+    avg_df = preprocess_for_classification(selected_cohort=selected_cohort,
+                                           features_df=features_df,
+                                           selected_features=selected_features,
+                                           selected_dependent_variable=selected_dependent_variable)
     death_df = avg_df[selected_dependent_variable]  # death_label as its own df y_data
     avg_df_filtered = avg_df.drop([selected_dependent_variable], axis=1)  # death_label not inside x_data
 
@@ -140,7 +165,8 @@ def split_classification_data(selected_cohort: dataframe, cohort_title: str, fea
     return clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic
 
 
-def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, cohort_title: str, features_df: dataframe,
+def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, cohort_title: str,
+                         features_df: dataframe,
                          selected_features: list, selected_dependent_variable: str, classification_method: str,
                          sampling_method: str, use_case_name, save_to_file, verbose: True):
     # calculate the CM, return: CM as dataframe
@@ -156,10 +182,19 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
     cm: ndarray = confusion_matrix(y_test_basic,
                                    clf.predict(x_test_basic))  # important: use test_basic here, not the sampled version
     # Get CM as table
-    cm_df = pd.DataFrame({
-        "predicts_death": {"death": cm[1][1], "no_death": cm[0][1]},
-        "predicts_no_death": {"death": cm[1][0], "no_death": cm[0][0]}
-    })
+    try:
+        cm_df = pd.DataFrame({
+            "predicts_death": {"death": cm[1][1], "no_death": cm[0][1]},
+            "predicts_no_death": {"death": cm[1][0], "no_death": cm[0][0]}
+        })
+    except IndexError as e:
+        print(f'WARNING: Confusion Matrix does not have all columns/rows. Probably no death cases in {cohort_title} (y_test_basic only 0).'
+              f'Calculation of Classification Report is not possible for this cohort.')
+        cm_df = pd.DataFrame({
+            "predicts_death": {"death": 0, "no_death": 0},          # use 0 instead of np.nan -> will be caught in calculation of accuracy, recall, etc.
+            "predicts_no_death": {"death": 0, "no_death": 0}
+        })
+
     if verbose:
         print(f'\n Confusion Matrix for {classification_method} on {cohort_title}, {sampling_title}:')
         print(cm_df)
@@ -192,7 +227,8 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
             cbar=False,
             cmap=cmap,
             vmin=0,
-            vmax=(cm_df['sum_actual']['sum_predicted'] + 20)        # adding a bit to max value -> not such a strong color difference
+            vmax=(cm_df['sum_actual']['sum_predicted'] + 20)
+            # adding a bit to max value -> not such a strong color difference
         )
 
         # set ticklabels rotation (0 rotation, but with this horizontal)
@@ -208,7 +244,8 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
         # save plot
         if classification_method == 'RandomForest':
             classification_method = 'RF'
-        plt.savefig(f'./output/{use_case_name}/classification/CM_{classification_method}_{cohort_title}_{sampling_title}_{current_time}_new.png')
+        plt.savefig(
+            f'./output/{use_case_name}/classification/CM_{classification_method}_{cohort_title}_{sampling_title}_{current_time}_new.png')
         plt.show()
         plt.close()
 
@@ -269,20 +306,32 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
     clf_probs = clf_probs[:, 1]  # Only the probabilities for positive outcome are kept
 
     # Get auc_score for probabilities compared to real values
-    auc_score = round(roc_auc_score(y_test_basic,
-                                    clf_probs),
-                      3)  # ROC = receiver operating characteristic, AUROC = area under the ROC curve
+    if y_test_basic.sum() == 0:
+        print('WARNING: No death cases in y_test_basic. Calculation of auc_score not possible.')
+        auc_score = 0
+    else:
+        auc_score = round(roc_auc_score(y_test_basic,
+                                        clf_probs),
+                          3)  # ROC = receiver operating characteristic, AUROC = area under the ROC curve
     # print(f'CHECK: {classification_method}: AUROC = %.3f' % auc_score)
 
     # Get false-positive-rate = x-axis and true-positive-rate = y-axis
-    clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, clf_probs)
-    plt.plot(clf_fpr, clf_tpr, marker='.', label='Random Forest (AUROC = %0.3f)' % auc_score)
+    if y_test_basic.sum() == 0:
+        print('WARNING: No death cases in y_test_basic. Calculation of roc_curve not possible.')
+        warnings.filterwarnings(action='ignore', message='No positive samples in y_true, true positive value should be meaningless')    # UndefinedMetricWarning:
+        clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, clf_probs)
+    else:
+        clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, clf_probs)
+        plt.plot(clf_fpr, clf_tpr, marker='.', label='Random Forest (AUROC = %0.3f)' % auc_score)
 
     # Add a random predictor line to plot
     random_probs = [0 for _ in range(len(y_test_basic))]
-    random_auc = roc_auc_score(y_test_basic, random_probs)
-    random_fpr, random_tpr, _ = roc_curve(y_test_basic, random_probs)
-    plt.plot(random_fpr, random_tpr, linestyle='--', label='Random prediction (AUROC = %0.3f)' % random_auc)
+    if y_test_basic.sum() == 0:
+        pass
+    else:
+        random_auc = roc_auc_score(y_test_basic, random_probs)
+        random_fpr, random_tpr, _ = roc_curve(y_test_basic, random_probs)
+        plt.plot(random_fpr, random_tpr, linestyle='--', label='Random prediction (AUROC = %0.3f)' % random_auc)
 
     # Plot Settings
     plt.title(f"{classification_method} for {cohort_title} AUROC: {auc_score}, {sampling_title}")
@@ -304,17 +353,29 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
 def get_accuracy(cm_df):
     # (TP + TN) / (TP + FP + FN + TN)
     sum_all_cases = (cm_df['predicts_death']['death'] + cm_df['predicts_no_death']['no_death'] + cm_df['predicts_no_death']['death'] + cm_df['predicts_death']['no_death'])
-    return round((cm_df['predicts_death']['death'] + cm_df['predicts_no_death']['no_death']) / sum_all_cases, 3)
+    if sum_all_cases == 0:
+        accuracy = 0
+    else:
+        accuracy = round((cm_df['predicts_death']['death'] + cm_df['predicts_no_death']['no_death']) / sum_all_cases, 3)
+    return accuracy
 
 
 def get_recall(cm_df):
     # TP / (TP + FN)
-    return round(cm_df['predicts_death']['death'] / (cm_df['predicts_death']['death'] + cm_df['predicts_no_death']['death']), 3)
+    if (cm_df['predicts_death']['death'] + cm_df['predicts_no_death']['death']) == 0:
+        recall = 0
+    else:
+        recall = round(cm_df['predicts_death']['death'] / (cm_df['predicts_death']['death'] + cm_df['predicts_no_death']['death']), 3)
+    return recall
 
 
 def get_precision(cm_df):
     # TP / (TP + FP)
-    return round(cm_df['predicts_death']['death'] / (cm_df['predicts_death']['death'] + cm_df['predicts_death']['no_death']), 3)
+    if (cm_df['predicts_death']['death'] + cm_df['predicts_death']['no_death']) == 0:
+        precision = 0
+    else:
+        precision = round(cm_df['predicts_death']['death'] / (cm_df['predicts_death']['death'] + cm_df['predicts_death']['no_death']), 3)
+    return precision
 
 
 def compare_classification_models_on_cohort(use_this_function, use_case_name, features_df, selected_features,
@@ -387,16 +448,127 @@ def compare_classification_models_on_cohort(use_this_function, use_case_name, fe
 
 
 def compare_classification_models_on_clusters(use_this_function, use_case_name, features_df, selected_features,
-                                              selected_cohort, all_classification_methods, all_dependent_variables, save_to_file):
+                                              selected_cohort, all_classification_methods, all_dependent_variables,
+                                              selected_k_means_count, check_sh_score, save_to_file):
+    # calculate prediction quality per cluster, save into table classification_clusters_overview
+    # todo long term: this is only for kmeans, also add for other clustering methods (dynamic like DBSCAN and ASDF also possible?)
+    if not use_this_function:
+        return None
 
-    # step 1: get the ideal cluster count for this selected_cohort
+    if check_sh_score:
+        # any option to automatically get optimal cluster count from this?
+        plot_sh_score_kmeans(use_this_function=True,  # True | False
+                             selected_cohort=selected_cohort,
+                             cohort_title='complete_selected_cohort',
+                             use_case_name=use_case_name,
+                             features_df=features_df,
+                             selected_features=selected_features,
+                             selected_dependent_variable='death_in_hosp',
+                             save_to_file=False)
 
-    # step 2: get these clusters into a list
+    classification_clusters_overview = pd.DataFrame()
 
-    # step 3: for each cluster get prediction quality
+    # step 1: iterate through model configs (not compare across cohort, because different clustering)
+    for dependent_variable in all_dependent_variables:
+        for classification_method in all_classification_methods:
+            # step 2: get all clusters as df in a list
+            kmeans_clusters: list = get_kmeans_clusters(original_cohort=selected_cohort,
+                                                        features_df=features_df,
+                                                        selected_features=selected_features,
+                                                        selected_dependent_variable=dependent_variable,
+                                                        selected_k_means_count=selected_k_means_count,
+                                                        verbose=False)
 
+            # get total_auc_score for total set
+            total_auc_score = get_auc_score(use_this_function=True,  # True | False
+                                            classification_method=classification_method,
+                                            sampling_method='oversampling',  # SELECTED_SAMPLING_METHOD
+                                            selected_cohort=selected_cohort,
+                                            cohort_title='complete_set',
+                                            use_case_name=use_case_name,
+                                            features_df=features_df,
+                                            selected_features=selected_features,
+                                            selected_dependent_variable=dependent_variable,
+                                            show_plot=False,
+                                            verbose=False,
+                                            save_to_file=False
+                                            )
+            total_cm_df: dataframe = get_confusion_matrix(use_this_function=True,  # True | False
+                                                          classification_method=classification_method,
+                                                          sampling_method='oversampling',  # SELECTED_SAMPLING_METHOD
+                                                          selected_cohort=selected_cohort,
+                                                          cohort_title='complete_set',
+                                                          use_case_name=use_case_name,
+                                                          features_df=features_df,
+                                                          selected_features=selected_features,
+                                                          selected_dependent_variable=dependent_variable,
+                                                          verbose=False,
+                                                          save_to_file=False
+                                                          )
+            current_settings = pd.DataFrame([{'dependent_variable': dependent_variable,
+                                              'classification_method': classification_method,
+                                              'cluster': 'total_model',
+                                              'auc_score': total_auc_score,
+                                              'accuracy': get_accuracy(total_cm_df),
+                                              'recall': get_recall(total_cm_df),
+                                              'precision': get_precision(total_cm_df)
+                                              }])
+            classification_clusters_overview = pd.concat([classification_clusters_overview, current_settings],
+                                                         ignore_index=True)
 
-    # problem: does it even make sense to compare clusters cross-model? probably not. cohort has to be the same. classification_method & dependent_variable can be changed.
+            for i, cluster in enumerate(kmeans_clusters):
+                # step 3: for each cluster get prediction quality
+                print(
+                    f'STATUS: Calculating auc_score for cluster: {i}, with model settings: {classification_method}, {dependent_variable}')
+                # get auc_score for cluster
+                auc_score = get_auc_score(use_this_function=True,  # True | False
+                                          classification_method=classification_method,
+                                          sampling_method='oversampling',
+                                          # SELECTED_SAMPLING_METHOD  -> currently always oversampling, can also be parameterized
+                                          selected_cohort=cluster,
+                                          cohort_title=f'cluster_{i}',
+                                          use_case_name=use_case_name,
+                                          features_df=features_df,
+                                          selected_features=selected_features,
+                                          selected_dependent_variable=dependent_variable,
+                                          show_plot=False,
+                                          verbose=False,
+                                          save_to_file=False
+                                          )
+                cm_df: dataframe = get_confusion_matrix(use_this_function=True,  # True | False
+                                                        classification_method=classification_method,
+                                                        sampling_method='oversampling',  # SELECTED_SAMPLING_METHOD
+                                                        selected_cohort=cluster,
+                                                        cohort_title=f'cluster_{i}',
+                                                        use_case_name=use_case_name,
+                                                        features_df=features_df,
+                                                        selected_features=selected_features,
+                                                        selected_dependent_variable=dependent_variable,
+                                                        verbose=False,
+                                                        save_to_file=False
+                                                        )
+                current_settings = pd.DataFrame([{'dependent_variable': dependent_variable,
+                                                  'classification_method': classification_method,
+                                                  'cluster': f'cluster_{i}',
+                                                  'auc_score': auc_score,
+                                                  'accuracy': get_accuracy(cm_df),
+                                                  'recall': get_recall(cm_df),
+                                                  'precision': get_precision(cm_df)
+                                                  }])
+                # print('CHECK: Current result: \n', current_settings.to_string(index=False))
+                # step 4: add to final table
+                classification_clusters_overview = pd.concat([classification_clusters_overview, current_settings],
+                                                             ignore_index=True)
 
+    if save_to_file:
+        current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
+        filename_string: str = f'./output/{use_case_name}/classification/clusters_overview_{current_time}.csv'
+        filename = filename_string.encode()
+        with open(filename, 'w', newline='') as output_file:
+            classification_clusters_overview.to_csv(output_file, index=False)
+            print(f'\n STATUS: classification_clusters_overview was saved to {filename_string}')
+    else:
+        print('CHECK: classification_clusters_overview:')
+        print(classification_clusters_overview)
 
     return None

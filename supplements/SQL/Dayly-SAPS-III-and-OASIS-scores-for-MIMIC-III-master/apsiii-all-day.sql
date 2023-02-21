@@ -35,7 +35,7 @@ SET search_path TO mimiciii;				-- this was included
 --  The score is calculated for *all* ICU patients, with the assumption that the user will subselect appropriate ICUSTAY_IDs.
 --  For example, the score is calculated for neonates, but it is likely inappropriate to actually use the score values for these patients.
 
--- List of TODO:
+-- List of tasks:
 -- The site of temperature is not incorporated. Axillary measurements should be increased by 1 degree.
 -- Unfortunately the data for metavision is not available at the moment.
 --  674 | Temp. Site
@@ -294,7 +294,7 @@ left join labsfirstday labs
       when meanbp_min >= 140 then 10
     end as meanbp_score
 
-  -- TODO: add 1 degree to axillary measurements
+  -- task: add 1 degree to axillary measurements
   , case
       when tempc_min is null then null
       when tempc_min <  33.0 then 20
@@ -419,7 +419,7 @@ from cohort
         when meanbp_max >= 140 then 10
       end as meanbp_score
 
-    -- TODO: add 1 degree to axillary measurements
+    -- task: add 1 degree to axillary measurements
     , case
         when tempc_max is null then null
         when tempc_max <  33.0 then 20

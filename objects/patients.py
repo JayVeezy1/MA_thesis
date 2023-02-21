@@ -17,7 +17,7 @@ class Patient:
     def __init__(self, patient_id: str, patient_data: dataframe, features_df: dataframe):
         self.features: list = list(patient_data.columns.values)
         # todo future work: maybe move filtering of stroke_type and infarct_type from SQL Script into Patient Class -> PRO: more flexible for future use-cases instead of SQL, CON: but must also be inside cohort.csv for filtering
-        # todo future work: add interpolation/imputation(depending on NaN)/outliers to timeseries -> use timeseries for analysis
+        # todo future work: add interpolation/imputation(depending on NaN)/outliers to timeseries -> if use timeseries for analysis
 
         if patient_id not in Patient.all_patient_ids_set:
             self.patient_id = patient_id
@@ -199,7 +199,7 @@ class Patient:
 
     @classmethod
     def get_avg_scaled_data(cls, avg_patient_cohort) -> dataframe:
-        # TODO: Choose which option!
+        # TODO: Choose which normalization option!
         # normalization (between 0 and 1):
         # min-max-scaling: (df - df.min()) / (df.max() - df.min())
 

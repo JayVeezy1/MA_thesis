@@ -7,6 +7,7 @@ from step_3_data_analysis import correlations, classification, clustering, gener
 from supplements import selection_icd9_codes
 
 ####### MAIN #######
+# By: Jakob Vanek, 2023
 if __name__ == '__main__':
     PROJECT_PATH: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'  # this variable must be fitted to the users local project folder
     USE_CASE_NAME: str = 'stroke_all_systems'  # stroke_patients_data       # heart_infarct_patients_data
@@ -56,7 +57,7 @@ if __name__ == '__main__':
     # CHOOSE: Cohort Parameters
     SELECTED_COHORT = scaled_complete_avg_cohort
     SELECTED_COHORT_TITLE = 'scaled_complete_avg_cohort'
-    SELECT_SAVE_FILES = False
+    SELECT_SAVE_FILES = True
     # Automated: Preprocessed Cohort
     SELECTED_COHORT_preprocessed = get_preprocessed_avg_cohort(avg_cohort=SELECTED_COHORT,
                                                                cohort_title=SELECTED_COHORT_TITLE,
@@ -78,13 +79,22 @@ if __name__ == '__main__':
                                      'scaled_ischemic_avg_cohort': scaled_ischemic_cohort_preprocessed}
     print('STATUS: Preprocessing finished. \n')
 
-    # TODO NEXT: correlation of flag-features must be calculated differently than continuous! -> How? -> then add these into predictions as well!
-    # TODO NEXT: add Deep Learning model
-    # TODO THEN: write: which model has best results for now? -> this is a first part-result, should be comparable to papers
+    # todo check: are the hemorrhagic filters for stroke actually correct? Can I use carevue cases or only metavision?
+    # todo check: why is curve of sh_score so bad
 
-    # todo after: optimize the process A: use/find clusters and try better prediction | B: use time-series | C: optimize the features further
+    # TODO today: Finish clustering_overview_function
+    # possible to automatically find optimal sh_score? -> why is my sh_score so bad? -> too many features?
 
-    # todo check: are the hemorrhagic filters for stroke actually correct?
+    # TODO this week: correlation of flag-features must be calculated differently than continuous! -> How? -> then add these into predictions as well!
+        # Rho Test
+        # Chi-Squared Test
+        # add these to the feature+correlation overview table
+
+
+    # todo next week: add a Deep Learning model
+    # todo next week write: which model has best results for now? -> this is a first part-result, should be comparable to papers
+    # todo after: analyze clusters for 'fairness' -> bridge to ASDF Dashboard
+    # todo long term: add 'decision-boundary-plot' to visualize the clustering (on 2 features)
 
     ### Data Analysis
     # Step 3.1) General Statistics
@@ -137,7 +147,7 @@ if __name__ == '__main__':
                                     selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                     save_to_file=SELECT_SAVE_FILES)
     # kmeans: plotting
-    SELECTED_KMEANS_CLUSTERS_COUNT = 8  # manually checking silhouette score shows optimal cluster count (higher is better)
+    SELECTED_KMEANS_CLUSTERS_COUNT = 9  # manually checking silhouette score shows optimal cluster count (higher is better)
     clustering.plot_k_means_on_pacmap(use_this_function=False,  # True | False
                                       selected_cohort=SELECTED_COHORT_preprocessed,
                                       cohort_title=SELECTED_COHORT_TITLE,
@@ -147,6 +157,17 @@ if __name__ == '__main__':
                                       selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                       selected_cluster_count=SELECTED_KMEANS_CLUSTERS_COUNT,
                                       save_to_file=SELECT_SAVE_FILES)
+
+    # kmeans: Cluster Comparison (only for manually selected_cluster_count -> only kmeans)
+    clusters_overview_table = clustering.calculate_clusters_overview_table(use_this_function=True,  # True | False
+                                                                           selected_cohort=SELECTED_COHORT_preprocessed,
+                                                                           cohort_title=SELECTED_COHORT_TITLE,
+                                                                           use_case_name=USE_CASE_NAME,
+                                                                           features_df=FEATURES_DF,
+                                                                           selected_features=SELECTED_FEATURES,
+                                                                           selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                                           selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
+                                                                           save_to_file=SELECT_SAVE_FILES)
 
     # DBSCAN: sh_score
     clustering.plot_sh_score_DBSCAN(use_this_function=False,  # True | False
@@ -171,16 +192,6 @@ if __name__ == '__main__':
                                      selected_min_sample=SELECTED_MIN_SAMPLE,
                                      save_to_file=SELECT_SAVE_FILES)
 
-    # Cluster Comparison (only for manually selected_cluster_count -> only kmeans)
-    clusters_overview_table = clustering.calculate_clusters_overview_table(use_this_function=False,  # True | False
-                                                                           selected_cohort=SELECTED_COHORT_preprocessed,
-                                                                           cohort_title=SELECTED_COHORT_TITLE,
-                                                                           use_case_name=USE_CASE_NAME,
-                                                                           features_df=FEATURES_DF,
-                                                                           selected_features=SELECTED_FEATURES,
-                                                                           selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                                                           selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
-                                                                           save_to_file=SELECT_SAVE_FILES)
 
     ### Machine Learning Predictions
     # Step 4.1) Classification: (RandomForest, XGBoost, ...)
@@ -188,7 +199,7 @@ if __name__ == '__main__':
     SELECTED_SAMPLING_METHOD = 'oversampling'  # options: no_sampling | oversampling | undersampling   -> estimation: oversampling > no_sampling > undersampling (very bad results)
     ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'XGBoost']
     # Confusion Matrix (CM)
-    cm = classification.get_confusion_matrix(use_this_function=True,  # True | False
+    cm = classification.get_confusion_matrix(use_this_function=False,  # True | False
                                              classification_method=SELECTED_CLASSIFICATION_METHOD,
                                              sampling_method=SELECTED_SAMPLING_METHOD,
                                              selected_cohort=SELECTED_COHORT_preprocessed,
@@ -241,16 +252,17 @@ if __name__ == '__main__':
                                                            all_dependent_variables=ALL_DEPENDENT_VARIABLES,
                                                            save_to_file=SELECT_SAVE_FILES)
 
-    # TODO: use ALL_SUBGROUPS for classification_report instead of ALL_COHORTS? -> subgroups-list could come from clustering method (based on icustay_ids lists) -> then this used for the predictions -> better predictions based on clustered groups?
     # Input: selected_cohort and its ideal kmeans cluster-count
     # Output: table of prediction quality per cluster, rows = different model configs (per classification_method and dependent_variable)
-    classification.compare_classification_models_on_clusters(use_this_function=False,  # True | False
+    classification.compare_classification_models_on_clusters(use_this_function=True,  # True | False
                                                              use_case_name=USE_CASE_NAME,
                                                              features_df=FEATURES_DF,
                                                              selected_features=SELECTED_FEATURES,
                                                              selected_cohort=SELECTED_COHORT_preprocessed,
                                                              all_classification_methods=ALL_CLASSIFICATION_METHODS,
                                                              all_dependent_variables=ALL_DEPENDENT_VARIABLES,
+                                                             selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
+                                                             check_sh_score=True,
                                                              save_to_file=SELECT_SAVE_FILES)
 
     ### Fairness Metrics

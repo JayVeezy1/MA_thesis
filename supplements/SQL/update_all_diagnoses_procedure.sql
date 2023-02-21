@@ -11,7 +11,7 @@ declare
 	temp_infarct_type varchar(15);
 	
 begin
-	-- TODO: stroke_type and infarct_type simply does not belong into here. Just get all the icd9_codes in one list, get the type in other function or even in Python.
+	-- Task: stroke_type and infarct_type simply does not belong into here. Just get all the icd9_codes in one list, get the type in other function or even in Python.
 
 
 	-- 2) loop through each admission and then each available icd9_code

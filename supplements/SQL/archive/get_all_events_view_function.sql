@@ -56,7 +56,7 @@ begin
 			Select
 				first_icustay_id.icustay_id,
 				labevents.itemid,
-				labevents.charttime,		-- TODO: only acceppt items with charttimes < icustay_id-outtime, otherwise event from other icustay
+				labevents.charttime,		-- only accept items with charttime < icustay_id-outtime, otherwise event from other icustay
 				labevents.value,
 				labevents.valueuom
 			FROM mimiciii.labevents
@@ -132,7 +132,7 @@ begin
 	SET label = (SELECT d_labitems.label FROM mimiciii.d_labitems WHERE d_labitems.itemid = temp_single_patient_DUMMY.itemid)
 	WHERE temp_single_patient_DUMMY.itemid IN (SELECT d_labitems.itemid FROM mimiciii.d_labitems);
 
-	-- TODO: maybe remove this dummy, approach and export all available labels, then do the filtering in python
+	-- maybe remove this dummy, approach and export all available labels, then do the filtering in python
 	-- step 3: add a dummy value 
 	-- with charttime 'today' for each label, so the label "exists" and will be turned into a column when doing crosstable
 	-- will be removed after doing crossable	

@@ -22,7 +22,7 @@ declare
 begin
 	-- NOTE: This function goes through all hadm_ids if diagnoses_all_icd9 does not exist yet -> this can take up multiple hours
 	-- It might be easier to split the update of diagnoses_all_icd9 into multiple parts and use the function "update_diagnoses_all_icd9"
-	-- TODO: stroke_type and infarct_type simply does not belong into here. Just get all the icd9_codes in one list, get the type in other function or even in Python.
+	-- Task: stroke_type and infarct_type simply does not belong into here. Just get all the icd9_codes in one list, get the type in other function or even in Python.
 
 	if (SELECT EXISTS (
 			SELECT FROM pg_tables
