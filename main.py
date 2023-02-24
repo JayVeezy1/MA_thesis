@@ -79,11 +79,8 @@ if __name__ == '__main__':
                                      'scaled_ischemic_avg_cohort': scaled_ischemic_cohort_preprocessed}
     print('STATUS: Preprocessing finished. \n')
 
-    # todo check: are the hemorrhagic filters for stroke actually correct? Can I use carevue cases or only metavision?
-    # todo check: why is curve of sh_score so bad
-
-    # TODO today: Finish clustering_overview_function
-    # possible to automatically find optimal sh_score? -> why is my sh_score so bad? -> too many features?
+    # TODO first: why is curve of sh_score so bad -> in one plot inertia/elbow-curve + sh_score -> better insight
+        # possible to automatically find optimal sh_score? -> why is my sh_score so bad? -> too many/few features?
 
     # TODO this week: correlation of flag-features must be calculated differently than continuous! -> How? -> then add these into predictions as well!
         # Rho Test
@@ -102,7 +99,7 @@ if __name__ == '__main__':
                                               selected_cohort=SELECTED_COHORT_preprocessed,
                                               cohort_title=SELECTED_COHORT_TITLE,
                                               use_case_name=USE_CASE_NAME,
-                                              save_to_file=True)
+                                              save_to_file=SELECT_SAVE_FILES)
 
     general_statistics.calculate_feature_overview_table(use_this_function=False,  # True | False
                                                         selected_cohort=SELECTED_COHORT_preprocessed,
@@ -111,11 +108,11 @@ if __name__ == '__main__':
                                                         cohort_title=SELECTED_COHORT_TITLE,
                                                         use_case_name=USE_CASE_NAME,
                                                         selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                                        save_to_file=True)
+                                                        save_to_file=SELECT_SAVE_FILES)
 
     # Step 3.2) Correlation
     # Correlations
-    correlations.plot_correlations(use_this_function=False,  # True | False
+    correlations.plot_correlations(use_this_function=True,  # True | False
                                    use_plot_heatmap=False,
                                    use_plot_pairplot=False,
                                    cohort_title=SELECTED_COHORT_TITLE,
@@ -127,7 +124,7 @@ if __name__ == '__main__':
                                    save_to_file=SELECT_SAVE_FILES)
 
     # Step 3.3) Visualization (PacMap)
-    data_visualization.display_pacmap(use_this_function=False,  # True | False
+    data_visualization.display_pacmap(use_this_function=True,  # True | False
                                       selected_cohort=SELECTED_COHORT_preprocessed,
                                       use_case_name=USE_CASE_NAME,
                                       cohort_title=SELECTED_COHORT_TITLE,
@@ -138,7 +135,7 @@ if __name__ == '__main__':
 
     # Step 3.4) Clustering (kmeans, DBSCAN, ...)
     # kmeans: sh_score
-    clustering.plot_sh_score_kmeans(use_this_function=False,  # True | False
+    clustering.plot_sh_score_kmeans(use_this_function=True,  # True | False
                                     selected_cohort=SELECTED_COHORT_preprocessed,
                                     cohort_title=SELECTED_COHORT_TITLE,
                                     use_case_name=USE_CASE_NAME,
@@ -159,7 +156,7 @@ if __name__ == '__main__':
                                       save_to_file=SELECT_SAVE_FILES)
 
     # kmeans: Cluster Comparison (only for manually selected_cluster_count -> only kmeans)
-    clusters_overview_table = clustering.calculate_clusters_overview_table(use_this_function=True,  # True | False
+    clusters_overview_table = clustering.calculate_clusters_overview_table(use_this_function=False,  # True | False
                                                                            selected_cohort=SELECTED_COHORT_preprocessed,
                                                                            cohort_title=SELECTED_COHORT_TITLE,
                                                                            use_case_name=USE_CASE_NAME,
@@ -254,7 +251,7 @@ if __name__ == '__main__':
 
     # Input: selected_cohort and its ideal kmeans cluster-count
     # Output: table of prediction quality per cluster, rows = different model configs (per classification_method and dependent_variable)
-    classification.compare_classification_models_on_clusters(use_this_function=True,  # True | False
+    classification.compare_classification_models_on_clusters(use_this_function=False,  # True | False
                                                              use_case_name=USE_CASE_NAME,
                                                              features_df=FEATURES_DF,
                                                              selected_features=SELECTED_FEATURES,

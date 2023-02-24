@@ -16,7 +16,7 @@ class Patient:
 
     def __init__(self, patient_id: str, patient_data: dataframe, features_df: dataframe):
         self.features: list = list(patient_data.columns.values)
-        # todo future work: maybe move filtering of stroke_type and infarct_type from SQL Script into Patient Class -> PRO: more flexible for future use-cases instead of SQL, CON: but must also be inside cohort.csv for filtering
+        # todo future work: create function for filtering of stroke_type and infarct_type here. Should not be inside SQL Script -> more flexible for future use-cases instead of SQL, check again if hemorrhage and ischemic filtering was correct
         # todo future work: add interpolation/imputation(depending on NaN)/outliers to timeseries -> if use timeseries for analysis
 
         if patient_id not in Patient.all_patient_ids_set:

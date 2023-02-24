@@ -45,8 +45,8 @@ def get_ids_for_cluster(avg_patient_cohort, cohort_title, features_df, selected_
     avg_np = preprocess_for_clustering(avg_patient_cohort, features_df, selected_features.copy(), selected_dependent_variable)      # use selected_features.copy() because in function other dependent variables are remove
 
     # get the cluster for selected_k_means_count -> currently this function is not for DBSCAN, because dynamic cluster count there
-    k_means_list, sh_score = calculate_cluster_kmeans(avg_np, cohort_title, n_clusters=selected_k_means_count,
-                                                      verbose=False)
+    k_means_list, sh_score, inertia = calculate_cluster_kmeans(avg_np, cohort_title, n_clusters=selected_k_means_count,
+                                                               verbose=False)
 
     # connect k-means clusters back to icustay_ids
     clusters_df: dataframe = pd.DataFrame({'icustay_id': avg_patient_cohort['icustay_id'], 'cluster': k_means_list})
@@ -99,10 +99,12 @@ def calculate_cluster_kmeans(avg_np: np.ndarray, cohort_title: str, n_clusters: 
     avg_np.reshape(avg_np.shape[0], -1)  # does this have an effect?
     if len(set(clustering_labels_list)) < 2:
         sh_score = 0
+        inertia = (-1)
     else:
         sh_score = round(silhouette_score(avg_np, labels=clustering_labels_list, metric='euclidean', random_state=0), 2)
+        inertia = kmeans_obj.inertia_
 
-    return clustering_labels_list, sh_score
+    return clustering_labels_list, sh_score, inertia
 
 
 def plot_sh_score_kmeans(use_this_function: False, selected_cohort, cohort_title, use_case_name, features_df,
@@ -118,21 +120,29 @@ def plot_sh_score_kmeans(use_this_function: False, selected_cohort, cohort_title
     # Find best k-means cluster option depending on sh_score -> check plot manually
     krange = list(range(2, 15))  # choose multiple k-means cluster options to test
     avg_silhouettes = []
-    for n in krange:
-        k_means_list, sh_score = calculate_cluster_kmeans(avg_np, cohort_title, n_clusters=n,
-                                                          verbose=False)  # here clusters are calculated
-        avg_silhouettes.append(sh_score)
+    inertias = []
 
-    # Plot Silhouette Scores
-    plt.figure(dpi=100)
-    plt.title(f'Silhouette Score for k-Means on {cohort_title}')
-    plt.plot(krange, avg_silhouettes)  # for DBSCAN use eps_range instead of krange
-    plt.xlabel("$k$")
-    plt.ylabel("Average Silhouettes Score")
+    for n in krange:
+        k_means_list, sh_score, inertia = calculate_cluster_kmeans(avg_np, cohort_title, n_clusters=n,
+                                                                   verbose=False)  # here clusters are calculated
+        avg_silhouettes.append(sh_score)        # silhouette score should be maximal
+        inertias.append(inertia)                # inertia = distortion = Sum-of-Squared-Errors = Elbow method, should be minimal
+
+    # Silhouette Score + Plot Elbow/Inertia Method
+    fig, ax = plt.subplots()
+    inertia_color = '#0000B0'
+    ax.plot(krange, inertias, color=inertia_color, marker=".")
+    ax.set_xlabel('k', fontsize=14)
+    ax.set_ylabel('Distortion (SSE)', color=inertia_color, fontsize=14)
+    ax2 = ax.twinx()        # twin object for second y-axis
+    sh_color = '#B00000'
+    ax2.plot(krange, avg_silhouettes, color=sh_color, marker=".")
+    ax2.set_ylabel('Silhouette Score', color=sh_color, fontsize=14)
+    plt.title(f'SSE and Silhouette Score for k-Means on {cohort_title}')
+
     if save_to_file:
-        plt.savefig(
-            f'./output/{use_case_name}/clustering/{f"Silhouette Score for k-Means on {cohort_title}".replace(" ", "_")}.png',
-            bbox_inches="tight")
+        current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
+        plt.savefig(f'./output/{use_case_name}/clustering/optimal_cluster_count_{cohort_title}_{current_time}.png', bbox_inches='tight')
     plt.show()
     plt.close()
 
@@ -155,7 +165,7 @@ def plot_k_means_on_pacmap(use_this_function: False, selected_cohort, cohort_tit
                                                                          selected_dependent_variable=selected_dependent_variable)
 
     # Plot the cluster with best sh_score
-    k_means_list, sh_score = calculate_cluster_kmeans(avg_np, cohort_title, n_clusters=selected_cluster_count,
+    k_means_list, sh_score, inertia = calculate_cluster_kmeans(avg_np, cohort_title, n_clusters=selected_cluster_count,
                                                       verbose=True)
     plot_title = f'k_Means_{cohort_title}_{selected_cluster_count}_clusters'
     plot_clusters_on_3D_pacmap(plot_title=plot_title, use_case_name=use_case_name,
