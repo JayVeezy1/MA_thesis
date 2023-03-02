@@ -13,7 +13,7 @@ def preprocess_for_pacmap(selected_cohort, features_df, selected_features, selec
             selected_features.remove(feature)
         except ValueError as e:
             pass
-    selected_features.append(selected_dependent_variable)  # keeping selected_dependent_variable for clustering?
+    # selected_features.append(selected_dependent_variable)  # not keeping selected_dependent_variable for pacmap
     try:
         selected_features.remove('icustay_id')
     except ValueError as e:

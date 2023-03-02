@@ -166,7 +166,7 @@ def plot_k_means_on_pacmap(use_this_function: False, selected_cohort, cohort_tit
 
     # Plot the cluster with best sh_score
     k_means_list, sh_score, inertia = calculate_cluster_kmeans(avg_np, cohort_title, n_clusters=selected_cluster_count,
-                                                      verbose=True)
+                                                               verbose=True)
     plot_title = f'k_Means_{cohort_title}_{selected_cluster_count}_clusters'
     plot_clusters_on_3D_pacmap(plot_title=plot_title, use_case_name=use_case_name,
                                pacmap_data_points=pacmap_data_points, cluster_count=selected_cluster_count,

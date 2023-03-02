@@ -11,7 +11,8 @@ from scipy.stats import stats
 def preprocess_for_correlation(selected_cohort: dataframe, features_df: dataframe, selected_features: list,
                                selected_dependent_variable: str):
     # Preprocessing for Correlation: Remove the not selected prediction_variables and icustay_id
-    prediction_variables = features_df['feature_name'].loc[features_df['potential_for_analysis'] == 'prediction_variable'].to_list()
+    prediction_variables = features_df['feature_name'].loc[
+        features_df['potential_for_analysis'] == 'prediction_variable'].to_list()
     for feature in prediction_variables:
         try:
             selected_features.remove(feature)
@@ -27,40 +28,100 @@ def preprocess_for_correlation(selected_cohort: dataframe, features_df: datafram
     temp_selected_features.remove(selected_dependent_variable)
     print(
         f'CHECK: {len(temp_selected_features)} features used for Correlation.')  # dependent_variable is not used for its own correlation
-
-    selected_cohort = selected_cohort[selected_features]
-
-    return selected_cohort.fillna(0), selected_features
+    selected_cohort = selected_cohort[selected_features].fillna(0)
 
 
-def get_correlations_on_cohort(selected_cohort: dataframe, features_df: dataframe, selected_features: list,
-                               selected_dependent_variable: str) -> dataframe:
-    avg_cohort, selected_features = preprocess_for_correlation(selected_cohort=selected_cohort,
-                                                               features_df=features_df,
-                                                               selected_features=selected_features,
-                                                               selected_dependent_variable=selected_dependent_variable)
+    # split selected_cohort into categorical_cohort, continuous_cohort, binary_cohort
+    categorical_features = features_df['feature_name'].loc[features_df['categorical_or_continuous'] == 'categorical'].to_list()
+    temp_single_features = features_df['feature_name'].loc[features_df['categorical_or_continuous'] == 'single_value'].to_list()
+    categorical_features.extend(temp_single_features)
+    continuous_features = features_df['feature_name'].loc[features_df['categorical_or_continuous'] == 'continuous'].to_list()
+    binary_features = features_df['feature_name'].loc[features_df['categorical_or_continuous'] == 'flag_value'].to_list()
+    categorical_features = list(set(categorical_features).intersection(selected_features))
+    continuous_features = list(set(continuous_features).intersection(selected_features))
+    binary_features = list(set(binary_features).intersection(selected_features))
 
-    # Calculate correlation
-    avg_patient_cohort_corr = avg_cohort[selected_features].corr(numeric_only=False)
-    death_corr = avg_patient_cohort_corr[selected_dependent_variable].round(2)  # only return correlation towards selected_dependent_variable
+    categorical_cohort = selected_cohort[categorical_features]
+    continuous_cohort = selected_cohort[continuous_features]
+    binary_cohort = selected_cohort[binary_features]
 
-    # Calculate r-values & p-values             # todo check: Are these calculations correct?
+    return continuous_cohort, categorical_cohort, binary_cohort, selected_features
+
+
+def get_continuous_corr(continuous_cohort, selected_dependent_variable, selected_features):
+    # Correlation
+    continuous_cohort_corr = continuous_cohort[selected_features].corr(numeric_only=False)      # todo: check if selected_features is possible here? Or do I need its own columns? Does each sub-df need death_in_hosp?
+    death_corr = continuous_cohort_corr[selected_dependent_variable].round(2)  # only return correlation towards selected_dependent_variable
+
+    # Significance
     # old calculation, unclear results
     # pval = avg_patient_cohort[selected_features_corr].corr(method=lambda x, y: pearsonr(x, y)[1]) - np.eye(*avg_patient_cohort_corr.shape)
     # p = pval.applymap(lambda x: ''.join(['*' for t in [.05, .01, .001] if x <= t]))       # alternative to turn pval into stars *
 
-    cleaned_df: dataframe = avg_cohort.fillna(value=0)
+    cleaned_df: dataframe = continuous_cohort.fillna(0)
     validity_df: dataframe = pd.DataFrame()
     try:
-        for feature in avg_cohort[selected_features]:
-            r_val, p_val = stats.pearsonr(cleaned_df[feature], avg_cohort[selected_dependent_variable])
+        for feature in continuous_cohort[selected_features]:
+            r_val, p_val = stats.pearsonr(cleaned_df[feature], continuous_cohort[selected_dependent_variable])
             validity_df[feature] = [round(r_val, 3), round(p_val, 3)]
     except ValueError as e:
         print('WARNING: ValueError for r_val and p_val calculation. Cluster probably only one entity.')
-        for feature in avg_cohort[selected_features]:
+        for feature in continuous_cohort[selected_features]:
             validity_df[feature] = [np.nan, np.nan]
 
     validity_df = validity_df.rename({0: 'r_value', 1: 'p_value'}).transpose()
+
+    return death_corr, validity_df
+
+
+def get_categorical_corr(categorical_cohort, selected_dependent_variable, selected_features):
+    death_corr = categorical_cohort[selected_features].corr(numeric_only=False)
+    death_corr = categorical_cohort[selected_dependent_variable].round(2)  # only return correlation towards selected_dependent_variable
+
+    validity_df: dataframe = pd.DataFrame()
+
+    return death_corr, validity_df
+
+
+def get_binary_corr(binary_cohort, selected_dependent_variable, selected_features):
+    death_corr = binary_cohort[selected_features].corr(numeric_only=False)
+    death_corr = binary_cohort[selected_dependent_variable].round(2)  # only return correlation towards selected_dependent_variable
+
+    validity_df: dataframe = pd.DataFrame()
+
+    return death_corr, validity_df
+
+
+def get_correlations_on_cohort(selected_cohort: dataframe, features_df: dataframe, selected_features: list,
+                               selected_dependent_variable: str) -> dataframe:
+    # todo after: check if this change of 'preprocess_for_correlation' has to be adapted to in other functions
+
+    ## 1 ) split avg_cohort up into continuous, categorical, flag(binary) features
+    continuous_cohort, categorical_cohort, binary_cohort, selected_features = preprocess_for_correlation(
+                                                                selected_cohort=selected_cohort,
+                                                                features_df=features_df,
+                                                                selected_features=selected_features,
+                                                                selected_dependent_variable=selected_dependent_variable)
+
+    ## TODO: 2) Correlations & Significance Tests
+    # 2.1) Get correlation and validity (significance) for continuous
+    # correlation = simply .corr | significance = pearsonr -> p-value and r-value
+    continuous_corr, continuous_validity = get_continuous_corr(continuous_cohort, selected_dependent_variable, selected_features)
+
+    # 2.2) Get correlation and validity for categorical
+    # correlation = Cramer’s V (symmetrical) or Theil’s U (asymmetrical) | significance = Chi-Squared but if occurrence of one category is < 5 chi-squared is not possible -> use "Fisher’s exact test"
+    categorical_corr, categorical_validity = get_categorical_corr(categorical_cohort, selected_dependent_variable, selected_features)
+
+    # 2.3) Get correlation and validity for binary
+    # correlation = Tetrachoric Correlation | significance = McNemar’s chi-square
+    binary_corr, binary_validity = get_binary_corr(binary_cohort, selected_dependent_variable, selected_features)
+
+    ## TODO: 3) Merge correlations and validity dfs again
+    temp_death_corr = pd.merge(left=continuous_corr, right=categorical_corr, left_index=True, right_index=True)
+    death_corr = pd.merge(left=temp_death_corr, right=binary_corr, left_index=True, right_index=True)
+
+    temp_validity_df = pd.merge(left=continuous_validity, right=categorical_validity, left_index=True, right_index=True)
+    validity_df = pd.merge(left=temp_validity_df, right=binary_validity, left_index=True, right_index=True)
 
     return death_corr.sort_values(ascending=False), validity_df['p_value'], validity_df['r_value']
 
@@ -73,7 +134,10 @@ def plot_correlations(use_this_function: False, use_plot_heatmap: False, use_plo
 
     # Calculate Correlations
     print('STATUS: Calculating Correlations.')
-    sorted_death_corr, p_value, r_value = get_correlations_on_cohort(selected_cohort, selected_features, features_df, selected_dependent_variable)
+    sorted_death_corr, p_value, r_value = get_correlations_on_cohort(selected_cohort=selected_cohort,
+                                                                     selected_features=selected_features,
+                                                                     features_df=features_df,
+                                                                     selected_dependent_variable=selected_dependent_variable)
 
     # todo maybe: also add pval to correlation plot?
 

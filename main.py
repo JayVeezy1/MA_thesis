@@ -79,19 +79,19 @@ if __name__ == '__main__':
                                      'scaled_ischemic_avg_cohort': scaled_ischemic_cohort_preprocessed}
     print('STATUS: Preprocessing finished. \n')
 
-    # TODO first: why is curve of sh_score so bad -> in one plot inertia/elbow-curve + sh_score -> better insight
-        # possible to automatically find optimal sh_score? -> why is my sh_score so bad? -> too many/few features?
+    # todo check: classification has to be done multiple time and then use avg to evaluate? Is it 'allowed' to use OASIS score in classification?
 
     # TODO this week: correlation of flag-features must be calculated differently than continuous! -> How? -> then add these into predictions as well!
-        # Rho Test
-        # Chi-Squared Test
-        # add these to the feature+correlation overview table
+        # Rho Test? Difference of p-value and r-value?
+
+    # TODO next week: also need to change classification/clustering for flag-features!!!
+    # TODO next week: add a Deep Learning model
 
 
-    # todo next week: add a Deep Learning model
-    # todo next week write: which model has best results for now? -> this is a first part-result, should be comparable to papers
+    # todo after write: correlations etc. into overleaf, then which model has best results for now? -> this is a first part-result, should be comparable to papers
     # todo after: analyze clusters for 'fairness' -> bridge to ASDF Dashboard
     # todo long term: add 'decision-boundary-plot' to visualize the clustering (on 2 features)
+    # todo long term: add 3-features-visualization plot (like pacmap but with real dimensions)
 
     ### Data Analysis
     # Step 3.1) General Statistics
@@ -101,7 +101,7 @@ if __name__ == '__main__':
                                               use_case_name=USE_CASE_NAME,
                                               save_to_file=SELECT_SAVE_FILES)
 
-    general_statistics.calculate_feature_overview_table(use_this_function=False,  # True | False
+    general_statistics.calculate_feature_overview_table(use_this_function=True,  # True | False
                                                         selected_cohort=SELECTED_COHORT_preprocessed,
                                                         features_df=FEATURES_DF,
                                                         selected_features=SELECTED_FEATURES,
@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
     # Step 3.2) Correlation
     # Correlations
-    correlations.plot_correlations(use_this_function=True,  # True | False
+    correlations.plot_correlations(use_this_function=False,  # True | False
                                    use_plot_heatmap=False,
                                    use_plot_pairplot=False,
                                    cohort_title=SELECTED_COHORT_TITLE,
@@ -124,7 +124,7 @@ if __name__ == '__main__':
                                    save_to_file=SELECT_SAVE_FILES)
 
     # Step 3.3) Visualization (PacMap)
-    data_visualization.display_pacmap(use_this_function=True,  # True | False
+    data_visualization.display_pacmap(use_this_function=False,  # True | False
                                       selected_cohort=SELECTED_COHORT_preprocessed,
                                       use_case_name=USE_CASE_NAME,
                                       cohort_title=SELECTED_COHORT_TITLE,
@@ -134,8 +134,8 @@ if __name__ == '__main__':
                                       save_to_file=SELECT_SAVE_FILES)
 
     # Step 3.4) Clustering (kmeans, DBSCAN, ...)
-    # kmeans: sh_score
-    clustering.plot_sh_score_kmeans(use_this_function=True,  # True | False
+    # kmeans: optimal cluster count with sh_score and distortion (SSE) - can be bad if too many features selected
+    clustering.plot_sh_score_kmeans(use_this_function=False,  # True | False
                                     selected_cohort=SELECTED_COHORT_preprocessed,
                                     cohort_title=SELECTED_COHORT_TITLE,
                                     use_case_name=USE_CASE_NAME,
@@ -177,7 +177,7 @@ if __name__ == '__main__':
                                     save_to_file=SELECT_SAVE_FILES)
     # DBSCAN: plotting
     SELECTED_EPS = 0.5  # manually checking silhouette score shows optimal epsilon-min_sample-combination
-    SELECTED_MIN_SAMPLE = 5
+    SELECTED_MIN_SAMPLE = 6
     clustering.plot_DBSCAN_on_pacmap(use_this_function=False,  # True | False
                                      selected_cohort=SELECTED_COHORT_preprocessed,
                                      cohort_title=SELECTED_COHORT_TITLE,
