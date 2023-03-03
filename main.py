@@ -33,7 +33,7 @@ if __name__ == '__main__':
     #                                 use_case_name=USE_CASE_NAME)
 
     # Step 1.2) Filter final patient.csvs for relevant features and export as 'final_dataset'
-    # transform raw.csvs into filtered, final .csvs, also transform carevue feature-names into metavision names (not ideal)
+    # transform raw.csvs into filtered, final .csvs, also transform carevue feature-names into metavision names
     # select_relevant_features.export_final_dataset(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME)
 
     # Step 1.3) Load all .csv files as a 'Patient' Object, use Pickle for Cache
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     ### Preprocessing
     # Step 2) Calculate Avg, Filter, Scale, Impute & Interpolate for each patient
     # Options: dbsource filter
-    complete_avg_cohort = Patient.get_avg_patient_cohort(PROJECT_PATH, USE_CASE_NAME, selected_patients=[])  # empty=all
+    complete_avg_cohort = Patient.get_avg_patient_cohort(PROJECT_PATH, USE_CASE_NAME, FEATURES_DF, selected_patients=[])  # empty=all
     metavision_avg_cohort = complete_avg_cohort[complete_avg_cohort['dbsource'] == 'metavision']
     carevue_avg_cohort = complete_avg_cohort[complete_avg_cohort['dbsource'] == 'carevue']
     # Options: stroke_type filter, also option: change complete_avg_cohort to metavision_avg_cohort or carevue_avg_cohort
@@ -81,10 +81,13 @@ if __name__ == '__main__':
 
     # todo check: classification has to be done multiple time and then use avg to evaluate? Is it 'allowed' to use OASIS score in classification?
 
-    # TODO this week: correlation of flag-features must be calculated differently than continuous! -> How? -> then add these into predictions as well!
+    # todo research: include the fairness package? https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md
+    #  Also in general the AI Responsible package useful as a dashboard?
+
+    # TODO NOW: correlation of categorical+flag-features must be calculated differently than continuous!
         # Rho Test? Difference of p-value and r-value?
 
-    # TODO next week: also need to change classification/clustering for flag-features!!!
+    # TODO next week: also need to change classification/clustering for categorical+flag-features!!!
     # TODO next week: add a Deep Learning model
 
 
@@ -101,7 +104,7 @@ if __name__ == '__main__':
                                               use_case_name=USE_CASE_NAME,
                                               save_to_file=SELECT_SAVE_FILES)
 
-    general_statistics.calculate_feature_overview_table(use_this_function=True,  # True | False
+    general_statistics.calculate_feature_overview_table(use_this_function=False,  # True | False
                                                         selected_cohort=SELECTED_COHORT_preprocessed,
                                                         features_df=FEATURES_DF,
                                                         selected_features=SELECTED_FEATURES,
@@ -112,7 +115,7 @@ if __name__ == '__main__':
 
     # Step 3.2) Correlation
     # Correlations
-    correlations.plot_correlations(use_this_function=False,  # True | False
+    correlations.plot_correlations(use_this_function=True,  # True | False
                                    use_plot_heatmap=False,
                                    use_plot_pairplot=False,
                                    cohort_title=SELECTED_COHORT_TITLE,

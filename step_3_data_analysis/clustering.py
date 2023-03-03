@@ -27,6 +27,14 @@ def preprocess_for_clustering(avg_cohort, features_df, selected_features, select
         selected_features.remove('icustay_id')
     except ValueError as e:
         pass
+    try:
+        selected_features.remove('dbsource')  # not useful for clustering
+    except ValueError as e:
+        pass
+    try:
+        selected_features.remove('stroke_type')  # stroke_type not reliable for clustering
+    except ValueError as e:
+        pass
 
     # print(f'CHECK: {len(selected_features)} features used for Clustering.')
     # print(f'CHECK: {len(selected_features)} features used for Clustering: ', selected_features)  # dependent_variable might be removed outside

@@ -103,7 +103,7 @@ def get_correlations_on_cohort(selected_cohort: dataframe, features_df: datafram
                                                                 selected_features=selected_features,
                                                                 selected_dependent_variable=selected_dependent_variable)
 
-    ## TODO: 2) Correlations & Significance Tests
+    ## TODO NOW: 2) Correlations & Significance Tests
     # 2.1) Get correlation and validity (significance) for continuous
     # correlation = simply .corr | significance = pearsonr -> p-value and r-value
     continuous_corr, continuous_validity = get_continuous_corr(continuous_cohort, selected_dependent_variable, selected_features)

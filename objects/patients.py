@@ -104,11 +104,29 @@ class Patient:
                 cleaned_raw_data.loc[cleaned_raw_data[feature].isin(['ERROR']), feature] = np.nan
                 cleaned_raw_data[feature] = cleaned_raw_data[feature].astype(float)     # is the feature contained 'ERROR', all existing values were set as string
 
+        # todo future research: check if this outlier-removal method is sensible, and how to deal with negative values?
+        # Automatically remove Outliers
+        for feature in continuous_features:
+            # if max() value of this column for a patient is 10x higher than mean() of this column then set = 0
+            # this removes one really high outlier
+            temp_mean = cleaned_raw_data[feature].mean()
+            temp_max = cleaned_raw_data[feature].max()
+            temp_max_position = cleaned_raw_data[feature].idxmax()
+            if temp_max > temp_mean * 10:
+                print(f'CHECK: Removing outlier for patient {cleaned_raw_data["icustay_id"][0]} and feature {feature}')
+                print(f'CHECK: max value is {temp_max} and mean of this feature is {temp_mean}')
+                print(f'CHECK: position of old max was: {temp_max_position}')
+                cleaned_raw_data.loc[temp_max_position, feature] = 0
+                print(f'CHECK: Value at the position is now: {cleaned_raw_data[feature].iloc[temp_max_position]}')
 
-        # Remove known Outliers -> todo maybe: make this automatic? If variance of a value > 1000 of mean, remove?
+        # Manually remove known Outliers
         if cleaned_raw_data["icustay_id"][0] == int('228194'):
             print(f'CHECK: Removing outliers for patient {cleaned_raw_data["icustay_id"][0]}')
-            cleaned_raw_data.loc[cleaned_raw_data['row_id'] == 198, 'O2 saturation pulseoxymetry'] = 0
+            cleaned_raw_data.loc[cleaned_raw_data['row_id'] == 198, 'O2 saturation pulseoxymetry'] = 0  # value in this row was over 30.000 -> way too high
+
+        if cleaned_raw_data["icustay_id"][0] == int('228086'):
+            print(f'CHECK: Removing outliers for patient {cleaned_raw_data["icustay_id"][0]}')
+            cleaned_raw_data.loc[cleaned_raw_data['row_id'] == 79, 'Creatinine'] = 0                # value in this row was 149 -> way too high
 
         return cleaned_raw_data
 
@@ -172,7 +190,7 @@ class Patient:
                 return patient
 
     @classmethod
-    def get_avg_patient_cohort(cls, project_path, use_case_name, selected_patients) -> dataframe:
+    def get_avg_patient_cohort(cls, project_path, use_case_name, features_df, selected_patients) -> dataframe:
         # Important: all patients must be already loaded (from cache) at this point
         if not selected_patients:
             selected_patients = Patient.all_patient_objs_set
@@ -186,6 +204,23 @@ class Patient:
         avg_patient_cohort: dataframe = pd.concat(avg_dataframes)
         avg_patient_cohort = avg_patient_cohort.sort_values(by=['icustay_id'], axis=0)
         avg_patient_cohort = avg_patient_cohort.reset_index(drop=True)
+
+
+        # Remove outliers where patient-avg is 5x higher than feature-mean()
+        OUTLIERS_THRESHOLD = 4
+        continuous_features = features_df['feature_name'].loc[
+            features_df['categorical_or_continuous'] == 'continuous'].to_list()
+        removed_entries = 0
+        for temp_icustay_id in avg_patient_cohort['icustay_id'].to_list():
+            for feature in continuous_features:
+                temp_patient_value = avg_patient_cohort.loc[avg_patient_cohort['icustay_id'] == temp_icustay_id, feature].item()
+                if temp_patient_value > avg_patient_cohort[feature].mean() * OUTLIERS_THRESHOLD:        # todo discuss: is this too strict? Do I remove important patients?
+                    avg_patient_cohort.loc[avg_patient_cohort['icustay_id'] == temp_icustay_id, feature] = np.nan
+                    # print(f'CHECK: Removing avg value for icustay_id: {temp_icustay_id} and feature: {feature}')
+                    removed_entries += 1
+            # print(f'CHECK: Finished Outliers Check for temp_icustay_id {temp_icustay_id}.')
+        print(f'CHECK: Outliers threshold: {OUTLIERS_THRESHOLD}x higher than mean. Removed entries: {removed_entries}')
+
 
         # Export avg_patient_cohort
         filename_string: str = f'{project_path}exports/{use_case_name}/avg_patient_cohort.csv'

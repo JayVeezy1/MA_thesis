@@ -60,7 +60,7 @@ def export_final_dataset(project_path, use_case_name):
                               'O2 %': 'O2 saturation pulseoxymetry',  # not ideal mapping?
                               'RBC': 'Packed Red Blood Cells',
                               'Potassium': 'Potassium (whole blood)',
-                              # 'Thrombin': 'Prothrombin time',     # alternative: Bleeding Time   # there is no good match available
+                              # 'Thrombin': 'Prothrombin time',     # alternative: Bleeding Time -> there is no good match available
                               'Sodium': 'Sodium (whole blood)'}
 
     print('CHECK: Count of general_features:', len(general_features))
@@ -95,10 +95,9 @@ def export_final_dataset(project_path, use_case_name):
                     final_vitals_df.insert(loc=0, column=feature, value=np.nan)  # loc was left out because alphabetical ordering later
 
             # Sum of all Gauge Types into gauges_total
-            final_vitals_df.insert(loc=0, column='gauges_total', value=final_vitals_df[
-                ['22 Gauge', '20 Gauge', '18 Gauge', '16 Gauge', '14 Gauge']].sum(axis=1))
-            final_vitals_df = final_vitals_df.drop(
-                columns=['22 Gauge', '20 Gauge', '18 Gauge', '16 Gauge', '14 Gauge'])
+            final_vitals_df.insert(loc=0, column='gauges_total', value=final_vitals_df[['22 Gauge', '20 Gauge', '18 Gauge', '16 Gauge', '14 Gauge']].sum(axis=1))
+            final_vitals_df.replace(to_replace=0, value='', inplace=True)             # use empty values instead of 0 -> better mean
+            final_vitals_df = final_vitals_df.drop(columns=['22 Gauge', '20 Gauge', '18 Gauge', '16 Gauge', '14 Gauge'])
 
             # Alphabetical Order
             final_vitals_df = final_vitals_df.reindex(sorted(final_vitals_df.columns), axis=1)
@@ -121,7 +120,7 @@ def export_final_dataset(project_path, use_case_name):
 
             # export final .csv file
             filename_id = file[15:21]
-            filename_string: str = f'{project_path}/exports/{use_case_name}/selected_features/icustay_id_{filename_id}.csv'
+            filename_string: str = f'{project_path}exports/{use_case_name}/selected_features/icustay_id_{filename_id}.csv'
             filename = filename_string.encode()
             with open(filename, 'w', newline='') as output_file:
                 final_patient_df.to_csv(output_file)

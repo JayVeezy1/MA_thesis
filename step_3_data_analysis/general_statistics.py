@@ -113,7 +113,7 @@ def calculate_feature_overview_table(use_this_function: False, selected_cohort, 
     if not use_this_function:
         return None
 
-    # todo maybe: add patients_in_training_set (count/occurrence) and chi-squared-value (for categorical features) to overview_table, and also R-Value from correlation?
+    # todo: add correlation back again, also with chi-squared-value (for categorical features)
     # get correlations per feature
     #deaths_correlation_df, p_value, r_value = get_correlations_on_cohort(selected_cohort=selected_cohort,
      #                                                                    selected_features=selected_features,
