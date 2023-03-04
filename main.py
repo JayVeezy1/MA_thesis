@@ -7,7 +7,7 @@ from step_3_data_analysis import correlations, classification, clustering, gener
 from supplements import selection_icd9_codes
 
 ####### MAIN #######
-# By: Jakob Vanek, 2023
+# By: Jakob Vanek, 2023, Master Thesis at Goethe University
 if __name__ == '__main__':
     PROJECT_PATH: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'  # this variable must be fitted to the users local project folder
     USE_CASE_NAME: str = 'stroke_all_systems'  # stroke_patients_data       # heart_infarct_patients_data
@@ -50,13 +50,14 @@ if __name__ == '__main__':
     hemorrhage_avg_cohort = complete_avg_cohort[complete_avg_cohort['stroke_type'] == 'hemorrhagic']
     ischemic_avg_cohort = complete_avg_cohort[complete_avg_cohort['stroke_type'] == 'ischemic']
     # Options: scaled_cohort (recommended)
+    complete_avg_cohort = metavision_avg_cohort         # TODO REMINDER: turn this back after checking correlations
     scaled_complete_avg_cohort = Patient.get_avg_scaled_data(complete_avg_cohort.copy())
     scaled_hemorrhage_avg_cohort = Patient.get_avg_scaled_data(hemorrhage_avg_cohort.copy())
     scaled_ischemic_avg_cohort = Patient.get_avg_scaled_data(ischemic_avg_cohort.copy())
 
     # CHOOSE: Cohort Parameters
     SELECTED_COHORT = scaled_complete_avg_cohort
-    SELECTED_COHORT_TITLE = 'scaled_complete_avg_cohort'
+    SELECTED_COHORT_TITLE = 'scaled_complete_avg_cohort_metavision'         # TODO Reminder
     SELECT_SAVE_FILES = True
     # Automated: Preprocessed Cohort
     SELECTED_COHORT_preprocessed = get_preprocessed_avg_cohort(avg_cohort=SELECTED_COHORT,
@@ -79,20 +80,17 @@ if __name__ == '__main__':
                                      'scaled_ischemic_avg_cohort': scaled_ischemic_cohort_preprocessed}
     print('STATUS: Preprocessing finished. \n')
 
-    # todo check: classification has to be done multiple time and then use avg to evaluate? Is it 'allowed' to use OASIS score in classification?
-
-    # todo research: include the fairness package? https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md
-    #  Also in general the AI Responsible package useful as a dashboard?
-
     # TODO NOW: correlation of categorical+flag-features must be calculated differently than continuous!
         # Rho Test? Difference of p-value and r-value?
 
     # TODO next week: also need to change classification/clustering for categorical+flag-features!!!
     # TODO next week: add a Deep Learning model
+    # todo next week write: correlations etc. into overleaf, then which model has best results for now? -> this is a first part-result, should be comparable to papers
 
-
-    # todo after write: correlations etc. into overleaf, then which model has best results for now? -> this is a first part-result, should be comparable to papers
+    # todo check: classification has to be done multiple time and then use avg to evaluate? Is it 'allowed' to use OASIS score in classification?
+    # todo check: include the fairness package? https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md Also in general the AI Responsible package useful as a dashboard?
     # todo after: analyze clusters for 'fairness' -> bridge to ASDF Dashboard
+
     # todo long term: add 'decision-boundary-plot' to visualize the clustering (on 2 features)
     # todo long term: add 3-features-visualization plot (like pacmap but with real dimensions)
 

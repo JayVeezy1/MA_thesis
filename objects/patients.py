@@ -244,6 +244,7 @@ class Patient:
 
         # only scale numbers columns
         avg_patient_cohort_num = avg_patient_cohort.select_dtypes(include='number')
+        avg_patient_cohort_num.drop(columns='icustay_id', inplace=True)               # remove icustay_id from scaling process
 
         # scaling method: min-max-normalization
         scaled_avg_cohort_num = (avg_patient_cohort_num - avg_patient_cohort_num.min()) / (
@@ -251,9 +252,9 @@ class Patient:
 
         avg_patient_cohort[avg_patient_cohort_num.columns] = scaled_avg_cohort_num   # throws SettingWithCopyWarning but works as intended   # todo: check again
 
-        # still SettingWithCopyWarning
+        # following approach still has SettingWithCopyWarning
         # for column in avg_patient_cohort_num.columns:
-          #  avg_patient_cohort.loc[:, column] = scaled_avg_cohort_num.loc[:, column]
+        #    avg_patient_cohort.loc[:, column] = scaled_avg_cohort_num.loc[:, column]
 
         return avg_patient_cohort
 

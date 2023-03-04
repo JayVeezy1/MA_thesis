@@ -8,35 +8,32 @@ ethnicity,2,BLACK
 ethnicity,3,OTHER
 ethnicity,4,HISPANIC OR LATINO
 ethnicity,5,ASIAN
-ethnicity,6,HISPANIC/LATINO - COLOMBIAN
 insurance,0,Medicare
-insurance,1,Private
-insurance,2,Medicaid
-insurance,3,Government
+insurance,1,Medicaid
+insurance,2,Government
+insurance,3,Private
 insurance,4,Self Pay
-marital_status,-1,no_data
 marital_status,0,DIVORCED
-marital_status,1,WIDOWED
+marital_status,1,SINGLE
 marital_status,2,MARRIED
-marital_status,3,SINGLE
+marital_status,-1,no_data
+marital_status,3,WIDOWED
 marital_status,4,UNKNOWN (DEFAULT)
 marital_status,5,LIFE PARTNER
 marital_status,6,SEPARATED
 religion,0,UNOBTAINABLE
-religion,1,CATHOLIC
-religion,2,OTHER
-religion,3,NOT SPECIFIED
-religion,4,JEWISH
-religion,5,EPISCOPALIAN
-religion,6,PROTESTANT QUAKER
-religion,-1,no_data
-religion,7,BUDDHIST
-religion,8,MUSLIM
-religion,9,HINDU
-religion,10,GREEK ORTHODOX
-religion,11,JEHOVAH'S WITNESS
-religion,12,CHRISTIAN SCIENTIST
-religion,13,UNITARIAN-UNIVERSALIST
-religion,14,ROMANIAN EAST. ORTH
-religion,15,BAPTIST
-religion,16,7TH DAY ADVENTIST
+religion,1,NOT SPECIFIED
+religion,2,CATHOLIC
+religion,3,JEWISH
+religion,4,PROTESTANT QUAKER
+religion,5,BUDDHIST
+religion,6,MUSLIM
+religion,7,EPISCOPALIAN
+religion,8,OTHER
+religion,9,CHRISTIAN SCIENTIST
+religion,10,JEHOVAH'S WITNESS
+religion,11,ROMANIAN EAST. ORTH
+religion,12,UNITARIAN-UNIVERSALIST
+religion,13,GREEK ORTHODOX
+religion,14,HINDU
+religion,15,7TH DAY ADVENTIST

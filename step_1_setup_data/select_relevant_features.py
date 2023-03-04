@@ -51,6 +51,7 @@ def export_final_dataset(project_path, use_case_name):
                              # oasis will not be at the original position with the other general_info, but they must be with vitals_df because hourly/daily values
                              ]
 
+    # todo future research: get patient_weight (and thrombin) for carevue patients -> check useful features inside PostGre DB
     carevue_features: dict = {'NBP [Diastolic]': 'Arterial Blood Pressure diastolic',
                               'NBP [Systolic]': 'Arterial Blood Pressure systolic',
                               'NBP Mean': 'Arterial Blood Pressure mean',
