@@ -89,7 +89,8 @@ def plot_clusters_on_3D_pacmap(plot_title, use_case_name, pacmap_data_points, cl
 
     if save_to_file:
         plt.savefig(
-            f'./output/{use_case_name}/clustering/clustering_{plot_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
+            f'./output/{use_case_name}/clustering/clustering_{plot_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png',
+                    dpi=600)
     plt.show()
     plt.close()
 
@@ -150,7 +151,8 @@ def plot_sh_score_kmeans(use_this_function: False, selected_cohort, cohort_title
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
-        plt.savefig(f'./output/{use_case_name}/clustering/optimal_cluster_count_{cohort_title}_{current_time}.png', bbox_inches='tight')
+        plt.savefig(f'./output/{use_case_name}/clustering/optimal_cluster_count_{cohort_title}_{current_time}.png', bbox_inches='tight',
+                    dpi=600)
     plt.show()
     plt.close()
 
@@ -493,6 +495,7 @@ def plot_sh_score_DBSCAN(use_this_function, selected_cohort, cohort_title, use_c
     if save_to_file:
         plt.savefig(
             f'./output/{use_case_name}/clustering/silhouette_score_DBSCAN_{cohort_title}.png',
+            dpi=600,
             bbox_inches='tight')
     plt.show()
 

@@ -7,7 +7,7 @@ from numpy import sort
 from pandas.core.interchange import dataframe
 
 from objects.patients import Patient
-from step_3_data_analysis.correlations import get_correlations_on_cohort
+from step_3_data_analysis.correlations import get_correlations_to_dependent_var
 
 
 # todo long term: second type of Deaths table: cluster1/column1 = survived, cluster2/column2 = death, rows = features
@@ -115,7 +115,7 @@ def calculate_feature_overview_table(use_this_function: False, selected_cohort, 
 
     # todo: add correlation back again, also with chi-squared-value (for categorical features)
     # get correlations per feature
-    #deaths_correlation_df, p_value, r_value = get_correlations_on_cohort(selected_cohort=selected_cohort,
+    #deaths_correlation_df, p_value, r_value = get_correlations_to_dependent_var(selected_cohort=selected_cohort,
      #                                                                    selected_features=selected_features,
       #                                                                   features_df=features_df,
        #                                                                  selected_dependent_variable=selected_dependent_variable)

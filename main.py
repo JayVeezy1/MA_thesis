@@ -1,5 +1,4 @@
 import pandas as pd
-
 from objects.patients import Patient
 from step_1_setup_data import cache_IO, mimic_to_csv, select_relevant_features
 from step_2_preprocessing.preprocessing_functions import get_preprocessed_avg_cohort
@@ -11,8 +10,8 @@ from supplements import selection_icd9_codes
 if __name__ == '__main__':
     PROJECT_PATH: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'  # this variable must be fitted to the users local project folder
     USE_CASE_NAME: str = 'stroke_all_systems'  # stroke_patients_data       # heart_infarct_patients_data
-    FEATURES_DF = pd.read_excel('./supplements/feature_preprocessing_table.xlsx')
-    SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'  # death_3_days, death_in_hosp
+    FEATURES_DF = pd.read_excel('./supplements/FEATURE_PREPROCESSING_TABLE.xlsx')
+    SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'
     ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
                                      'death_365_days']  # FEATURES_DF.loc[FEATURES_DF['potential_for_analysis'] == 'prediction_variable', 'feature_name'].to_list()
 
@@ -43,21 +42,24 @@ if __name__ == '__main__':
     ### Preprocessing
     # Step 2) Calculate Avg, Filter, Scale, Impute & Interpolate for each patient
     # Options: dbsource filter
-    complete_avg_cohort = Patient.get_avg_patient_cohort(PROJECT_PATH, USE_CASE_NAME, FEATURES_DF, selected_patients=[])  # empty=all
+    complete_avg_cohort = Patient.get_avg_patient_cohort(PROJECT_PATH, USE_CASE_NAME, FEATURES_DF,
+                                                         selected_patients=[])  # empty=all
     metavision_avg_cohort = complete_avg_cohort[complete_avg_cohort['dbsource'] == 'metavision']
     carevue_avg_cohort = complete_avg_cohort[complete_avg_cohort['dbsource'] == 'carevue']
     # Options: stroke_type filter, also option: change complete_avg_cohort to metavision_avg_cohort or carevue_avg_cohort
-    hemorrhage_avg_cohort = complete_avg_cohort[complete_avg_cohort['stroke_type'] == 'hemorrhagic']
-    ischemic_avg_cohort = complete_avg_cohort[complete_avg_cohort['stroke_type'] == 'ischemic']
+    hemorrhage_avg_cohort = complete_avg_cohort[
+        complete_avg_cohort['stroke_type'] == 1]  # 'ischemic' = -1 | 'other_stroke' = 0 | 'hemorrhagic' = 1
+    other_stroke_avg_cohort = complete_avg_cohort[complete_avg_cohort['stroke_type'] == 0]
+    ischemic_avg_cohort = complete_avg_cohort[complete_avg_cohort['stroke_type'] == -1]
     # Options: scaled_cohort (recommended)
-    complete_avg_cohort = metavision_avg_cohort         # TODO REMINDER: turn this back after checking correlations
-    scaled_complete_avg_cohort = Patient.get_avg_scaled_data(complete_avg_cohort.copy())
-    scaled_hemorrhage_avg_cohort = Patient.get_avg_scaled_data(hemorrhage_avg_cohort.copy())
-    scaled_ischemic_avg_cohort = Patient.get_avg_scaled_data(ischemic_avg_cohort.copy())
+    scaled_complete_avg_cohort = Patient.get_avg_scaled_data(complete_avg_cohort.copy(), FEATURES_DF)
+    scaled_hemorrhage_avg_cohort = Patient.get_avg_scaled_data(hemorrhage_avg_cohort.copy(), FEATURES_DF)
+    scaled_other_stroke_avg_cohort = Patient.get_avg_scaled_data(other_stroke_avg_cohort.copy(), FEATURES_DF)
+    scaled_ischemic_avg_cohort = Patient.get_avg_scaled_data(ischemic_avg_cohort.copy(), FEATURES_DF)
 
     # CHOOSE: Cohort Parameters
     SELECTED_COHORT = scaled_complete_avg_cohort
-    SELECTED_COHORT_TITLE = 'scaled_complete_avg_cohort_metavision'         # TODO Reminder
+    SELECTED_COHORT_TITLE = 'scaled_complete_avg_cohort'
     SELECT_SAVE_FILES = True
     # Automated: Preprocessed Cohort
     SELECTED_COHORT_preprocessed = get_preprocessed_avg_cohort(avg_cohort=SELECTED_COHORT,
@@ -79,9 +81,6 @@ if __name__ == '__main__':
                                      'scaled_hemorrhage_avg_cohort': scaled_hemorrhage_cohort_preprocessed,
                                      'scaled_ischemic_avg_cohort': scaled_ischemic_cohort_preprocessed}
     print('STATUS: Preprocessing finished. \n')
-
-    # TODO NOW: correlation of categorical+flag-features must be calculated differently than continuous!
-        # Rho Test? Difference of p-value and r-value?
 
     # TODO next week: also need to change classification/clustering for categorical+flag-features!!!
     # TODO next week: add a Deep Learning model
@@ -113,7 +112,7 @@ if __name__ == '__main__':
 
     # Step 3.2) Correlation
     # Correlations
-    correlations.plot_correlations(use_this_function=True,  # True | False
+    correlations.plot_correlations(use_this_function=False,  # True | False
                                    use_plot_heatmap=False,
                                    use_plot_pairplot=False,
                                    cohort_title=SELECTED_COHORT_TITLE,
@@ -190,12 +189,26 @@ if __name__ == '__main__':
                                      selected_min_sample=SELECTED_MIN_SAMPLE,
                                      save_to_file=SELECT_SAVE_FILES)
 
-
     ### Machine Learning Predictions
     # Step 4.1) Classification: (RandomForest, XGBoost, ...)
     SELECTED_CLASSIFICATION_METHOD = 'XGBoost'  # options: RandomForest | XGBoost
     SELECTED_SAMPLING_METHOD = 'oversampling'  # options: no_sampling | oversampling | undersampling   -> estimation: oversampling > no_sampling > undersampling (very bad results)
     ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'XGBoost']
+    # Plot optimal RandomForest (based on GridSearchCV)
+    forest_plot = classification.plot_random_forest(use_this_function=False,  # True | False
+                                                    classification_method='RandomForest',
+                                                    sampling_method=SELECTED_SAMPLING_METHOD,
+                                                    selected_cohort=SELECTED_COHORT_preprocessed,
+                                                    cohort_title=SELECTED_COHORT_TITLE,
+                                                    use_case_name=USE_CASE_NAME,
+                                                    features_df=FEATURES_DF,
+                                                    selected_features=SELECTED_FEATURES,
+                                                    selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                    show_plot=True,
+                                                    use_grid_search=True,
+                                                    verbose=True,
+                                                    save_to_file=SELECT_SAVE_FILES
+                                                    )
     # Confusion Matrix (CM)
     cm = classification.get_confusion_matrix(use_this_function=False,  # True | False
                                              classification_method=SELECTED_CLASSIFICATION_METHOD,
@@ -206,6 +219,7 @@ if __name__ == '__main__':
                                              features_df=FEATURES_DF,
                                              selected_features=SELECTED_FEATURES,
                                              selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                             use_grid_search=True,
                                              verbose=True,
                                              save_to_file=SELECT_SAVE_FILES
                                              )
@@ -219,6 +233,7 @@ if __name__ == '__main__':
                                                       features_df=FEATURES_DF,
                                                       selected_features=SELECTED_FEATURES,
                                                       selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                      use_grid_search=True,
                                                       verbose=True,
                                                       save_to_file=SELECT_SAVE_FILES
                                                       )
@@ -233,9 +248,11 @@ if __name__ == '__main__':
                                              selected_features=SELECTED_FEATURES,
                                              selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                              show_plot=True,
+                                             use_grid_search=True,
                                              verbose=True,
                                              save_to_file=SELECT_SAVE_FILES
                                              )
+
 
     # Step 4.2) Deep Learning/Neural Network (might also be inside 4.1? Or only useful if based on timeseries?)
     # ...
@@ -248,6 +265,7 @@ if __name__ == '__main__':
                                                            all_cohorts_with_titles=ALL_COHORTS_WITH_TITLES,
                                                            all_classification_methods=ALL_CLASSIFICATION_METHODS,
                                                            all_dependent_variables=ALL_DEPENDENT_VARIABLES,
+                                                           use_grid_search=True,
                                                            save_to_file=SELECT_SAVE_FILES)
 
     # Input: selected_cohort and its ideal kmeans cluster-count
@@ -260,6 +278,7 @@ if __name__ == '__main__':
                                                              all_classification_methods=ALL_CLASSIFICATION_METHODS,
                                                              all_dependent_variables=ALL_DEPENDENT_VARIABLES,
                                                              selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
+                                                             use_grid_search=True,
                                                              check_sh_score=True,
                                                              save_to_file=SELECT_SAVE_FILES)
 

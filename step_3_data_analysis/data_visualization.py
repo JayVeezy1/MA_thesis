@@ -82,7 +82,8 @@ def display_pacmap(use_this_function: False, selected_cohort, cohort_title, use_
 
     if save_to_file:
         plt.savefig(
-            f'./output/{use_case_name}/data_visualization/PacMap_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png')
+            f'./output/{use_case_name}/data_visualization/PacMap_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png',
+                    dpi=600)
     plt.show()
     plt.close()
 

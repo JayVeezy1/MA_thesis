@@ -7,8 +7,11 @@ from matplotlib import pyplot as plt
 from numpy import ndarray
 from pandas.core.interchange import dataframe
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve
+from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve, make_scorer, \
+    accuracy_score, recall_score
 from sklearn.model_selection import train_test_split
+from sklearn.tree import plot_tree
+from sklearn.model_selection import GridSearchCV
 from imblearn.over_sampling import SMOTE, RandomOverSampler
 from imblearn.under_sampling import NearMiss
 from xgboost import XGBClassifier
@@ -30,6 +33,11 @@ def preprocess_for_classification(selected_cohort: dataframe, features_df: dataf
     selected_features.append(selected_dependent_variable)  # keeping selected_dependent_variable for clustering?
     try:
         selected_features.remove('icustay_id')
+    except ValueError as e:
+        pass
+    try:
+        selected_features.remove(
+            'dbsource')  # TODO: check how to handle the (factorized) categorical features for classification
     except ValueError as e:
         pass
 
@@ -123,6 +131,7 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
 def split_classification_data(selected_cohort: dataframe, cohort_title: str, features_df: dataframe,
                               selected_features: list,
                               selected_dependent_variable: str, classification_method: str, sampling_method: str,
+                              use_grid_search: False,
                               verbose: True):
     # Classification/Prediction on avg_patient_cohort
     # Cleanup & filtering
@@ -135,7 +144,8 @@ def split_classification_data(selected_cohort: dataframe, cohort_title: str, fea
 
     # Create basic training_test_split
     if classification_method == 'RandomForest':
-        clf = RandomForestClassifier(random_state=1321)  # old settings: n_estimators=100, max_depth=5, bootstrap=True,
+        clf = RandomForestClassifier(random_state=1321, oob_score=True)
+
     elif classification_method == 'XGBoost':
         clf = XGBClassifier()
     else:
@@ -146,6 +156,7 @@ def split_classification_data(selected_cohort: dataframe, cohort_title: str, fea
     # Split training/test-data
     x_train_basic, x_test_basic, y_train_basic, y_test_basic = train_test_split(avg_df_filtered, death_df,
                                                                                 test_size=0.2, random_state=1321)
+
     # If selected, get over-/under-sampled data
     try:
         x_train_final, x_test_final, y_train_final, y_test_final, sampling_title = get_sampled_data(clf,
@@ -159,6 +170,10 @@ def split_classification_data(selected_cohort: dataframe, cohort_title: str, fea
     except TypeError as e:
         return None
 
+    # optimize RF classifier
+    if classification_method == 'RandomForest' and use_grid_search:
+        clf = grid_search_optimal_RF(clf, x_train_final, y_train_final, verbose)
+
     # this is the training step, prediction will be inside the Classification Report
     clf.fit(X=x_train_final, y=y_train_final)
 
@@ -168,7 +183,7 @@ def split_classification_data(selected_cohort: dataframe, cohort_title: str, fea
 def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, cohort_title: str,
                          features_df: dataframe,
                          selected_features: list, selected_dependent_variable: str, classification_method: str,
-                         sampling_method: str, use_case_name, save_to_file, verbose: True):
+                         sampling_method: str, use_case_name, save_to_file, use_grid_search, verbose: True):
     # calculate the CM, return: CM as dataframe
     if not use_this_function:
         return None
@@ -176,7 +191,7 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
     # get_classification_basics
     clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
         selected_cohort, cohort_title, features_df, selected_features,
-        selected_dependent_variable, classification_method, sampling_method, verbose)
+        selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
 
     # Get CM
     cm: ndarray = confusion_matrix(y_test_basic,
@@ -188,10 +203,12 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
             "predicts_no_death": {"death": cm[1][0], "no_death": cm[0][0]}
         })
     except IndexError as e:
-        print(f'WARNING: Confusion Matrix does not have all columns/rows. Probably no death cases in {cohort_title} (y_test_basic only 0).'
-              f'Calculation of Classification Report is not possible for this cohort.')
+        print(
+            f'WARNING: Confusion Matrix does not have all columns/rows. Probably no death cases in {cohort_title} (y_test_basic only 0).'
+            f'Calculation of Classification Report is not possible for this cohort.')
         cm_df = pd.DataFrame({
-            "predicts_death": {"death": 0, "no_death": 0},          # use 0 instead of np.nan -> will be caught in calculation of accuracy, recall, etc.
+            "predicts_death": {"death": 0, "no_death": 0},
+            # use 0 instead of np.nan -> will be caught in calculation of accuracy, recall, etc.
             "predicts_no_death": {"death": 0, "no_death": 0}
         })
 
@@ -245,7 +262,8 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
         if classification_method == 'RandomForest':
             classification_method = 'RF'
         plt.savefig(
-            f'./output/{use_case_name}/classification/CM_{classification_method}_{cohort_title}_{sampling_title}_{current_time}_new.png')
+            f'./output/{use_case_name}/classification/CM_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png',
+            dpi=600)
         plt.show()
         plt.close()
 
@@ -262,7 +280,7 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
 def get_classification_report(use_this_function: False, selected_cohort: dataframe, cohort_title: str,
                               features_df: dataframe,
                               selected_features: list, selected_dependent_variable: str, classification_method: str,
-                              sampling_method: str, use_case_name, save_to_file, verbose: True):
+                              sampling_method: str, use_case_name, save_to_file, use_grid_search: False, verbose: True):
     # calculate the CM and return the corresponding ClassificationReport
     if not use_this_function:
         return None
@@ -270,7 +288,7 @@ def get_classification_report(use_this_function: False, selected_cohort: datafra
     # get_classification_basics
     clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
         selected_cohort, cohort_title, features_df, selected_features,
-        selected_dependent_variable, classification_method, sampling_method, verbose)
+        selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
 
     report = classification_report(y_test_basic, clf.predict(x_test_basic))
     if verbose:
@@ -291,7 +309,8 @@ def get_classification_report(use_this_function: False, selected_cohort: datafra
 
 def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_title: str, features_df: dataframe,
                   selected_features: list, selected_dependent_variable: str, classification_method: str,
-                  sampling_method: str, use_case_name, show_plot: False, save_to_file: False, verbose: True):
+                  sampling_method: str, use_case_name, show_plot: False, save_to_file: False, use_grid_search: False,
+                  verbose: True):
     # calculate & plot the AUROC, return: auc_score
     if not use_this_function:
         return None
@@ -299,7 +318,7 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
     # split_classification_data
     clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
         selected_cohort, cohort_title, features_df, selected_features,
-        selected_dependent_variable, classification_method, sampling_method, verbose)
+        selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
 
     # Calculate predictions for x_test
     clf_probs = clf.predict_proba(x_test_basic)  # Prediction probabilities (= estimated values of prediction)
@@ -318,7 +337,8 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
     # Get false-positive-rate = x-axis and true-positive-rate = y-axis
     if y_test_basic.sum() == 0:
         print('WARNING: No death cases in y_test_basic. Calculation of roc_curve not possible.')
-        warnings.filterwarnings(action='ignore', message='No positive samples in y_true, true positive value should be meaningless')    # UndefinedMetricWarning:
+        warnings.filterwarnings(action='ignore',
+                                message='No positive samples in y_true, true positive value should be meaningless')  # UndefinedMetricWarning:
         clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, clf_probs)
     else:
         clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, clf_probs)
@@ -341,7 +361,7 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
 
     if save_to_file:
         auroc_filename = f'./output/{use_case_name}/classification/AUROC_{classification_method}_{cohort_title}_{sampling_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png'
-        plt.savefig(auroc_filename)
+        plt.savefig(auroc_filename, dpi=600)
         print(f'STATUS: AUROC was saved to {auroc_filename}')
 
     if show_plot:
@@ -352,7 +372,9 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
 
 def get_accuracy(cm_df):
     # (TP + TN) / (TP + FP + FN + TN)
-    sum_all_cases = (cm_df['predicts_death']['death'] + cm_df['predicts_no_death']['no_death'] + cm_df['predicts_no_death']['death'] + cm_df['predicts_death']['no_death'])
+    sum_all_cases = (
+            cm_df['predicts_death']['death'] + cm_df['predicts_no_death']['no_death'] + cm_df['predicts_no_death'][
+        'death'] + cm_df['predicts_death']['no_death'])
     if sum_all_cases == 0:
         accuracy = 0
     else:
@@ -365,7 +387,9 @@ def get_recall(cm_df):
     if (cm_df['predicts_death']['death'] + cm_df['predicts_no_death']['death']) == 0:
         recall = 0
     else:
-        recall = round(cm_df['predicts_death']['death'] / (cm_df['predicts_death']['death'] + cm_df['predicts_no_death']['death']), 3)
+        recall = round(
+            cm_df['predicts_death']['death'] / (cm_df['predicts_death']['death'] + cm_df['predicts_no_death']['death']),
+            3)
     return recall
 
 
@@ -374,14 +398,16 @@ def get_precision(cm_df):
     if (cm_df['predicts_death']['death'] + cm_df['predicts_death']['no_death']) == 0:
         precision = 0
     else:
-        precision = round(cm_df['predicts_death']['death'] / (cm_df['predicts_death']['death'] + cm_df['predicts_death']['no_death']), 3)
+        precision = round(
+            cm_df['predicts_death']['death'] / (cm_df['predicts_death']['death'] + cm_df['predicts_death']['no_death']),
+            3)
     return precision
 
 
 def compare_classification_models_on_cohort(use_this_function, use_case_name, features_df, selected_features,
                                             all_cohorts_with_titles,
                                             all_classification_methods,
-                                            all_dependent_variables, save_to_file):
+                                            all_dependent_variables, use_grid_search, save_to_file):
     # calculate & plot the AUROC, return: auc_score
     if not use_this_function:
         return None
@@ -417,6 +443,7 @@ def compare_classification_models_on_cohort(use_this_function, use_case_name, fe
                                                         features_df=features_df,
                                                         selected_features=selected_features,
                                                         selected_dependent_variable=dependent_variable,
+                                                        use_grid_search=use_grid_search,
                                                         verbose=False,
                                                         save_to_file=False
                                                         )
@@ -449,7 +476,8 @@ def compare_classification_models_on_cohort(use_this_function, use_case_name, fe
 
 def compare_classification_models_on_clusters(use_this_function, use_case_name, features_df, selected_features,
                                               selected_cohort, all_classification_methods, all_dependent_variables,
-                                              selected_k_means_count, check_sh_score, save_to_file):
+                                              selected_k_means_count, check_sh_score, use_grid_search: False,
+                                              save_to_file):
     # calculate prediction quality per cluster, save into table classification_clusters_overview
     # todo long term: this is only for kmeans, also add for other clustering methods (dynamic like DBSCAN and ASDF also possible?)
     if not use_this_function:
@@ -502,6 +530,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                                           features_df=features_df,
                                                           selected_features=selected_features,
                                                           selected_dependent_variable=dependent_variable,
+                                                          use_grid_search=use_grid_search,
                                                           verbose=False,
                                                           save_to_file=False
                                                           )
@@ -532,6 +561,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                           selected_features=selected_features,
                                           selected_dependent_variable=dependent_variable,
                                           show_plot=False,
+                                          use_grid_search=use_grid_search,
                                           verbose=False,
                                           save_to_file=False
                                           )
@@ -544,6 +574,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                                         features_df=features_df,
                                                         selected_features=selected_features,
                                                         selected_dependent_variable=dependent_variable,
+                                                        use_grid_search=use_grid_search,
                                                         verbose=False,
                                                         save_to_file=False
                                                         )
@@ -570,5 +601,78 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
     else:
         print('CHECK: classification_clusters_overview:')
         print(classification_clusters_overview)
+
+    return None
+
+
+def grid_search_optimal_RF(clf, x_train_final, y_train_final, verbose: False):
+    # Concept from https://www.analyticsvidhya.com/blog/2021/06/understanding-random-forest/#:~:text=One%20of%20the%20most%20important,in%20the%20case%20of%20classification.
+    # Instantiate the grid search model
+    params = {'max_depth': [2, 3, 5, 10],  # removed 20, plot to big
+              'min_samples_leaf': [5, 10, 20, 50, 100],     # removed 200, not needed
+              'n_estimators': [10, 25, 30, 50, 100, 200]}
+    scoring = {'AUC': 'roc_auc', 'Accuracy': make_scorer(accuracy_score), 'Recall': make_scorer(recall_score)}
+    grid_search = GridSearchCV(estimator=clf,
+                               param_grid=params,
+                               scoring=scoring,
+                               refit='Recall',
+                               cv=5,
+                               n_jobs=-1, verbose=0)
+
+    # Supress warning does not work somehow
+    with warnings.catch_warnings():
+        warnings.filterwarnings(action='ignore', category=UserWarning)
+        grid_search.fit(x_train_final, y_train_final)
+        # UserWarning: Some inputs do not have OOB scores. This probably means too few trees were used to compute any reliable OOB estimates.
+
+    # Return best settings
+    best_score = grid_search.best_score_
+    rf_best = grid_search.best_estimator_
+    feature_importance_df = pd.DataFrame({
+        "feature": x_train_final.columns,
+        "importance": rf_best.feature_importances_
+    })
+    feature_importance_df.sort_values(by='importance', ascending=False, inplace=True)
+
+    if verbose:
+        print('CHECK GridSearchCV result: best_score (oob_score) for RF after GridSearchCV:', best_score)  # out-of-bag score
+        print(f'CHECK GridSearchCV result: optimal RF settings:', rf_best)
+        print('CHECK GridSearchCV result: Feature Importance: \n', feature_importance_df)
+
+    return rf_best
+
+
+def plot_random_forest(use_this_function, classification_method, sampling_method, selected_cohort, cohort_title,
+                       use_case_name, features_df, selected_features, selected_dependent_variable, show_plot, verbose,
+                       use_grid_search, save_to_file):
+    # Calculate GridSearchCV to find optimal RF setting, then plot the RF for feature importance
+    if not use_this_function:
+        return None
+
+    selected_features.remove('stroke_type')
+
+    # get_classification_basics
+    clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
+        selected_cohort, cohort_title, features_df, selected_features, selected_dependent_variable, classification_method,
+        sampling_method, use_grid_search, verbose)
+
+    # Plot optimal RF
+    plt.figure(figsize=(10, 8), dpi=900)  # figsize=(40, 20) makes plot too large
+    random_decision_tree = clf.estimators_[5]
+    plot_tree(decision_tree=random_decision_tree, feature_names=x_train_final.columns, class_names=['death', 'no_death'],
+              filled=True)
+    # inside each node in the decision_tree plot:
+    # feature <= decisive-value,
+    # gini = entropy,
+    # samples = sum of training-data,
+    # value[count(class_0), count(class_1)] with counts of complete-data,
+    # decision-of-tree = class_0/class_1
+
+    if save_to_file:
+        current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
+        plt.savefig(f'./output/{use_case_name}/classification/RF_plot_{cohort_title}_{sampling_title}_{current_time}.png')
+    if show_plot:
+        plt.show()
+    plt.close()
 
     return None
