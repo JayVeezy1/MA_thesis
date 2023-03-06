@@ -186,10 +186,12 @@ def get_correlations_to_dependent_var(selected_cohort: dataframe, features_df: d
     # method: simply .corr -> r-value | significance = pearsonr -> p-value
     continuous_corr = get_continuous_corr(continuous_cohort, selected_dependent_variable)
     # 2.2) Get correlation and validity for categorical
-    # method: Cramer’s V (symmetrical) or Theil’s U (asymmetrical) | significance = Chi-Squared but if occurrence of one category is < 5 chi-squared is not possible -> use "Fisher’s exact test"
+    # todo future research: if occurrence of one category is < 5 chi-squared is not possible -> use "Fisher’s exact test"
+    # method: Cramer’s V (symmetrical) or Theil’s U (asymmetrical) | significance = Chi-Squared
     categorical_corr = get_categorical_corr(categorical_cohort, selected_dependent_variable)
     # 2.3) Get correlation and validity for binary
-    # method: tetrachoric correlation, works with .corr() | significance = McNemar’s chi-square
+    # todo future research: currently chi-squared works fine, but maybe better to use McNemar’s chi-square?
+    # method: tetrachoric correlation, works with .corr() | significance = chi-square
     binary_corr = get_binary_corr(binary_cohort, selected_dependent_variable)
 
     ## 3) Merge correlations and validity dfs again

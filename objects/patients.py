@@ -52,7 +52,6 @@ def get_clean_raw_data(patient_data: dataframe, feature_df: dataframe) -> datafr
     cleaned_raw_data.loc[cleaned_raw_data['ethnicity'] == 'ASIAN - KOREAN', 'ethnicity'] = 'ASIAN'
 
     # Factorize categorical features
-    # TODO NOW: get values from FACTORIZATION_TABLE, remove factorization in all the other scripts, check if correlations have changed because now categorical features 'logical' or interpretable
     factorization_df = pd.read_excel('./supplements/FACTORIZATION_TABLE.xlsx')      # columns: feature	unfactorized_value	factorized_value
     for feature in pd.unique(factorization_df['feature']).tolist():
         temp_factorization_df = factorization_df.loc[factorization_df['feature'] == feature]

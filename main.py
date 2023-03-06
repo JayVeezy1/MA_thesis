@@ -82,16 +82,17 @@ if __name__ == '__main__':
                                      'scaled_ischemic_avg_cohort': scaled_ischemic_cohort_preprocessed}
     print('STATUS: Preprocessing finished. \n')
 
-    # TODO next week: also need to change classification/clustering for categorical+flag-features!!!
-    # TODO next week: add a Deep Learning model
-    # todo next week write: correlations etc. into overleaf, then which model has best results for now? -> this is a first part-result, should be comparable to papers
+    # TODO this week: add a Deep Learning model
+    # TODO this week: also need to change clustering + classification for categorical+flag-features!!!
+    # also add SHAPley values (+ shap waterfalls, with this different importance for subgroups, comparable to correlations) and AUPRC
+    # TODO write: update pacmap + clustering + predictions into overleaf, then which model has best results for now? -> this is a first part-result, should be comparable to papers
 
-    # todo check: classification has to be done multiple time and then use avg to evaluate? Is it 'allowed' to use OASIS score in classification?
     # todo check: include the fairness package? https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md Also in general the AI Responsible package useful as a dashboard?
     # todo after: analyze clusters for 'fairness' -> bridge to ASDF Dashboard
 
     # todo long term: add 'decision-boundary-plot' to visualize the clustering (on 2 features)
     # todo long term: add 3-features-visualization plot (like pacmap but with real dimensions)
+    # todo questions: classification has to be done multiple time and then use avg to evaluate? Is it 'allowed' to use OASIS score in classification?
 
     ### Data Analysis
     # Step 3.1) General Statistics
@@ -112,7 +113,7 @@ if __name__ == '__main__':
 
     # Step 3.2) Correlation
     # Correlations
-    correlations.plot_correlations(use_this_function=False,  # True | False
+    correlations.plot_correlations(use_this_function=True,  # True | False
                                    use_plot_heatmap=False,
                                    use_plot_pairplot=False,
                                    cohort_title=SELECTED_COHORT_TITLE,
