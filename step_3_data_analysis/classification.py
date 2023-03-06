@@ -255,7 +255,7 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
         # titles and legends
         plt.tick_params(axis='x', which='major', labelsize=11, labelbottom=False, bottom=False, top=False,
                         labeltop=True)
-        ax1.set_title(f"{classification_method} on {cohort_title}, {sampling_title}")
+        ax1.set_title(f"{classification_method} on {cohort_title}, {sampling_title}", wrap=True)
         plt.tight_layout()
 
         # save plot

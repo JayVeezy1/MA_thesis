@@ -66,7 +66,7 @@ def display_pacmap(use_this_function: False, selected_cohort, cohort_title, use_
     # Plot PacMap
     fig = plt.figure()
     ax1 = fig.add_subplot(1, 1, 1, projection='3d')
-    ax1.set_title(f'PaCMAP visualization of {cohort_title} with {selected_dependent_variable}')
+    ax1.set_title(f'PaCMAP visualization of {cohort_title} with {selected_dependent_variable}', wrap=True)
     ax1.scatter(pacmap_data_points[:, 0],
                 pacmap_data_points[:, 1],
                 pacmap_data_points[:, 2],

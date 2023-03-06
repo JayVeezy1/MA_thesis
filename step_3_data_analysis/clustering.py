@@ -147,7 +147,7 @@ def plot_sh_score_kmeans(use_this_function: False, selected_cohort, cohort_title
     sh_color = '#B00000'
     ax2.plot(krange, avg_silhouettes, color=sh_color, marker=".")
     ax2.set_ylabel('Silhouette Score', color=sh_color, fontsize=14)
-    plt.title(f'SSE and Silhouette Score for k-Means on {cohort_title}')
+    plt.title(f'SSE and Silhouette Score for k-Means on {cohort_title}', wrap=True)
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
@@ -488,7 +488,7 @@ def plot_sh_score_DBSCAN(use_this_function, selected_cohort, cohort_title, use_c
 
     # Plot Silhouette Scores
     plt.figure(dpi=100)
-    plt.title(f'Silhouette Scores, DBSCAN on {cohort_title}, min_sample: {best_min_sample}')
+    plt.title(f'Silhouette Scores, DBSCAN on {cohort_title}, min_sample: {best_min_sample}', wrap=True)
     plt.plot(eps_range, best_avg_silhouettes)  # for DBSCAN use eps_range instead of krange
     plt.xlabel("$eps$")
     plt.ylabel("Average Silhouettes Score")

@@ -5,8 +5,8 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 from pandas.core.interchange import dataframe
-from scipy.stats import stats, chi2_contingency     # also for chi2_contingency
-from dython.nominal import associations             # for categorical correlation
+from scipy.stats import stats, chi2_contingency  # also for chi2_contingency
+from dython.nominal import associations  # for categorical correlation
 
 
 def preprocess_for_correlation(selected_cohort: dataframe, features_df: dataframe, selected_features: list,
@@ -237,19 +237,33 @@ def plot_correlations(use_this_function: False, use_plot_heatmap: False, use_plo
         else:
             labels.append(feature + ' ()')
 
+    # old version with correlation on x-axis
     # make certain minimum of x_axis is 0.4
-    y_axis = max(max_value, min_value) + 0.05
-    if y_axis < 0.4:
-        y_axis = 0.4
-    ax1.bar([i for i in range(len(correlation_values))],
-            [value for value in correlation_values], label=labels,
-            color=[color((value - min_value) / 0.5) for value in correlation_values])  # (max_value + 0.05 - min_value))
-    ax1.set_xticks([i for i in range(len(correlation_values))])
-    ax1.set_xticklabels(labels)
-    ax1.set_ylim([-y_axis, y_axis])  # correlation over 0.4 is not expected
-    ax1.set_title(f"Correlation to {selected_dependent_variable} for {cohort_title}")
-    plt.xticks(rotation=90)
+    # y_axis = max(max_value, min_value) + 0.05
+    # if y_axis < 0.4:
+    #     y_axis = 0.4
+    # ax1.bar([i for i in range(len(correlation_values))],
+    #         [value for value in correlation_values], label=labels,
+    #         color=[color((value - min_value) / 0.5) for value in correlation_values])  # (max_value + 0.05 - min_value))
+    # ax1.set_xticks([i for i in range(len(correlation_values))])
+    # ax1.set_xticklabels(labels)
+    # ax1.set_ylim([-y_axis, y_axis])  # correlation over 0.4 is not expected
+    # ax1.set_title(f"Correlation to {selected_dependent_variable} for {cohort_title}", wrap=True)
+    # plt.xticks(rotation=90)
+    # fig.tight_layout()
+
+    # horizontal barplot for correlations on y-axis
+    labels.reverse()
+    correlation_values = correlation_values.iloc[::-1]
+    ax1.barh(y=[i for i, label in enumerate(labels)],
+             width=correlation_values,               # reverse correlation_values so very high correlations at top
+             color=[color((value - min_value) / 0.5) for value in
+                    correlation_values])
+    ax1.set_yticks([i for i in range(len(correlation_values))])
+    ax1.set_yticklabels(labels)
+    ax1.set_title(f'Correlation to {selected_dependent_variable} for {cohort_title}', wrap=True)
     fig.tight_layout()
+
     if save_to_file:
         plt.savefig(
             f'./output/{use_case_name}/correlations/correlation_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png',
@@ -287,7 +301,8 @@ def plot_heatmap(cohort_title: str, selected_cohort: dataframe, features_df: dat
         pass
 
     if len(preprocessed_features) > 25:
-        print('WARNING: More than 25 features selected for heatmap. Plot result will not be usable. plot_heatmap is terminated.')
+        print(
+            'WARNING: More than 25 features selected for heatmap. Plot result will not be usable. plot_heatmap is terminated.')
         return None
     elif len(preprocessed_features) > 15:
         print('WARNING: More than 15 features selected for heatmap. plot_heatmap might take longer.')
@@ -303,7 +318,7 @@ def plot_heatmap(cohort_title: str, selected_cohort: dataframe, features_df: dat
     sns.heatmap(data=avg_df_corr_without_nan.to_numpy(), vmin=-1, vmax=1, linewidths=0.5,
                 cmap='bwr', yticklabels=preprocessed_features, xticklabels=preprocessed_features, ax=ax2,
                 mask=triangle_mask)
-    ax2.set_title(f'Correlations in {cohort_title}')
+    ax2.set_title(f'Correlations in {cohort_title}', wrap=True)
     fig.tight_layout()
 
     if save_to_file:
@@ -337,12 +352,12 @@ def plot_pairplot(cohort_title: str, selected_cohort: dataframe, features_df: da
 
     # Check amount of features
     if len(preprocessed_features) > 20:
-        print('WARNING: More than 20 features selected for pairplot. Plot result will not be usable. plot_pairplot is terminated.')
+        print(
+            'WARNING: More than 20 features selected for pairplot. Plot result will not be usable. plot_pairplot is terminated.')
         return None
     elif len(preprocessed_features) > 15:
         print('WARNING: More than 15 features selected for pairplot. plot_pairplot might take longer.')
     print('STATUS: Plotting plot_pairplot.')
-
 
     # Get selected_labels_df
     selected_labels_df = preprocessed_cohort.filter(preprocessed_features, axis=1)
