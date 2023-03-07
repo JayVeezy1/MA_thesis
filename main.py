@@ -136,21 +136,14 @@ if __name__ == '__main__':
                                       features_df=FEATURES_DF,
                                       selected_features=SELECTED_FEATURES,
                                       selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                      use_encoding=True,
                                       save_to_file=SELECT_SAVE_FILES)
 
     # Step 3.4) Clustering (kmeans, DBSCAN, ...)
-    # kmeans: optimal cluster count with sh_score and distortion (SSE) - can be bad if too many features selected
-    clustering.plot_sh_score_kmeans(use_this_function=False,  # True | False
-                                    selected_cohort=SELECTED_COHORT_preprocessed,
-                                    cohort_title=SELECTED_COHORT_TITLE,
-                                    use_case_name=USE_CASE_NAME,
-                                    features_df=FEATURES_DF,
-                                    selected_features=SELECTED_FEATURES,
-                                    selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                    save_to_file=SELECT_SAVE_FILES)
-    # kmeans: plotting
-    SELECTED_KMEANS_CLUSTERS_COUNT = 9  # manually checking silhouette score shows optimal cluster count (higher is better)
+    # KMEANS
+    SELECTED_KMEANS_CLUSTERS_COUNT = 7  # manually checking silhouette score shows optimal cluster count (higher is better)
     clustering.plot_k_means_on_pacmap(use_this_function=False,  # True | False
+                                      display_sh_score=False,
                                       selected_cohort=SELECTED_COHORT_preprocessed,
                                       cohort_title=SELECTED_COHORT_TITLE,
                                       use_case_name=USE_CASE_NAME,
@@ -158,7 +151,13 @@ if __name__ == '__main__':
                                       selected_features=SELECTED_FEATURES,
                                       selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                       selected_cluster_count=SELECTED_KMEANS_CLUSTERS_COUNT,
+                                      use_encoding=True,
                                       save_to_file=SELECT_SAVE_FILES)
+
+    # todo: add k-prototypes for mix of continuous and categorical, make k-means only for continuous or with one-hot-encoding
+    # Actual clustering
+    # kproto = KPrototypes(n_clusters= 15, init='Cao', n_jobs = 4)
+    # clusters = kproto.fit_predict(kprot_data, categorical=categorical_columns)v
 
     # kmeans: Cluster Comparison (only for manually selected_cluster_count -> only kmeans)
     clusters_overview_table = clustering.calculate_clusters_overview_table(use_this_function=False,  # True | False
@@ -169,21 +168,14 @@ if __name__ == '__main__':
                                                                            selected_features=SELECTED_FEATURES,
                                                                            selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                                                            selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
+                                                                           use_encoding=True,
                                                                            save_to_file=SELECT_SAVE_FILES)
 
-    # DBSCAN: sh_score
-    clustering.plot_sh_score_DBSCAN(use_this_function=False,  # True | False
-                                    selected_cohort=SELECTED_COHORT_preprocessed,
-                                    cohort_title=SELECTED_COHORT_TITLE,
-                                    use_case_name=USE_CASE_NAME,
-                                    features_df=FEATURES_DF,
-                                    selected_features=SELECTED_FEATURES,
-                                    selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                    save_to_file=SELECT_SAVE_FILES)
-    # DBSCAN: plotting
-    SELECTED_EPS = 0.5  # manually checking silhouette score shows optimal epsilon-min_sample-combination
-    SELECTED_MIN_SAMPLE = 6
-    clustering.plot_DBSCAN_on_pacmap(use_this_function=False,  # True | False
+    # DBSCAN
+    SELECTED_EPS = 0.7  # manually checking silhouette score shows optimal epsilon-min_sample-combination
+    SELECTED_MIN_SAMPLE = 5
+    clustering.plot_DBSCAN_on_pacmap(use_this_function=True,  # True | False
+                                     display_sh_score=False,
                                      selected_cohort=SELECTED_COHORT_preprocessed,
                                      cohort_title=SELECTED_COHORT_TITLE,
                                      use_case_name=USE_CASE_NAME,
@@ -192,11 +184,12 @@ if __name__ == '__main__':
                                      selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                      selected_eps=SELECTED_EPS,
                                      selected_min_sample=SELECTED_MIN_SAMPLE,
+                                     use_encoding=True,
                                      save_to_file=SELECT_SAVE_FILES)
 
     ### Machine Learning Predictions
     # Step 4.1) Classification: (RandomForest, XGBoost, ...)
-    SELECTED_CLASSIFICATION_METHOD = 'XGBoost'  # options: RandomForest | XGBoost
+    SELECTED_CLASSIFICATION_METHOD = 'RandomForest'  # options: RandomForest | XGBoost
     SELECTED_SAMPLING_METHOD = 'oversampling'  # options: no_sampling | oversampling | undersampling   -> estimation: oversampling > no_sampling > undersampling (very bad results)
     ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'XGBoost']
     # Plot optimal RandomForest (based on GridSearchCV)
@@ -229,7 +222,7 @@ if __name__ == '__main__':
                                              save_to_file=SELECT_SAVE_FILES
                                              )
     # Classification Report
-    report = classification.get_classification_report(use_this_function=True,  # True | False
+    report = classification.get_classification_report(use_this_function=False,  # True | False
                                                       classification_method=SELECTED_CLASSIFICATION_METHOD,
                                                       sampling_method=SELECTED_SAMPLING_METHOD,
                                                       selected_cohort=SELECTED_COHORT_preprocessed,
@@ -275,6 +268,8 @@ if __name__ == '__main__':
 
     # Input: selected_cohort and its ideal kmeans cluster-count
     # Output: table of prediction quality per cluster, rows = different model configs (per classification_method and dependent_variable)
+    # todo: use this analysis to compare clusters: https://antonsruberts.github.io/kproto-audience/
+    # also get shapely function from there
     classification.compare_classification_models_on_clusters(use_this_function=False,  # True | False
                                                              use_case_name=USE_CASE_NAME,
                                                              features_df=FEATURES_DF,

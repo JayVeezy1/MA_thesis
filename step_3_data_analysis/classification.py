@@ -6,7 +6,6 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from numpy import ndarray
 from pandas.core.interchange import dataframe
-from sklearn.preprocessing import OneHotEncoder
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve, make_scorer, \
     accuracy_score, recall_score
@@ -18,22 +17,9 @@ from imblearn.under_sampling import NearMiss
 from xgboost import XGBClassifier
 import seaborn as sn
 
+from step_2_preprocessing.preprocessing_functions import get_one_hot_encoding
 from step_3_data_analysis.clustering import get_kmeans_clusters, plot_sh_score_kmeans
 
-
-# also a function needed to turn one-hot-encoding back?
-def get_one_hot_encoding(selected_cohort, categorical_features):
-    for feature in categorical_features:
-        encoder = OneHotEncoder()
-        onehotarray = encoder.fit_transform(selected_cohort[[feature]]).toarray()
-        items = [f'{feature}_{item}' for item in encoder.categories_[0]]
-        selected_cohort[items] = onehotarray
-        selected_cohort.drop(columns=feature, inplace=True)  # remove original column
-
-    print('CHECK: count of selected_cohort features after encoding:', len(selected_cohort.columns))
-    # print('CHECK: selected_cohort features after encoding:', selected_cohort.columns)
-
-    return selected_cohort
 
 
 def preprocess_for_classification(selected_cohort: dataframe, features_df: dataframe, selected_features: list,
@@ -57,9 +43,14 @@ def preprocess_for_classification(selected_cohort: dataframe, features_df: dataf
     categorical_features = features_df['feature_name'].loc[
         features_df['categorical_or_continuous'] == 'categorical'].to_list()
     categorical_features = [x for x in categorical_features if x in selected_features]
-    encoded_cohort = get_one_hot_encoding(selected_cohort, categorical_features)        # raises recall from 0.56 to 0.58 for XGBOOST
+    selected_cohort = get_one_hot_encoding(selected_cohort, categorical_features)        # raises recall from 0.56 to 0.58 for XGBOOST
 
-    return encoded_cohort   # dependent_variable will be needed and then removed outside
+    try:
+        selected_cohort.drop(columns='icustay_id', inplace=True)
+    except KeyError as e:
+        pass
+
+    return selected_cohort   # dependent_variable will be needed and then removed outside
 
 
 def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_train, basic_y_test, cohort_title,

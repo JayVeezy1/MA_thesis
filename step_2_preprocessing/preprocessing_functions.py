@@ -1,6 +1,23 @@
 import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
 
 
+# also a function needed to turn one-hot-encoding back?
+def get_one_hot_encoding(selected_cohort, categorical_features):
+    for feature in categorical_features:
+        encoder = OneHotEncoder()
+        onehotarray = encoder.fit_transform(selected_cohort[[feature]]).toarray()
+        items = [f'{feature}_{item}' for item in encoder.categories_[0]]
+        selected_cohort[items] = onehotarray
+        selected_cohort.drop(columns=feature, inplace=True)  # remove original column
+
+    print('CHECK: count of selected_cohort features after encoding:', len(selected_cohort.columns))
+    # print('CHECK: selected_cohort features after encoding:', selected_cohort.columns)
+
+    return selected_cohort
+
+
+# not used anymore
 def create_factorization_table(avg_cohort, features_df, cohort_title, features_to_remove):
     # todo future work: check if this automatic factorization was actually a good solution for categorical features?
     features_to_factorize = features_df['feature_name'].loc[

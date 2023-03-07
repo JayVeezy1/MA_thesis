@@ -10,10 +10,16 @@ from pandas.core.interchange import dataframe
 from sklearn.cluster import KMeans, DBSCAN
 from sklearn.metrics import silhouette_score
 
+from step_2_preprocessing.preprocessing_functions import get_one_hot_encoding
 from step_3_data_analysis import data_visualization
 
 
-def preprocess_for_clustering(avg_cohort, features_df, selected_features, selected_dependent_variable):
+def preprocess_for_clustering(selected_cohort, features_df, selected_features, selected_dependent_variable,
+                              use_encoding: False):
+    # Removal of known features_to_remove
+    features_to_remove = features_df['feature_name'].loc[features_df['must_be_removed'] == 'yes'].to_list()
+    selected_features = [x for x in selected_features if x not in features_to_remove]
+
     # Preprocessing for Clustering: Remove the not selected prediction_variables and icustay_id
     prediction_variables = features_df['feature_name'].loc[
         features_df['potential_for_analysis'] == 'prediction_variable'].to_list()
@@ -22,35 +28,35 @@ def preprocess_for_clustering(avg_cohort, features_df, selected_features, select
             selected_features.remove(feature)
         except ValueError as e:
             pass
-    # selected_features.append(selected_dependent_variable)     # if used for prediction selected_dependent_variable can not be included
+    selected_cohort = selected_cohort[selected_features].fillna(0)
+
+    if use_encoding:
+        # Encoding of categorical features (one hot encoding)
+        categorical_features = features_df['feature_name'].loc[
+            features_df['categorical_or_continuous'] == 'categorical'].to_list()
+        categorical_features = [x for x in categorical_features if x in selected_features]
+        selected_cohort = get_one_hot_encoding(selected_cohort, categorical_features)
+
     try:
-        selected_features.remove('icustay_id')
-    except ValueError as e:
-        pass
-    try:
-        selected_features.remove('dbsource')  # not useful for clustering
-    except ValueError as e:
-        pass
-    try:
-        selected_features.remove('stroke_type')  # stroke_type not reliable for clustering
-    except ValueError as e:
+        selected_cohort.drop(columns='icustay_id', inplace=True)
+    except KeyError as e:
         pass
 
     # print(f'CHECK: {len(selected_features)} features used for Clustering.')
-    # print(f'CHECK: {len(selected_features)} features used for Clustering: ', selected_features)  # dependent_variable might be removed outside
-    avg_cohort_without_nan = avg_cohort[selected_features].fillna(0)
 
-    return avg_cohort_without_nan.to_numpy()
+    return selected_cohort.to_numpy()
 
 
 def get_ids_for_cluster(avg_patient_cohort, cohort_title, features_df, selected_features, selected_dependent_variable,
-                        selected_k_means_count, selected_cluster, verbose: False) -> list | None:
+                        selected_k_means_count, selected_cluster, use_encoding, verbose: False) -> list | None:
     if selected_cluster > selected_k_means_count - 1:
         print('ERROR: selected_cluster number must be < selected_k_means_count.')
         return None
 
     # transform df to np
-    avg_np = preprocess_for_clustering(avg_patient_cohort, features_df, selected_features.copy(), selected_dependent_variable)      # use selected_features.copy() because in function other dependent variables are remove
+    avg_np = preprocess_for_clustering(avg_patient_cohort, features_df, selected_features.copy(),
+                                       selected_dependent_variable,
+                                       use_encoding)  # use selected_features.copy() because in function other dependent variables are remove
 
     # get the cluster for selected_k_means_count -> currently this function is not for DBSCAN, because dynamic cluster count there
     k_means_list, sh_score, inertia = calculate_cluster_kmeans(avg_np, cohort_title, n_clusters=selected_k_means_count,
@@ -60,7 +66,8 @@ def get_ids_for_cluster(avg_patient_cohort, cohort_title, features_df, selected_
     clusters_df: dataframe = pd.DataFrame({'icustay_id': avg_patient_cohort['icustay_id'], 'cluster': k_means_list})
 
     if verbose:
-        print(f'CHECK: Count of patients for cluster {selected_cluster}: {len(clusters_df["icustay_id"][clusters_df["cluster"] == selected_cluster])}')
+        print(
+            f'CHECK: Count of patients for cluster {selected_cluster}: {len(clusters_df["icustay_id"][clusters_df["cluster"] == selected_cluster])}')
 
     return clusters_df['icustay_id'][clusters_df['cluster'] == selected_cluster].to_list()
 
@@ -73,7 +80,7 @@ def plot_clusters_on_3D_pacmap(plot_title, use_case_name, pacmap_data_points, cl
 
     fig = plt.figure()
     fig.tight_layout(h_pad=2, w_pad=2)
-    plt.suptitle(f'{plot_title} for clusters: {cluster_count}, sh_score: {sh_score}')
+    plt.suptitle(f'{plot_title} for clusters: {cluster_count}, sh_score: {sh_score}', wrap=True)
     ax1 = fig.add_subplot(1, 1, 1, projection='3d')
 
     ax1.scatter(pacmap_data_points[:, 0], pacmap_data_points[:, 1], pacmap_data_points[:, 2], cmap=color_map,
@@ -90,7 +97,7 @@ def plot_clusters_on_3D_pacmap(plot_title, use_case_name, pacmap_data_points, cl
     if save_to_file:
         plt.savefig(
             f'./output/{use_case_name}/clustering/clustering_{plot_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png',
-                    dpi=600)
+            dpi=600)
     plt.show()
     plt.close()
 
@@ -102,7 +109,7 @@ def calculate_cluster_kmeans(avg_np: np.ndarray, cohort_title: str, n_clusters: 
 
     # Calculate KMeans
     kmeans_obj = KMeans(init='k-means++', n_clusters=n_clusters, n_init=4, random_state=0, max_iter=350).fit(avg_np)
-    clustering_labels_list = kmeans_obj.labels_  # todo maybe: directly merge these labels back to the icustay_id -> one place. Not return of labels as list but series icustay_id | cluster_label
+    clustering_labels_list = kmeans_obj.labels_
 
     # get sh_score
     avg_np.reshape(avg_np.shape[0], -1)  # does this have an effect?
@@ -117,14 +124,16 @@ def calculate_cluster_kmeans(avg_np: np.ndarray, cohort_title: str, n_clusters: 
 
 
 def plot_sh_score_kmeans(use_this_function: False, selected_cohort, cohort_title, use_case_name, features_df,
-                         selected_features, selected_dependent_variable, save_to_file: bool = False):
+                         selected_features, selected_dependent_variable, use_encoding: False,
+                         save_to_file: bool = False):
     if not use_this_function:
         return None
 
     # This function displays the Silhouette Score curve. With this an optimal cluster count for k-means can be selected.
     print("STATUS: Calculating Silhouette Scores for k-means.")
     # Get cleaned avg_np
-    avg_np = preprocess_for_clustering(selected_cohort, features_df, selected_features, selected_dependent_variable)
+    avg_np = preprocess_for_clustering(selected_cohort, features_df, selected_features, use_encoding,
+                                       selected_dependent_variable)
 
     # Find best k-means cluster option depending on sh_score -> check plot manually
     krange = list(range(2, 15))  # choose multiple k-means cluster options to test
@@ -134,8 +143,8 @@ def plot_sh_score_kmeans(use_this_function: False, selected_cohort, cohort_title
     for n in krange:
         k_means_list, sh_score, inertia = calculate_cluster_kmeans(avg_np, cohort_title, n_clusters=n,
                                                                    verbose=False)  # here clusters are calculated
-        avg_silhouettes.append(sh_score)        # silhouette score should be maximal
-        inertias.append(inertia)                # inertia = distortion = Sum-of-Squared-Errors = Elbow method, should be minimal
+        avg_silhouettes.append(sh_score)  # silhouette score should be maximal
+        inertias.append(inertia)  # inertia = distortion = Sum-of-Squared-Errors = Elbow method, should be minimal
 
     # Silhouette Score + Plot Elbow/Inertia Method
     fig, ax = plt.subplots()
@@ -143,7 +152,7 @@ def plot_sh_score_kmeans(use_this_function: False, selected_cohort, cohort_title
     ax.plot(krange, inertias, color=inertia_color, marker=".")
     ax.set_xlabel('k', fontsize=14)
     ax.set_ylabel('Distortion (SSE)', color=inertia_color, fontsize=14)
-    ax2 = ax.twinx()        # twin object for second y-axis
+    ax2 = ax.twinx()  # twin object for second y-axis
     sh_color = '#B00000'
     ax2.plot(krange, avg_silhouettes, color=sh_color, marker=".")
     ax2.set_ylabel('Silhouette Score', color=sh_color, fontsize=14)
@@ -151,7 +160,8 @@ def plot_sh_score_kmeans(use_this_function: False, selected_cohort, cohort_title
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
-        plt.savefig(f'./output/{use_case_name}/clustering/optimal_cluster_count_{cohort_title}_{current_time}.png', bbox_inches='tight',
+        plt.savefig(f'./output/{use_case_name}/clustering/optimal_cluster_count_{cohort_title}_{current_time}.png',
+                    bbox_inches='tight',
                     dpi=600)
     plt.show()
     plt.close()
@@ -159,20 +169,36 @@ def plot_sh_score_kmeans(use_this_function: False, selected_cohort, cohort_title
     return None
 
 
-def plot_k_means_on_pacmap(use_this_function: False, selected_cohort, cohort_title, use_case_name, features_df,
-                           selected_features, selected_dependent_variable, selected_cluster_count, save_to_file: False):
+def plot_k_means_on_pacmap(use_this_function: False, display_sh_score: False, selected_cohort, cohort_title,
+                           use_case_name, features_df,
+                           selected_features, selected_dependent_variable, selected_cluster_count, use_encoding: False,
+                           save_to_file: False):
     if not use_this_function:
         return None
 
+    if display_sh_score:
+        # check optimal cluster count with sh_score and distortion (SSE) - can be bad if too many features selected
+        plot_sh_score_kmeans(use_this_function=True,  # True | False
+                             selected_cohort=selected_cohort,
+                             cohort_title=cohort_title,
+                             use_case_name=use_case_name,
+                             features_df=features_df,
+                             selected_features=selected_features,
+                             selected_dependent_variable=selected_dependent_variable,
+                             use_encoding=use_encoding,
+                             save_to_file=save_to_file)
+
     # Clean up df & transform to numpy
-    avg_np = preprocess_for_clustering(selected_cohort, features_df, selected_features, selected_dependent_variable)
+    avg_np = preprocess_for_clustering(selected_cohort, features_df, selected_features, selected_dependent_variable,
+                                       use_encoding)
 
     # PacMap needed for visualization
     pacmap_data_points, death_list = data_visualization.calculate_pacmap(selected_cohort=selected_cohort,
                                                                          cohort_title=cohort_title,
                                                                          features_df=features_df,
                                                                          selected_features=selected_features,
-                                                                         selected_dependent_variable=selected_dependent_variable)
+                                                                         selected_dependent_variable=selected_dependent_variable,
+                                                                         use_encoding=use_encoding)
 
     # Plot the cluster with best sh_score
     k_means_list, sh_score, inertia = calculate_cluster_kmeans(avg_np, cohort_title, n_clusters=selected_cluster_count,
@@ -365,7 +391,7 @@ def get_overview_for_cluster(cluster_cohort, selected_features, features_df, cur
 
 
 def get_kmeans_clusters(original_cohort, features_df, selected_features, selected_dependent_variable,
-                        selected_k_means_count, verbose: False):
+                        selected_k_means_count, use_encoding, verbose: False):
     # returns a list of clusters [dataframe, ...]
     kmeans_clusters: list = []
     for selected_cluster in range(0, selected_k_means_count):
@@ -377,6 +403,7 @@ def get_kmeans_clusters(original_cohort, features_df, selected_features, selecte
             selected_dependent_variable=selected_dependent_variable,
             selected_k_means_count=selected_k_means_count,
             selected_cluster=selected_cluster,
+            use_encoding=use_encoding,
             verbose=verbose)
 
         filtered_cluster_cohort = original_cohort[original_cohort['icustay_id'].isin(filtered_cluster_icustay_ids)]
@@ -387,7 +414,7 @@ def get_kmeans_clusters(original_cohort, features_df, selected_features, selecte
 
 def calculate_clusters_overview_table(use_this_function: False, selected_cohort, cohort_title, use_case_name,
                                       features_df, selected_features, selected_dependent_variable,
-                                      save_to_file: False, selected_k_means_count):
+                                      selected_k_means_count, use_encoding: False, save_to_file: False):
     # currently this function is only usable for manually selected cluster_count -> kmeans but not DBSCAN
     if not use_this_function:
         return None
@@ -405,6 +432,7 @@ def calculate_clusters_overview_table(use_this_function: False, selected_cohort,
         selected_features=selected_features,
         selected_dependent_variable=selected_dependent_variable,
         selected_k_means_count=selected_k_means_count,
+        use_encoding=use_encoding,
         verbose=True)
 
     for i, cluster in enumerate(kmeans_clusters):
@@ -451,14 +479,15 @@ def calculate_cluster_dbscan(avg_np, eps, min_samples, cohort_title, verbose: bo
 
 
 def plot_sh_score_DBSCAN(use_this_function, selected_cohort, cohort_title, use_case_name, features_df,
-                         selected_features, selected_dependent_variable, save_to_file):
+                         selected_features, selected_dependent_variable, use_encoding: False, save_to_file):
     if not use_this_function:
         return None
 
     # This function displays the Silhouette Score curve. With this an optimal cluster count for k-means can be selected.
     print('STATUS: Calculating Silhouette Scores for k-means.')
     # Get cleaned avg_np
-    avg_np = preprocess_for_clustering(selected_cohort, features_df, selected_features, selected_dependent_variable)
+    avg_np = preprocess_for_clustering(selected_cohort, features_df, selected_features, selected_dependent_variable,
+                                       use_encoding)
 
     # Find best sh_score DBSCAN parameters epsilon and min_samples
     eps_range = [0.25, 0.5, 0.75, 1]  # eps = radius around a node
@@ -503,21 +532,35 @@ def plot_sh_score_DBSCAN(use_this_function, selected_cohort, cohort_title, use_c
     return None
 
 
-def plot_DBSCAN_on_pacmap(use_this_function: bool, selected_cohort: dataframe, cohort_title: str, use_case_name: str,
+def plot_DBSCAN_on_pacmap(use_this_function: bool, display_sh_score: False, selected_cohort: dataframe,
+                          cohort_title: str, use_case_name: str,
                           features_df: dataframe, selected_features: list, selected_dependent_variable: str,
-                          selected_eps, selected_min_sample, save_to_file: bool):
+                          selected_eps, selected_min_sample, use_encoding: False, save_to_file: bool):
     if not use_this_function:
         return None
 
+    if display_sh_score:
+        plot_sh_score_DBSCAN(use_this_function=True,  # True | False
+                             selected_cohort=selected_cohort,
+                             cohort_title=cohort_title,
+                             use_case_name=use_case_name,
+                             features_df=features_df,
+                             selected_features=selected_features,
+                             selected_dependent_variable=selected_dependent_variable,
+                             use_encoding=use_encoding,
+                             save_to_file=save_to_file)
+
     # Clean up df & transform to numpy
-    avg_np = preprocess_for_clustering(selected_cohort, features_df, selected_features, selected_dependent_variable)
+    avg_np = preprocess_for_clustering(selected_cohort, features_df, selected_features, selected_dependent_variable,
+                                       use_encoding)
 
     # PacMap needed for visualization
     pacmap_data_points, death_list = data_visualization.calculate_pacmap(selected_cohort=selected_cohort,
                                                                          cohort_title=cohort_title,
                                                                          features_df=features_df,
                                                                          selected_features=selected_features,
-                                                                         selected_dependent_variable=selected_dependent_variable)
+                                                                         selected_dependent_variable=selected_dependent_variable,
+                                                                         use_encoding=use_encoding)
 
     # Plot the cluster with best sh_score
     dbscan_list, sh_score = calculate_cluster_dbscan(avg_np, eps=selected_eps, min_samples=selected_min_sample,

@@ -3,9 +3,15 @@ import matplotlib
 import pacmap
 from matplotlib import pyplot as plt
 
+from step_2_preprocessing.preprocessing_functions import get_one_hot_encoding
 
-def preprocess_for_pacmap(selected_cohort, features_df, selected_features, selected_dependent_variable):
-    # Preprocessing for Clustering: Remove the not selected prediction_variables and icustay_id
+
+def preprocess_for_pacmap(selected_cohort, features_df, selected_features, selected_dependent_variable, use_encoding):
+    # Removal of known features_to_remove
+    features_to_remove = features_df['feature_name'].loc[features_df['must_be_removed'] == 'yes'].to_list()
+    selected_features = [x for x in selected_features if x not in features_to_remove]
+
+    # Preprocessing for Clustering: Remove the not selected prediction_variables
     prediction_variables = features_df['feature_name'].loc[
         features_df['potential_for_analysis'] == 'prediction_variable'].to_list()
     for feature in prediction_variables:
@@ -13,27 +19,34 @@ def preprocess_for_pacmap(selected_cohort, features_df, selected_features, selec
             selected_features.remove(feature)
         except ValueError as e:
             pass
-    # selected_features.append(selected_dependent_variable)  # not keeping selected_dependent_variable for pacmap
-    try:
-        selected_features.remove('icustay_id')
-    except ValueError as e:
-        pass
+    selected_cohort = selected_cohort[selected_features].fillna(0)
 
-    avg_cohort_without_nan = selected_cohort[selected_features].fillna(0)
+    if use_encoding:
+        # Encoding of categorical features (one hot encoding)
+        categorical_features = features_df['feature_name'].loc[
+            features_df['categorical_or_continuous'] == 'categorical'].to_list()
+        categorical_features = [x for x in categorical_features if x in selected_features]
+        selected_cohort = get_one_hot_encoding(selected_cohort, categorical_features)
+
+    try:
+        selected_cohort.drop(columns='icustay_id', inplace=True)
+    except KeyError as e:
+        pass
 
     # print(f'CHECK: {len(selected_features)} features used for PacMap.')
 
-    return avg_cohort_without_nan.to_numpy()
+    return selected_cohort.to_numpy()
 
 
-def calculate_pacmap(selected_cohort, cohort_title, features_df, selected_features, selected_dependent_variable):
+def calculate_pacmap(selected_cohort, cohort_title, features_df, selected_features, selected_dependent_variable, use_encoding: False):
     # Returns: pacmap_data_points = data points, and death_list = markings
 
     # Filter and transform df to avg_np
     avg_np = preprocess_for_pacmap(selected_cohort=selected_cohort,
                                    features_df=features_df,
                                    selected_features=selected_features,
-                                   selected_dependent_variable=selected_dependent_variable)
+                                   selected_dependent_variable=selected_dependent_variable,
+                                   use_encoding=use_encoding)
 
     print(f'STATUS: Conducting PaCMAP on {cohort_title}')
     embedding = pacmap.PaCMAP(n_components=3, n_neighbors=10, MN_ratio=0.5, FP_ratio=2.0, verbose=False,
@@ -52,17 +65,15 @@ def calculate_pacmap(selected_cohort, cohort_title, features_df, selected_featur
 
 
 def display_pacmap(use_this_function: False, selected_cohort, cohort_title, use_case_name, features_df,
-                   selected_features, selected_dependent_variable,
+                   selected_features, selected_dependent_variable, use_encoding: False,
                    save_to_file):
     # plot the instances with pacmap, mark the death-cases for visualization
-
     if not use_this_function:
         return None
 
     # Calculate PacMap
     pacmap_data_points, death_list = calculate_pacmap(selected_cohort, cohort_title, features_df, selected_features,
-                                                      selected_dependent_variable)
-
+                                                      selected_dependent_variable, use_encoding)
     # Plot PacMap
     fig = plt.figure()
     ax1 = fig.add_subplot(1, 1, 1, projection='3d')
