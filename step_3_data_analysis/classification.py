@@ -6,6 +6,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from numpy import ndarray
 from pandas.core.interchange import dataframe
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve, make_scorer, \
     accuracy_score, recall_score
@@ -20,9 +21,28 @@ import seaborn as sn
 from step_3_data_analysis.clustering import get_kmeans_clusters, plot_sh_score_kmeans
 
 
+# also a function needed to turn one-hot-encoding back?
+def get_one_hot_encoding(selected_cohort, categorical_features):
+    for feature in categorical_features:
+        encoder = OneHotEncoder()
+        onehotarray = encoder.fit_transform(selected_cohort[[feature]]).toarray()
+        items = [f'{feature}_{item}' for item in encoder.categories_[0]]
+        selected_cohort[items] = onehotarray
+        selected_cohort.drop(columns=feature, inplace=True)  # remove original column
+
+    print('CHECK: count of selected_cohort features after encoding:', len(selected_cohort.columns))
+    # print('CHECK: selected_cohort features after encoding:', selected_cohort.columns)
+
+    return selected_cohort
+
+
 def preprocess_for_classification(selected_cohort: dataframe, features_df: dataframe, selected_features: list,
                                   selected_dependent_variable: str):
-    # Preprocessing for Clustering: Remove the not selected prediction_variables and icustay_id
+    # Removal of known features_to_remove
+    features_to_remove = features_df['feature_name'].loc[features_df['must_be_removed'] == 'yes'].to_list()
+    selected_features = [x for x in selected_features if x not in features_to_remove]
+
+    # Removal of other dependent_variables
     prediction_variables = features_df['feature_name'].loc[
         features_df['potential_for_analysis'] == 'prediction_variable'].to_list()
     for feature in prediction_variables:
@@ -30,22 +50,16 @@ def preprocess_for_classification(selected_cohort: dataframe, features_df: dataf
             selected_features.remove(feature)
         except ValueError as e:
             pass
-    selected_features.append(selected_dependent_variable)  # keeping selected_dependent_variable for clustering?
-    try:
-        selected_features.remove('icustay_id')
-    except ValueError as e:
-        pass
-    try:
-        selected_features.remove(
-            'dbsource')  # TODO: check how to handle the (factorized) categorical features for classification
-    except ValueError as e:
-        pass
+    selected_features.append(selected_dependent_variable)
+    selected_cohort = selected_cohort[selected_features].fillna(0)
 
-    temp_selected_features = selected_features.copy()
-    temp_selected_features.remove(selected_dependent_variable)
-    # print(f'CHECK: {len(temp_selected_features)} features used for Classification: ', temp_selected_features)  # dependent_variable will be removed outside
+    # Encoding of categorical features (one hot encoding)
+    categorical_features = features_df['feature_name'].loc[
+        features_df['categorical_or_continuous'] == 'categorical'].to_list()
+    categorical_features = [x for x in categorical_features if x in selected_features]
+    encoded_cohort = get_one_hot_encoding(selected_cohort, categorical_features)        # raises recall from 0.56 to 0.58 for XGBOOST
 
-    return selected_cohort[selected_features].fillna(0)
+    return encoded_cohort   # dependent_variable will be needed and then removed outside
 
 
 def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_train, basic_y_test, cohort_title,
@@ -609,7 +623,7 @@ def grid_search_optimal_RF(clf, x_train_final, y_train_final, verbose: False):
     # Concept from https://www.analyticsvidhya.com/blog/2021/06/understanding-random-forest/#:~:text=One%20of%20the%20most%20important,in%20the%20case%20of%20classification.
     # Instantiate the grid search model
     params = {'max_depth': [2, 3, 5, 10],  # removed 20, plot to big
-              'min_samples_leaf': [5, 10, 20, 50, 100],     # removed 200, not needed
+              'min_samples_leaf': [5, 10, 20, 50, 100],  # removed 200, not needed
               'n_estimators': [10, 25, 30, 50, 100, 200]}
     scoring = {'AUC': 'roc_auc', 'Accuracy': make_scorer(accuracy_score), 'Recall': make_scorer(recall_score)}
     grid_search = GridSearchCV(estimator=clf,
@@ -635,7 +649,8 @@ def grid_search_optimal_RF(clf, x_train_final, y_train_final, verbose: False):
     feature_importance_df.sort_values(by='importance', ascending=False, inplace=True)
 
     if verbose:
-        print('CHECK GridSearchCV result: best_score (oob_score) for RF after GridSearchCV:', best_score)  # out-of-bag score
+        print('CHECK GridSearchCV result: best_score (oob_score) for RF after GridSearchCV:',
+              best_score)  # out-of-bag score
         print(f'CHECK GridSearchCV result: optimal RF settings:', rf_best)
         print('CHECK GridSearchCV result: Feature Importance: \n', feature_importance_df)
 
@@ -653,13 +668,15 @@ def plot_random_forest(use_this_function, classification_method, sampling_method
 
     # get_classification_basics
     clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
-        selected_cohort, cohort_title, features_df, selected_features, selected_dependent_variable, classification_method,
+        selected_cohort, cohort_title, features_df, selected_features, selected_dependent_variable,
+        classification_method,
         sampling_method, use_grid_search, verbose)
 
     # Plot optimal RF
     plt.figure(figsize=(10, 8), dpi=900)  # figsize=(40, 20) makes plot too large
     random_decision_tree = clf.estimators_[5]
-    plot_tree(decision_tree=random_decision_tree, feature_names=x_train_final.columns, class_names=['death', 'no_death'],
+    plot_tree(decision_tree=random_decision_tree, feature_names=x_train_final.columns,
+              class_names=['death', 'no_death'],
               filled=True)
     # inside each node in the decision_tree plot:
     # feature <= decisive-value,
@@ -670,7 +687,8 @@ def plot_random_forest(use_this_function, classification_method, sampling_method
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
-        plt.savefig(f'./output/{use_case_name}/classification/RF_plot_{cohort_title}_{sampling_title}_{current_time}.png')
+        plt.savefig(
+            f'./output/{use_case_name}/classification/RF_plot_{cohort_title}_{sampling_title}_{current_time}.png')
     if show_plot:
         plt.show()
     plt.close()

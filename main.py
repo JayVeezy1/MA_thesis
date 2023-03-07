@@ -92,7 +92,11 @@ if __name__ == '__main__':
 
     # todo long term: add 'decision-boundary-plot' to visualize the clustering (on 2 features)
     # todo long term: add 3-features-visualization plot (like pacmap but with real dimensions)
-    # todo questions: classification has to be done multiple time and then use avg to evaluate? Is it 'allowed' to use OASIS score in classification?
+
+    # todo questions:
+    # classification has to be done multiple time and then use avg to evaluate?
+    # Is it 'allowed' to use OASIS score in classification?
+    # Do I always want one hot encoding? Also for correlations? -> then no factorization needed? -> much better solution because then correlation per value possible. And the general feature importance derived from prediction model/shapely?
 
     ### Data Analysis
     # Step 3.1) General Statistics
@@ -113,7 +117,7 @@ if __name__ == '__main__':
 
     # Step 3.2) Correlation
     # Correlations
-    correlations.plot_correlations(use_this_function=True,  # True | False
+    correlations.plot_correlations(use_this_function=False,  # True | False
                                    use_plot_heatmap=False,
                                    use_plot_pairplot=False,
                                    cohort_title=SELECTED_COHORT_TITLE,
@@ -225,7 +229,7 @@ if __name__ == '__main__':
                                              save_to_file=SELECT_SAVE_FILES
                                              )
     # Classification Report
-    report = classification.get_classification_report(use_this_function=False,  # True | False
+    report = classification.get_classification_report(use_this_function=True,  # True | False
                                                       classification_method=SELECTED_CLASSIFICATION_METHOD,
                                                       sampling_method=SELECTED_SAMPLING_METHOD,
                                                       selected_cohort=SELECTED_COHORT_preprocessed,

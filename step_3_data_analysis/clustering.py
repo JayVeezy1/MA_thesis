@@ -194,6 +194,7 @@ def get_clusters_overview_table(original_cohort, selected_features, features_df,
                                                       'complete_set': [original_cohort['icustay_id'].count()],
                                                       })
 
+    # features_to_factorize will be used to re-factorize values to their original nominal names
     features_to_remove = features_df['feature_name'].loc[features_df['must_be_removed'] == 'yes'].to_list()
     features_to_factorize = features_df['feature_name'].loc[
         features_df['categorical_or_continuous'] == 'categorical'].to_list()
