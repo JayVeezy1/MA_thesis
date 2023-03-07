@@ -143,9 +143,9 @@ def calculate_feature_overview_table(use_this_function: False, selected_cohort, 
             # Get unfactorized name from supplements FACTORIZATION_TABLE
             if feature in features_to_refactorize:
                 for appearance in sort(pd.unique(selected_cohort[feature])):
+
                     if math.isnan(appearance):
                         break
-
                     temp_fact_df = factorization_df.loc[factorization_df['feature'] == feature]
                     temp_index = temp_fact_df['factorized_value'] == appearance
                     try:

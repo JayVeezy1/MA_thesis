@@ -82,10 +82,11 @@ if __name__ == '__main__':
                                      'scaled_ischemic_avg_cohort': scaled_ischemic_cohort_preprocessed}
     print('STATUS: Preprocessing finished. \n')
 
-    # TODO this week: add a Deep Learning model
-    # TODO this week: also need to change clustering + classification for categorical+flag-features!!!
-    # also add SHAPley values (+ shap waterfalls, with this different importance for subgroups, comparable to correlations) and AUPRC
-    # TODO write: update pacmap + clustering + predictions into overleaf, then which model has best results for now? -> this is a first part-result, should be comparable to papers
+    # TODO write: update predictions chapter in overleaf
+
+    # TODO this week: add a Deep Learning model, then test which model has best results for now? -> this is a first part-result, should be comparable to papers
+
+    # TODO next week: classification add SHAPley values (+ shap waterfalls, with this different importance for subgroups, comparable to correlations) and AUPRC
 
     # todo check: include the fairness package? https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md Also in general the AI Responsible package useful as a dashboard?
     # todo after: analyze clusters for 'fairness' -> bridge to ASDF Dashboard
@@ -94,6 +95,7 @@ if __name__ == '__main__':
     # todo long term: add 3-features-visualization plot (like pacmap but with real dimensions)
 
     # todo questions:
+    # which scaling method?
     # classification has to be done multiple time and then use avg to evaluate?
     # Is it 'allowed' to use OASIS score in classification?
     # Do I always want one hot encoding? Also for correlations? -> then no factorization needed? -> much better solution because then correlation per value possible. And the general feature importance derived from prediction model/shapely?
@@ -139,11 +141,11 @@ if __name__ == '__main__':
                                       use_encoding=True,
                                       save_to_file=SELECT_SAVE_FILES)
 
-    # Step 3.4) Clustering (kmeans, DBSCAN, ...)
+    # Step 3.4) Clustering (kmeans, kprototype, DBSCAN, ...)
     # KMEANS
-    SELECTED_KMEANS_CLUSTERS_COUNT = 7  # manually checking silhouette score shows optimal cluster count (higher is better)
+    SELECTED_KMEANS_CLUSTERS_COUNT = 6  # manually checking silhouette score shows optimal cluster count (higher is better)
     clustering.plot_k_means_on_pacmap(use_this_function=False,  # True | False
-                                      display_sh_score=False,
+                                      display_sh_score=False,  # option for sh_score
                                       selected_cohort=SELECTED_COHORT_preprocessed,
                                       cohort_title=SELECTED_COHORT_TITLE,
                                       use_case_name=USE_CASE_NAME,
@@ -154,12 +156,25 @@ if __name__ == '__main__':
                                       use_encoding=True,
                                       save_to_file=SELECT_SAVE_FILES)
 
-    # todo: add k-prototypes for mix of continuous and categorical, make k-means only for continuous or with one-hot-encoding
-    # Actual clustering
-    # kproto = KPrototypes(n_clusters= 15, init='Cao', n_jobs = 4)
-    # clusters = kproto.fit_predict(kprot_data, categorical=categorical_columns)v
+    # KPrototypes
+    SELECTED_KPROTO_CLUSTERS_COUNT = 6
+    clustering.plot_k_prot_on_pacmap(use_this_function=False,  # True | False
+                                     display_sh_score=False,  # option for sh_score
+                                     selected_cohort=SELECTED_COHORT_preprocessed,
+                                     cohort_title=SELECTED_COHORT_TITLE,
+                                     use_case_name=USE_CASE_NAME,
+                                     features_df=FEATURES_DF,
+                                     selected_features=SELECTED_FEATURES,
+                                     selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                     selected_cluster_count=SELECTED_KPROTO_CLUSTERS_COUNT,
+                                     use_encoding=False,  # not needed for kPrototypes
+                                     save_to_file=SELECT_SAVE_FILES)
 
-    # kmeans: Cluster Comparison (only for manually selected_cluster_count -> only kmeans)
+    # TODO: check if this can be used. Predictions with Clustering algo? Checking validity of clusters with this?
+    # clusters = kproto_obj.fit_predict(X=avg_np, categorical=categorical_columns)
+    # fig = plot_cluster(kproto, clusters.astype(float), title="k-prototypes")
+
+    # kmeans: Cluster Comparison (only for manually selected_cluster_count -> only kmeans/kprot)
     clusters_overview_table = clustering.calculate_clusters_overview_table(use_this_function=False,  # True | False
                                                                            selected_cohort=SELECTED_COHORT_preprocessed,
                                                                            cohort_title=SELECTED_COHORT_TITLE,
@@ -174,8 +189,8 @@ if __name__ == '__main__':
     # DBSCAN
     SELECTED_EPS = 0.7  # manually checking silhouette score shows optimal epsilon-min_sample-combination
     SELECTED_MIN_SAMPLE = 5
-    clustering.plot_DBSCAN_on_pacmap(use_this_function=True,  # True | False
-                                     display_sh_score=False,
+    clustering.plot_DBSCAN_on_pacmap(use_this_function=False,  # True | False
+                                     display_sh_score=False,  # option for sh_score
                                      selected_cohort=SELECTED_COHORT_preprocessed,
                                      cohort_title=SELECTED_COHORT_TITLE,
                                      use_case_name=USE_CASE_NAME,
@@ -190,8 +205,9 @@ if __name__ == '__main__':
     ### Machine Learning Predictions
     # Step 4.1) Classification: (RandomForest, XGBoost, ...)
     SELECTED_CLASSIFICATION_METHOD = 'RandomForest'  # options: RandomForest | XGBoost
+    USE_GRIDSEARCH = True
     SELECTED_SAMPLING_METHOD = 'oversampling'  # options: no_sampling | oversampling | undersampling   -> estimation: oversampling > no_sampling > undersampling (very bad results)
-    ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'XGBoost']
+    ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost']
     # Plot optimal RandomForest (based on GridSearchCV)
     forest_plot = classification.plot_random_forest(use_this_function=False,  # True | False
                                                     classification_method='RandomForest',
@@ -203,26 +219,13 @@ if __name__ == '__main__':
                                                     selected_features=SELECTED_FEATURES,
                                                     selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                                     show_plot=True,
-                                                    use_grid_search=True,
+                                                    use_grid_search=USE_GRIDSEARCH,
                                                     verbose=True,
                                                     save_to_file=SELECT_SAVE_FILES
                                                     )
-    # Confusion Matrix (CM)
-    cm = classification.get_confusion_matrix(use_this_function=False,  # True | False
-                                             classification_method=SELECTED_CLASSIFICATION_METHOD,
-                                             sampling_method=SELECTED_SAMPLING_METHOD,
-                                             selected_cohort=SELECTED_COHORT_preprocessed,
-                                             cohort_title=SELECTED_COHORT_TITLE,
-                                             use_case_name=USE_CASE_NAME,
-                                             features_df=FEATURES_DF,
-                                             selected_features=SELECTED_FEATURES,
-                                             selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                             use_grid_search=True,
-                                             verbose=True,
-                                             save_to_file=SELECT_SAVE_FILES
-                                             )
     # Classification Report
     report = classification.get_classification_report(use_this_function=False,  # True | False
+                                                      display_confusion_matrix=True,  # option for CM
                                                       classification_method=SELECTED_CLASSIFICATION_METHOD,
                                                       sampling_method=SELECTED_SAMPLING_METHOD,
                                                       selected_cohort=SELECTED_COHORT_preprocessed,
@@ -231,7 +234,7 @@ if __name__ == '__main__':
                                                       features_df=FEATURES_DF,
                                                       selected_features=SELECTED_FEATURES,
                                                       selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                                      use_grid_search=True,
+                                                      use_grid_search=USE_GRIDSEARCH,
                                                       verbose=True,
                                                       save_to_file=SELECT_SAVE_FILES
                                                       )
@@ -246,11 +249,10 @@ if __name__ == '__main__':
                                              selected_features=SELECTED_FEATURES,
                                              selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                              show_plot=True,
-                                             use_grid_search=True,
+                                             use_grid_search=USE_GRIDSEARCH,
                                              verbose=True,
                                              save_to_file=SELECT_SAVE_FILES
                                              )
-
 
     # Step 4.2) Deep Learning/Neural Network (might also be inside 4.1? Or only useful if based on timeseries?)
     # ...
@@ -263,7 +265,6 @@ if __name__ == '__main__':
                                                            all_cohorts_with_titles=ALL_COHORTS_WITH_TITLES,
                                                            all_classification_methods=ALL_CLASSIFICATION_METHODS,
                                                            all_dependent_variables=ALL_DEPENDENT_VARIABLES,
-                                                           use_grid_search=True,
                                                            save_to_file=SELECT_SAVE_FILES)
 
     # Input: selected_cohort and its ideal kmeans cluster-count
@@ -280,6 +281,7 @@ if __name__ == '__main__':
                                                              selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
                                                              use_grid_search=True,
                                                              check_sh_score=True,
+                                                             use_encoding=True,
                                                              save_to_file=SELECT_SAVE_FILES)
 
     ### Fairness Metrics
@@ -289,3 +291,5 @@ if __name__ == '__main__':
     # Step 6.1) Calculate automated Subgroups and related fairness metrics
 
     # Step 6.2) Include ASDF-Dashboard as frontend
+
+    print(f'STATUS: Analysis finished for {len(SELECTED_FEATURES)} selected_features.')

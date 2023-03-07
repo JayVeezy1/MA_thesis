@@ -18,8 +18,7 @@ from xgboost import XGBClassifier
 import seaborn as sn
 
 from step_2_preprocessing.preprocessing_functions import get_one_hot_encoding
-from step_3_data_analysis.clustering import get_kmeans_clusters, plot_sh_score_kmeans
-
+from step_3_data_analysis.clustering import get_kmeans_clusters, plot_sh_score
 
 
 def preprocess_for_classification(selected_cohort: dataframe, features_df: dataframe, selected_features: list,
@@ -43,14 +42,15 @@ def preprocess_for_classification(selected_cohort: dataframe, features_df: dataf
     categorical_features = features_df['feature_name'].loc[
         features_df['categorical_or_continuous'] == 'categorical'].to_list()
     categorical_features = [x for x in categorical_features if x in selected_features]
-    selected_cohort = get_one_hot_encoding(selected_cohort, categorical_features)        # raises recall from 0.56 to 0.58 for XGBOOST
+    selected_cohort = get_one_hot_encoding(selected_cohort,
+                                           categorical_features)  # raises recall from 0.56 to 0.58 for XGBOOST
 
     try:
         selected_cohort.drop(columns='icustay_id', inplace=True)
     except KeyError as e:
         pass
 
-    return selected_cohort   # dependent_variable will be needed and then removed outside
+    return selected_cohort  # dependent_variable will be needed and then removed outside
 
 
 def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_train, basic_y_test, cohort_title,
@@ -150,7 +150,8 @@ def split_classification_data(selected_cohort: dataframe, cohort_title: str, fea
     # Create basic training_test_split
     if classification_method == 'RandomForest':
         clf = RandomForestClassifier(random_state=1321, oob_score=True)
-
+    elif classification_method == 'RandomForest_with_gridsearch':
+        clf = RandomForestClassifier(random_state=1321, oob_score=True)
     elif classification_method == 'XGBoost':
         clf = XGBClassifier()
     else:
@@ -176,7 +177,7 @@ def split_classification_data(selected_cohort: dataframe, cohort_title: str, fea
         return None
 
     # optimize RF classifier
-    if classification_method == 'RandomForest' and use_grid_search:
+    if (classification_method == 'RandomForest' or classification_method == 'RandomForest_with_gridsearch') and use_grid_search:
         clf = grid_search_optimal_RF(clf, x_train_final, y_train_final, verbose)
 
     # this is the training step, prediction will be inside the Classification Report
@@ -282,7 +283,8 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
     return cm_df
 
 
-def get_classification_report(use_this_function: False, selected_cohort: dataframe, cohort_title: str,
+def get_classification_report(use_this_function: False, display_confusion_matrix: False, selected_cohort: dataframe,
+                              cohort_title: str,
                               features_df: dataframe,
                               selected_features: list, selected_dependent_variable: str, classification_method: str,
                               sampling_method: str, use_case_name, save_to_file, use_grid_search: False, verbose: True):
@@ -290,6 +292,19 @@ def get_classification_report(use_this_function: False, selected_cohort: datafra
     if not use_this_function:
         return None
 
+    if display_confusion_matrix:
+        cm = get_confusion_matrix(use_this_function=True,  # True | False
+                                  classification_method=classification_method,
+                                  sampling_method=sampling_method,
+                                  selected_cohort=selected_cohort,
+                                  cohort_title=cohort_title,
+                                  use_case_name=use_case_name,
+                                  features_df=features_df,
+                                  selected_features=selected_features,
+                                  selected_dependent_variable=selected_dependent_variable,
+                                  use_grid_search=use_grid_search,
+                                  verbose=verbose,
+                                  save_to_file=save_to_file)
     # get_classification_basics
     clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
         selected_cohort, cohort_title, features_df, selected_features,
@@ -322,8 +337,9 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
 
     # split_classification_data
     clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
-        selected_cohort, cohort_title, features_df, selected_features,
-        selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
+        selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=features_df, selected_features=selected_features,
+        selected_dependent_variable=selected_dependent_variable, classification_method=classification_method,
+        sampling_method=sampling_method, use_grid_search=use_grid_search, verbose=verbose)
 
     # Calculate predictions for x_test
     clf_probs = clf.predict_proba(x_test_basic)  # Prediction probabilities (= estimated values of prediction)
@@ -347,7 +363,7 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
         clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, clf_probs)
     else:
         clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, clf_probs)
-        plt.plot(clf_fpr, clf_tpr, marker='.', label='Random Forest (AUROC = %0.3f)' % auc_score)
+        plt.plot(clf_fpr, clf_tpr, marker='.', label='Random Forest (AUROC = %0.3f)' % auc_score)       # TODO: wrap title
 
     # Add a random predictor line to plot
     random_probs = [0 for _ in range(len(y_test_basic))]
@@ -412,7 +428,7 @@ def get_precision(cm_df):
 def compare_classification_models_on_cohort(use_this_function, use_case_name, features_df, selected_features,
                                             all_cohorts_with_titles,
                                             all_classification_methods,
-                                            all_dependent_variables, use_grid_search, save_to_file):
+                                            all_dependent_variables, save_to_file):
     # calculate & plot the AUROC, return: auc_score
     if not use_this_function:
         return None
@@ -421,6 +437,10 @@ def compare_classification_models_on_cohort(use_this_function, use_case_name, fe
 
     for title_with_cohort in all_cohorts_with_titles.items():
         for classification_method in all_classification_methods:
+            if classification_method == 'RandomForest_with_gridsearch':
+                use_grid_search = True
+            else:
+                use_grid_search = False
             for dependent_variable in all_dependent_variables:
                 print(
                     f'STATUS: Calculating auc_score for model settings: {title_with_cohort[0]}, {classification_method}, {dependent_variable}')
@@ -437,6 +457,7 @@ def compare_classification_models_on_cohort(use_this_function, use_case_name, fe
                                           selected_dependent_variable=dependent_variable,
                                           show_plot=False,
                                           verbose=False,
+                                          use_grid_search=use_grid_search,
                                           save_to_file=False
                                           )
                 cm_df: dataframe = get_confusion_matrix(use_this_function=True,  # True | False
@@ -481,7 +502,7 @@ def compare_classification_models_on_cohort(use_this_function, use_case_name, fe
 
 def compare_classification_models_on_clusters(use_this_function, use_case_name, features_df, selected_features,
                                               selected_cohort, all_classification_methods, all_dependent_variables,
-                                              selected_k_means_count, check_sh_score, use_grid_search: False,
+                                              selected_k_means_count, check_sh_score, use_grid_search: False, use_encoding: False,
                                               save_to_file):
     # calculate prediction quality per cluster, save into table classification_clusters_overview
     # todo long term: this is only for kmeans, also add for other clustering methods (dynamic like DBSCAN and ASDF also possible?)
@@ -490,13 +511,15 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
 
     if check_sh_score:
         # any option to automatically get optimal cluster count from this?
-        plot_sh_score_kmeans(use_this_function=True,  # True | False
+        plot_sh_score(use_this_function=True,  # True | False
                              selected_cohort=selected_cohort,
                              cohort_title='complete_selected_cohort',
                              use_case_name=use_case_name,
                              features_df=features_df,
                              selected_features=selected_features,
                              selected_dependent_variable='death_in_hosp',
+                            clustering_method='kmeans',                             # todo: also make usable for kprot
+                            use_encoding=use_encoding,
                              save_to_file=False)
 
     classification_clusters_overview = pd.DataFrame()

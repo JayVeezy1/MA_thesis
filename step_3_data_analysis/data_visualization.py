@@ -19,6 +19,22 @@ def preprocess_for_pacmap(selected_cohort, features_df, selected_features, selec
             selected_features.remove(feature)
         except ValueError as e:
             pass
+    try:
+        selected_features.remove('icustay_id')
+        # selected_cohort.drop(columns='icustay_id', inplace=True)
+    except ValueError as e:
+        pass
+    # stroke_type and dbsource should not be used for pacmap -> not meaningful info for patient differentiation
+    try:
+        selected_features.remove('dbsource')
+        # selected_cohort.drop(columns='icustay_id', inplace=True)
+    except ValueError as e:
+        pass
+    try:
+        selected_features.remove('stroke_type')
+        # selected_cohort.drop(columns='icustay_id', inplace=True)
+    except ValueError as e:
+        pass
     selected_cohort = selected_cohort[selected_features].fillna(0)
 
     if use_encoding:
@@ -27,11 +43,6 @@ def preprocess_for_pacmap(selected_cohort, features_df, selected_features, selec
             features_df['categorical_or_continuous'] == 'categorical'].to_list()
         categorical_features = [x for x in categorical_features if x in selected_features]
         selected_cohort = get_one_hot_encoding(selected_cohort, categorical_features)
-
-    try:
-        selected_cohort.drop(columns='icustay_id', inplace=True)
-    except KeyError as e:
-        pass
 
     # print(f'CHECK: {len(selected_features)} features used for PacMap.')
 
@@ -81,11 +92,11 @@ def display_pacmap(use_this_function: False, selected_cohort, cohort_title, use_
     ax1.scatter(pacmap_data_points[:, 0],
                 pacmap_data_points[:, 1],
                 pacmap_data_points[:, 2],
-                cmap="cool",
+                cmap='cool',
                 c=death_list,
-                s=0.6, label="Patient")
+                s=0.6, label='deaths')
     plt.legend()
-    fig.colorbar(matplotlib.cm.ScalarMappable(cmap="cool",
+    fig.colorbar(matplotlib.cm.ScalarMappable(cmap='cool',
                                               norm=matplotlib.colors.Normalize(
                                                   vmin=min(death_list),
                                                   vmax=max(death_list))),
