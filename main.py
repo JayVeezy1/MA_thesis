@@ -91,14 +91,11 @@ if __name__ == '__main__':
     # todo check: include the fairness package? https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md Also in general the AI Responsible package useful as a dashboard?
     # todo after: analyze clusters for 'fairness' -> bridge to ASDF Dashboard
 
+    # todo long term: add filtering mechanism in Patient Class, recheck stroke filtering (move ischemic to front)
     # todo long term: add 'decision-boundary-plot' to visualize the clustering (on 2 features)
     # todo long term: add 3-features-visualization plot (like pacmap but with real dimensions)
+    # todo long term: graphic to visualize the filtering steps of complete mimic-iii dataset for chapter 2
 
-    # todo questions:
-    # which scaling method?
-    # classification has to be done multiple time and then use avg to evaluate?
-    # Is it 'allowed' to use OASIS score in classification?
-    # Do I always want one hot encoding? Also for correlations? -> then no factorization needed? -> much better solution because then correlation per value possible. And the general feature importance derived from prediction model/shapely?
 
     ### Data Analysis
     # Step 3.1) General Statistics

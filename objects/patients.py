@@ -273,8 +273,8 @@ class Patient:
                 pass                # language and discharge_location are categorical features but not factorized, because too many values -> not used in analysis at all
 
         # scaling method: min-max-normalization
-        scaled_avg_cohort_num = (avg_patient_cohort_num - avg_patient_cohort_num.min()) / (
-                    avg_patient_cohort_num.max() - avg_patient_cohort_num.min())
+        scaled_avg_cohort_num = (avg_patient_cohort_num - avg_patient_cohort_num.min()) / \
+                                (avg_patient_cohort_num.max() - avg_patient_cohort_num.min())
 
         avg_patient_cohort[avg_patient_cohort_num.columns] = scaled_avg_cohort_num   # throws SettingWithCopyWarning but works as intended   # todo: check again
 
