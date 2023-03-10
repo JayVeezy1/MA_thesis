@@ -2,8 +2,13 @@ import pandas as pd
 from objects.patients import Patient
 from step_1_setup_data import cache_IO, mimic_to_csv, select_relevant_features
 from step_2_preprocessing.preprocessing_functions import get_preprocessed_avg_cohort
-from step_3_data_analysis import correlations, classification, clustering, general_statistics, data_visualization
+from step_3_data_analysis import correlations, classification, clustering, general_statistics, data_visualization, \
+    classification_deeplearning
 from supplements import selection_icd9_codes
+
+# import theano
+import tensorflow
+import keras
 
 ####### MAIN #######
 # By: Jakob Vanek, 2023, Master Thesis at Goethe University
@@ -95,7 +100,6 @@ if __name__ == '__main__':
     # todo long term: add 'decision-boundary-plot' to visualize the clustering (on 2 features)
     # todo long term: add 3-features-visualization plot (like pacmap but with real dimensions)
     # todo long term: graphic to visualize the filtering steps of complete mimic-iii dataset for chapter 2
-
 
     ### Data Analysis
     # Step 3.1) General Statistics
@@ -235,6 +239,38 @@ if __name__ == '__main__':
                                                       verbose=True,
                                                       save_to_file=SELECT_SAVE_FILES
                                                       )
+
+
+
+    # Classification Report Deep Learning
+
+    # 1) Tutorial for keras example: https://machinelearningmastery.com/tutorial-first-neural-network-python-keras/
+    # tensorflow GRU model https://www.tensorflow.org/api_docs/python/tf/keras/layers/GRU
+
+    # 1.2) directly with tensorflow the GPU: https://www.tensorflow.org/guide/gpu
+    print("Num GPUs Available: ", len(tensorflow.config.list_physical_devices('GPU')))          # output = 0
+
+
+    # 2) installing theano for GPU: https://theano-pymc.readthedocs.io/en/latest/install_windows.html
+    # 3) pybinding for miniconda + pip: https://docs.pybinding.site/en/stable/install/quick.html#troubleshooting
+    # I could use this to directly install BLAS if needed for Theano?
+    # Alternative OpenBLas: https://github.com/xianyi/OpenBLAS/wiki/How-to-use-OpenBLAS-in-Microsoft-Visual-Studio
+    # must also be setup in Visual Studio
+
+    # Classification Report
+    report_DL = classification_deeplearning.get_classification_report_deeplearning(use_this_function=True,     # True | False
+                                                                                   display_confusion_matrix=True,   # option for CM
+                                                                                   sampling_method=SELECTED_SAMPLING_METHOD,
+                                                                                   selected_cohort=SELECTED_COHORT_preprocessed,
+                                                                                   cohort_title=SELECTED_COHORT_TITLE,
+                                                                                   use_case_name=USE_CASE_NAME,
+                                                                                   features_df=FEATURES_DF,
+                                                                                   selected_features=SELECTED_FEATURES,
+                                                                                   selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                                                   verbose=True,
+                                                                                   save_to_file=SELECT_SAVE_FILES
+                                                                                   )
+
     # AUROC (plot & score)
     auc_score = classification.get_auc_score(use_this_function=False,  # True | False
                                              classification_method=SELECTED_CLASSIFICATION_METHOD,

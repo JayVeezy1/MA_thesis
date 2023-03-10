@@ -54,6 +54,25 @@ A Python Development Environment is needed and the required packages are listed 
 Moreover, it is recommended to not use a Python Version above 3.10.9 as PacMap is not yet compatible with any newer version.
 Currently, there is no alternative available, but it might be possible in future PacMap versions, to also use the latest Python Version. 
 
+
+**Requirements for Deep Learning Functionalities:**
+
+The necessary packages for DL require multiple other packages to be installed before.
+Also, a c++ compiler must be installed as well as a g++ compiler.
+
+Necessary imports:
+1. theano
+- Link: https://theano-pymc.readthedocs.io/en/latest/install_windows.html
+- this also needs BLAS (called Lapack in Windows), Link: https://icl.utk.edu/lapack-for-windows/lapack/index.html#libraries
+  - BLAS needs MinGW for installation on Windows: https://winlibs.com/ (other download options available)
+- and a (optional) G++ (GCC) compiler: 
+
+2. tensorflow
+
+3. keras
+
+It is also advised to change the calculations based on a GPU instead of CPU.
+
 **Filtering:** 
 
 There are 3 steps where the dataset is filtered.
