@@ -1,22 +1,22 @@
+from datetime import datetime
+
+# import theano         # for parallelization
+import tensorflow
 import pandas as pd
 from objects.patients import Patient
-from step_1_setup_data import cache_IO, mimic_to_csv, select_relevant_features
+from step_1_setup_data import cache_IO
 from step_2_preprocessing.preprocessing_functions import get_preprocessed_avg_cohort
-from step_3_data_analysis import correlations, classification, clustering, general_statistics, data_visualization, \
-    classification_deeplearning
-from supplements import selection_icd9_codes
-
-# import theano
-import tensorflow
-import keras
+from step_3_data_analysis import correlations, clustering, general_statistics, data_visualization
+from step_4_classification import classification_deeplearning, classification
+from step_5_fairness import fairness_analysis
 
 ####### MAIN #######
 # By: Jakob Vanek, 2023, Master Thesis at Goethe University
 if __name__ == '__main__':
-    PROJECT_PATH: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'  # this variable must be fitted to the users local project folder
-    PROJECT_PATH_LAPTOP = 'C:/Users/vanek/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/stroke_all_systems'
-    # PROJECT_PATH = PROJECT_PATH_LAPTOP
-    # TODO: adjust load function for Laptop, get .pickle dataset on laptop
+    # PROJECT_PATH: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'  # this variable must be fitted to the users local project folder
+    starting_time = datetime.now()
+    PROJECT_PATH_LAPTOP = 'C:/Users/vanek/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'
+    PROJECT_PATH = PROJECT_PATH_LAPTOP  # TODO: remove PATH change again
     USE_CASE_NAME: str = 'stroke_all_systems'  # stroke_patients_data       # heart_infarct_patients_data
     FEATURES_DF = pd.read_excel('./supplements/FEATURE_PREPROCESSING_TABLE.xlsx')
     SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'
@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
     ### Data Analysis
     # Step 3.1) General Statistics
-    general_statistics.calculate_deaths_table(use_this_function=False,  # True | False
+    general_statistics.calculate_deaths_table(use_this_function=True,  # True | False
                                               selected_cohort=SELECTED_COHORT_preprocessed,
                                               cohort_title=SELECTED_COHORT_TITLE,
                                               use_case_name=USE_CASE_NAME,
@@ -242,38 +242,6 @@ if __name__ == '__main__':
                                                       verbose=True,
                                                       save_to_file=SELECT_SAVE_FILES
                                                       )
-
-
-
-    # Classification Report Deep Learning
-
-    # 1) Tutorial for keras example: https://machinelearningmastery.com/tutorial-first-neural-network-python-keras/
-    # tensorflow GRU model https://www.tensorflow.org/api_docs/python/tf/keras/layers/GRU
-
-    # 1.2) directly with tensorflow the GPU: https://www.tensorflow.org/guide/gpu
-    print("Num GPUs Available: ", len(tensorflow.config.list_physical_devices('GPU')))          # output = 0
-
-
-    # 2) installing theano for GPU: https://theano-pymc.readthedocs.io/en/latest/install_windows.html
-    # 3) pybinding for miniconda + pip: https://docs.pybinding.site/en/stable/install/quick.html#troubleshooting
-    # I could use this to directly install BLAS if needed for Theano?
-    # Alternative OpenBLas: https://github.com/xianyi/OpenBLAS/wiki/How-to-use-OpenBLAS-in-Microsoft-Visual-Studio
-    # must also be setup in Visual Studio
-
-    # Classification Report
-    report_DL = classification_deeplearning.get_classification_report_deeplearning(use_this_function=True,     # True | False
-                                                                                   display_confusion_matrix=True,   # option for CM
-                                                                                   sampling_method=SELECTED_SAMPLING_METHOD,
-                                                                                   selected_cohort=SELECTED_COHORT_preprocessed,
-                                                                                   cohort_title=SELECTED_COHORT_TITLE,
-                                                                                   use_case_name=USE_CASE_NAME,
-                                                                                   features_df=FEATURES_DF,
-                                                                                   selected_features=SELECTED_FEATURES,
-                                                                                   selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                                                                   verbose=True,
-                                                                                   save_to_file=SELECT_SAVE_FILES
-                                                                                   )
-
     # AUROC (plot & score)
     auc_score = classification.get_auc_score(use_this_function=False,  # True | False
                                              classification_method=SELECTED_CLASSIFICATION_METHOD,
@@ -290,8 +258,33 @@ if __name__ == '__main__':
                                              save_to_file=SELECT_SAVE_FILES
                                              )
 
-    # Step 4.2) Deep Learning/Neural Network (might also be inside 4.1? Or only useful if based on timeseries?)
-    # ...
+    # Step 4.2) Deep Learning Neural Network
+    # Planning:
+    # 1) Tutorial for keras example: https://machinelearningmastery.com/tutorial-first-neural-network-python-keras/
+    # tensorflow GRU model https://www.tensorflow.org/api_docs/python/tf/keras/layers/GRU
+    # 1.2) directly with tensorflow the GPU: https://www.tensorflow.org/guide/gpu
+    print("Num GPUs Available: ", len(tensorflow.config.list_physical_devices('GPU')))  # output = 0
+    # 2) installing theano for GPU: https://theano-pymc.readthedocs.io/en/latest/install_windows.html
+    # 3) pybinding for miniconda + pip: https://docs.pybinding.site/en/stable/install/quick.html#troubleshooting
+    # I could use this to directly install BLAS if needed for Theano?
+    # Alternative OpenBLas: https://github.com/xianyi/OpenBLAS/wiki/How-to-use-OpenBLAS-in-Microsoft-Visual-Studio
+    # must also be setup in Visual Studio
+
+    # Classification Report DLNN
+    report_DL = classification_deeplearning.get_classification_report_deeplearning(use_this_function=False,
+                                                                                   # True | False
+                                                                                   display_confusion_matrix=True,
+                                                                                   # option for CM
+                                                                                   sampling_method=SELECTED_SAMPLING_METHOD,
+                                                                                   selected_cohort=SELECTED_COHORT_preprocessed,
+                                                                                   cohort_title=SELECTED_COHORT_TITLE,
+                                                                                   use_case_name=USE_CASE_NAME,
+                                                                                   features_df=FEATURES_DF,
+                                                                                   selected_features=SELECTED_FEATURES,
+                                                                                   selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                                                   verbose=True,
+                                                                                   save_to_file=SELECT_SAVE_FILES
+                                                                                   )
 
     # Step 4.3) Models Overview -> table to compare all accuracy & recall results
     classification.compare_classification_models_on_cohort(use_this_function=False,  # True | False
@@ -307,6 +300,7 @@ if __name__ == '__main__':
     # Output: table of prediction quality per cluster, rows = different model configs (per classification_method and dependent_variable)
     # todo: use this analysis to compare clusters: https://antonsruberts.github.io/kproto-audience/
     # also get shapely function from there
+
     classification.compare_classification_models_on_clusters(use_this_function=False,  # True | False
                                                              use_case_name=USE_CASE_NAME,
                                                              features_df=FEATURES_DF,
@@ -322,10 +316,25 @@ if __name__ == '__main__':
 
     ### Fairness Metrics
     # Step 5.1) Calculate Fairness for manual Subgroups
+    fairness_analysis.get_fairness_report(use_this_function=False,  # True | False
+                                          classification_method=SELECTED_CLASSIFICATION_METHOD,
+                                          sampling_method=SELECTED_SAMPLING_METHOD,
+                                          selected_cohort=SELECTED_COHORT_preprocessed,
+                                          cohort_title=SELECTED_COHORT_TITLE,
+                                          use_case_name=USE_CASE_NAME,
+                                          features_df=FEATURES_DF,
+                                          selected_features=SELECTED_FEATURES,
+                                          selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                          verbose=True,
+                                          use_grid_search=USE_GRIDSEARCH,
+                                          save_to_file=SELECT_SAVE_FILES
+                                          )
 
     ### Automated Subgroup detection
     # Step 6.1) Calculate automated Subgroups and related fairness metrics
 
     # Step 6.2) Include ASDF-Dashboard as frontend
 
-    print(f'STATUS: Analysis finished for {len(SELECTED_FEATURES)} selected_features.')
+    print(f'\n STATUS: Analysis finished for {len(SELECTED_FEATURES)} selected_features.')
+    time_diff = datetime.now() - starting_time
+    print(f'STATUS: Seconds needed: ', time_diff.total_seconds())

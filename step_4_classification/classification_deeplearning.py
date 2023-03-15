@@ -1,33 +1,17 @@
 import datetime
-import warnings
 
-import numpy as np
-import pandas as pd
-from matplotlib import pyplot as plt
-from numpy import ndarray
 from pandas.core.interchange import dataframe
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve, make_scorer, \
-    accuracy_score, recall_score
+from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
-from sklearn.tree import plot_tree
-from sklearn.model_selection import GridSearchCV
 from imblearn.over_sampling import SMOTE, RandomOverSampler
-from imblearn.under_sampling import NearMiss
-from xgboost import XGBClassifier
-import seaborn as sn
 
 # Packages for Deep learning:
-import statsmodels.api as sm  # might be necessary for deep learning network
 from tensorflow.python.keras import Sequential
 from tensorflow.python.keras.layers import Dense
 
 
 # Own Functions
-from step_2_preprocessing.preprocessing_functions import get_one_hot_encoding
-from step_3_data_analysis.clustering import get_kmeans_clusters, plot_sh_score
-from step_3_data_analysis.classification import split_classification_data, get_sampled_data, \
-    preprocess_for_classification
+from step_4_classification.classification import preprocess_for_classification
 
 
 def get_classification_report_deeplearning(use_this_function, display_confusion_matrix,
