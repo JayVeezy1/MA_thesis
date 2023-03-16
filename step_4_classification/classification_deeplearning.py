@@ -1,5 +1,6 @@
 import datetime
 
+import tensorflow
 from pandas.core.interchange import dataframe
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
@@ -21,6 +22,8 @@ def get_classification_report_deeplearning(use_this_function, display_confusion_
     # calculate the CM and return the corresponding ClassificationReport
     if not use_this_function:
         return None
+
+    print("Num GPUs Available: ", len(tensorflow.config.list_physical_devices('GPU')))  # output = 0
 
     # if display_confusion_matrix:
     # cm = get_confusion_matrix(use_this_function=True,  # True | False

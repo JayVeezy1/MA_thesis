@@ -1,8 +1,6 @@
 from datetime import datetime
-
-# import theano         # for parallelization
-import tensorflow
 import pandas as pd
+
 from objects.patients import Patient
 from step_1_setup_data import cache_IO
 from step_2_preprocessing.preprocessing_functions import get_preprocessed_avg_cohort
@@ -13,10 +11,10 @@ from step_5_fairness import fairness_analysis
 ####### MAIN #######
 # By: Jakob Vanek, 2023, Master Thesis at Goethe University
 if __name__ == '__main__':
-    # PROJECT_PATH: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'  # this variable must be fitted to the users local project folder
     starting_time = datetime.now()
+    PROJECT_PATH: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'  # this variable must be fitted to the users local project folder
     PROJECT_PATH_LAPTOP = 'C:/Users/vanek/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'
-    PROJECT_PATH = PROJECT_PATH_LAPTOP  # TODO: remove PATH change again
+    # PROJECT_PATH = PROJECT_PATH_LAPTOP
     USE_CASE_NAME: str = 'stroke_all_systems'  # stroke_patients_data       # heart_infarct_patients_data
     FEATURES_DF = pd.read_excel('./supplements/FEATURE_PREPROCESSING_TABLE.xlsx')
     SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'
@@ -106,7 +104,7 @@ if __name__ == '__main__':
 
     ### Data Analysis
     # Step 3.1) General Statistics
-    general_statistics.calculate_deaths_table(use_this_function=True,  # True | False
+    general_statistics.calculate_deaths_table(use_this_function=False,  # True | False
                                               selected_cohort=SELECTED_COHORT_preprocessed,
                                               cohort_title=SELECTED_COHORT_TITLE,
                                               use_case_name=USE_CASE_NAME,
@@ -208,7 +206,7 @@ if __name__ == '__main__':
 
     ### Machine Learning Predictions
     # Step 4.1) Classification: (RandomForest, XGBoost, ...)
-    SELECTED_CLASSIFICATION_METHOD = 'RandomForest'  # options: RandomForest | XGBoost
+    SELECTED_CLASSIFICATION_METHOD = 'XGBoost'  # options: RandomForest | XGBoost
     USE_GRIDSEARCH = True
     SELECTED_SAMPLING_METHOD = 'oversampling'  # options: no_sampling | oversampling | undersampling   -> estimation: oversampling > no_sampling > undersampling (very bad results)
     ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost']
@@ -263,7 +261,6 @@ if __name__ == '__main__':
     # 1) Tutorial for keras example: https://machinelearningmastery.com/tutorial-first-neural-network-python-keras/
     # tensorflow GRU model https://www.tensorflow.org/api_docs/python/tf/keras/layers/GRU
     # 1.2) directly with tensorflow the GPU: https://www.tensorflow.org/guide/gpu
-    print("Num GPUs Available: ", len(tensorflow.config.list_physical_devices('GPU')))  # output = 0
     # 2) installing theano for GPU: https://theano-pymc.readthedocs.io/en/latest/install_windows.html
     # 3) pybinding for miniconda + pip: https://docs.pybinding.site/en/stable/install/quick.html#troubleshooting
     # I could use this to directly install BLAS if needed for Theano?
@@ -316,7 +313,7 @@ if __name__ == '__main__':
 
     ### Fairness Metrics
     # Step 5.1) Calculate Fairness for manual Subgroups
-    fairness_analysis.get_fairness_report(use_this_function=False,  # True | False
+    fairness_analysis.get_fairness_report(use_this_function=True,  # True | False
                                           classification_method=SELECTED_CLASSIFICATION_METHOD,
                                           sampling_method=SELECTED_SAMPLING_METHOD,
                                           selected_cohort=SELECTED_COHORT_preprocessed,
