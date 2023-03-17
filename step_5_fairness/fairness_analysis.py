@@ -32,7 +32,9 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
 
     # 2) get an aif360 StandardDataset
     # idea: https://stackoverflow.com/questions/64506977/calculate-group-fairness-metrics-with-aif360/64543058#64543058
-    merged_train_data = x_train_final.merge(right=y_train_final, left_index=True, right_index=True)
+    original_labels = selected_cohort[selected_dependent_variable]
+    # todo: make certain correct index used for merge, selected cohort has all patients, but with inner-join only the ones in trained cohort are kept?
+    merged_train_data = x_train_final.merge(right=original_labels, left_index=True, right_index=True)
     dataset = StandardDataset(df=merged_train_data,
                               label_name=selected_dependent_variable,
                               favorable_classes=[0],  # no death = favorable
@@ -41,7 +43,8 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
 
     # create dataset_pred
     dataset_pred = dataset.copy()
-    dataset_pred.labels = clf.predict(X=x_train_final)          # TODO: Accuracy is 1.0 -> check if this step was done correctly and dependent variable column was overwritten? Inplace??
+    predicted_labels = clf.predict(X=x_train_final)
+    dataset_pred.labels = predicted_labels          # TODO: Accuracy is 1.0 -> check if this step was done correctly and dependent variable column was overwritten? Inplace??
 
     # derive privileged groups for all protected_attribute_names
     attr = dataset_pred.protected_attribute_names[0]
