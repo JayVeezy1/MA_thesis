@@ -14,7 +14,7 @@ if __name__ == '__main__':
     starting_time = datetime.now()
     PROJECT_PATH: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'  # this variable must be fitted to the users local project folder
     PROJECT_PATH_LAPTOP = 'C:/Users/vanek/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'
-    PROJECT_PATH = PROJECT_PATH_LAPTOP      # TODO: return to old PATH
+    PROJECT_PATH = PROJECT_PATH_LAPTOP      # TODO: return to old PATH also put removal of outliers back in
     USE_CASE_NAME: str = 'stroke_all_systems'  # stroke_patients_data       # heart_infarct_patients_data
     FEATURES_DF = pd.read_excel('./supplements/FEATURE_PREPROCESSING_TABLE.xlsx')
     SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'
@@ -72,7 +72,6 @@ if __name__ == '__main__':
                                                                cohort_title=SELECTED_COHORT_TITLE,
                                                                features_df=FEATURES_DF)
     SELECTED_FEATURES = list(SELECTED_COHORT_preprocessed.columns)
-
     # Automated: List of all cohorts_preprocessed for model comparison
     scaled_complete_cohort_preprocessed = get_preprocessed_avg_cohort(avg_cohort=scaled_complete_avg_cohort,
                                                                       cohort_title='scaled_complete_avg_cohort',
@@ -227,7 +226,7 @@ if __name__ == '__main__':
                                                     )
     # Classification Report
     report = classification.get_classification_report(use_this_function=False,  # True | False
-                                                      display_confusion_matrix=True,  # option for CM
+                                                      display_confusion_matrix=False,  # option for CM
                                                       classification_method=SELECTED_CLASSIFICATION_METHOD,
                                                       sampling_method=SELECTED_SAMPLING_METHOD,
                                                       selected_cohort=SELECTED_COHORT_preprocessed,

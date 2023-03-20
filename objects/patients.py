@@ -60,6 +60,7 @@ def get_clean_raw_data(patient_data: dataframe, feature_df: dataframe) -> datafr
             temp_fact_value = temp_factorization_df.loc[temp_factorization_df['unfactorized_value'] == unfactorized_value, 'factorized_value'].item()
             cleaned_raw_data.loc[cleaned_raw_data[f'{feature}'] == unfactorized_value,  f'{feature}'] = temp_fact_value
 
+    # TODO check: was this empty data problem removed with this?
     # Making certain 'no_data' is transformed to 0 (somehow those are not factorized completely)
     cleaned_raw_data.loc[cleaned_raw_data['marital_status'] == 'no_data',  'marital_status'] = -10
     cleaned_raw_data.loc[cleaned_raw_data['marital_status'] == 'no_data ',  'marital_status'] = -10
@@ -227,6 +228,8 @@ class Patient:
         avg_patient_cohort = avg_patient_cohort.sort_values(by=['icustay_id'], axis=0)
         avg_patient_cohort = avg_patient_cohort.reset_index(drop=True)
 
+        # TODO: Put this back on when not working with laptop anymore:
+        """
         # Remove outliers where patient-avg is 5x higher than feature-mean()
         OUTLIERS_THRESHOLD = 4
         continuous_features = features_df['feature_name'].loc[
@@ -241,6 +244,7 @@ class Patient:
                     removed_entries += 1
             # print(f'CHECK: Finished Outliers Check for temp_icustay_id {temp_icustay_id}.')
         print(f'CHECK: Outliers threshold: {OUTLIERS_THRESHOLD}x higher than mean. Removed entries: {removed_entries}')
+        """
 
         # Export avg_patient_cohort
         filename_string: str = f'{project_path}exports/{use_case_name}/avg_patient_cohort.csv'

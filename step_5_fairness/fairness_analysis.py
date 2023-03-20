@@ -2,7 +2,8 @@ import datetime
 
 import pandas as pd
 from aif360.datasets import StandardDataset
-from aif360.metrics import ClassificationMetric, BinaryLabelDatasetMetric
+from aif360.metrics import ClassificationMetric
+import fairlearn
 from pandas.core.interchange import dataframe
 
 from step_4_classification.classification import split_classification_data
@@ -24,18 +25,20 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
         selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
 
     # 1) select unprivileged_groups and their respective values
-    # todo: check if problem occurrs with factorized categorical features. Because they are transformed into their own columns like dbsource_1
+    # TODO: test if fairness for multiple factorized values of categorical features is possible
+    # Advantage: check fairness of exactly one of the categories (1 is positive, 0 is not)
+    # Disadvantage: not check influence of the complete feature or multiple values of this feature
+    # Solution: use ethnicity_1 AND ethnicity_3 (for example) together to check multiple ethnicity_values
+
     # IMPORTANT: adjust selected_privileged_classes depending on selected_protected_attributes
-    selected_protected_attributes = ['gender']
+    selected_protected_attributes = ['ethnicity_1']
     selected_privileged_classes = [[1]]  # male is mapped to 1, is privileged
-    # selected_privileged_classes = [[gender = 1], [ethnicity = 1], [insurance = 1, 2, 3], [...] ]
+    # selected_privileged_classes = [[gender = 1], [ethnicity = 1, 2], [insurance = 3, 4], [...] ]
 
     # 2) get an aif360 StandardDataset
-    # idea: https://stackoverflow.com/questions/64506977/calculate-group-fairness-metrics-with-aif360/64543058#64543058
-    original_labels = selected_cohort[selected_dependent_variable]
-    # todo: make certain correct index used for merge, selected cohort has all patients, but with inner-join only the ones in trained cohort are kept?
-    merged_train_data = x_train_final.merge(right=original_labels, left_index=True, right_index=True)
-    dataset = StandardDataset(df=merged_train_data,
+    # original_labels = selected_cohort[selected_dependent_variable]
+    merged_test_data = x_test_final.merge(right=y_test_final, left_index=True, right_index=True)
+    dataset = StandardDataset(df=merged_test_data,
                               label_name=selected_dependent_variable,
                               favorable_classes=[0],  # no death = favorable
                               protected_attribute_names=selected_protected_attributes,
@@ -43,8 +46,8 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
 
     # create dataset_pred
     dataset_pred = dataset.copy()
-    predicted_labels = clf.predict(X=x_train_final)
-    dataset_pred.labels = predicted_labels          # TODO: Accuracy is 1.0 -> check if this step was done correctly and dependent variable column was overwritten? Inplace??
+    predicted_labels = clf.predict(x_test_final)
+    dataset_pred.labels = predicted_labels
 
     # derive privileged groups for all protected_attribute_names
     attr = dataset_pred.protected_attribute_names[0]
@@ -58,38 +61,55 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
                                                  unprivileged_groups=unprivileged_groups,
                                                  privileged_groups=privileged_groups)
 
-    metric_pred = BinaryLabelDatasetMetric(dataset_pred,
-                                           unprivileged_groups=unprivileged_groups,
-                                           privileged_groups=privileged_groups)
+    # Alternative for metrics (only for dataset_pred)
+    # metric_pred = BinaryLabelDatasetMetric(dataset_pred,
+    #                                       unprivileged_groups=unprivileged_groups,
+    #                                       privileged_groups=privileged_groups)
 
-    # 3) calculate important metrics: demographic_parity_metric, equalized_odds_metric
-    equal_opportunity_difference = classification_metric.equal_opportunity_difference()
-    accuracy = classification_metric.accuracy()
+    # 4) Calculate Fairness Metrics
+    accuracy = round(classification_metric.accuracy(), 3)
+    recall = round(classification_metric.recall(), 3)
+    consistency = classification_metric.consistency()
+    for i, value in enumerate(consistency):
+        consistency[i] = round(value, 3)
+    num_instances = round(classification_metric.num_instances(), 0)
 
-    statistical_parity_difference = metric_pred.statistical_parity_difference()  # todo: why use metric_pred here? possible with classification_metric?
-
-    average_abs_odds_difference = classification_metric.average_abs_odds_difference()
-    disparate_impact = classification_metric.disparate_impact()
-    average_odds_difference = classification_metric.average_odds_difference()
+    # TODO: missing metrics: demographic_parity_metric, equalized_odds_metric
+    statistical_parity_difference = round(classification_metric.statistical_parity_difference(), 3)
+    average_abs_odds_difference = round(classification_metric.average_abs_odds_difference(), 3)
+    average_odds_difference = round(classification_metric.average_odds_difference(), 3)
+    disparate_impact = round(classification_metric.disparate_impact(), 3)
+    equal_opportunity_difference = round(classification_metric.equal_opportunity_difference(), 3)
+    differential_fairness_bias_amplification = round(classification_metric.differential_fairness_bias_amplification(), 3)
+    generalized_entropy_index = round(classification_metric.generalized_entropy_index(), 3)     # alias: theil_index
 
     # 4) return Fairness Report as print if verbose, save as table if save_files
     report = pd.DataFrame({'accuracy': [accuracy],
+                           'recall': [recall],
+                           'consistency': [consistency],
+                           'num_instances': [num_instances],
                            'statistical_parity_difference': [statistical_parity_difference],
                            'average_abs_odds_difference': [average_abs_odds_difference],
                            'disparate_impact': [disparate_impact],
                            'equal_opportunity_difference': [equal_opportunity_difference],
-                           'average_odds_difference': [average_odds_difference]})
+                           'average_odds_difference': [average_odds_difference],
+                           'differential_fairness_bias_amplification': [differential_fairness_bias_amplification],
+                           'generalized_entropy_index': [generalized_entropy_index]
+                           })
     if verbose:
         print(f'\n CHECK: Fairness Report for {classification_method} on {cohort_title}, {sampling_title}:')
-        print(report)
+        print(report.transpose().to_string())
 
     if save_to_file:
-        current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
-        report_filename_string: str = f'./output/{use_case_name}/classification/FAIRNESS_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
+        current_time = datetime.datetime.now().strftime("%H_%M_%S")         # removed %d%m%Y_ from date
+        attributes_string = ''.join(str(e) for e in selected_protected_attributes)
+        report_filename_string: str = f'./output/{use_case_name}/classification/FAIRNESS_{attributes_string}_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
         report_filename = report_filename_string.encode()
         # code to export a df
         with open(report_filename, 'w', newline='') as output_file:
-            report.to_csv(output_file, index=False)
+            report_export = report.transpose()
+            report_export.rename(columns={0: attributes_string}, inplace=True)
+            report_export.to_csv(output_file, index=True)    # keep index here for metrics titles
             print(f'STATUS: fairness_report was saved to {report_filename}')
 
         # code to export a dict

@@ -200,8 +200,8 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
         selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
 
     # Get CM
-    cm: ndarray = confusion_matrix(y_test_basic,
-                                   clf.predict(x_test_basic))  # important: use test_basic here, not the sampled version
+    cm: ndarray = confusion_matrix(y_test_final,
+                                   clf.predict(x_test_final))
     # Get CM as table
     try:
         cm_df = pd.DataFrame({
@@ -310,7 +310,7 @@ def get_classification_report(use_this_function: False, display_confusion_matrix
         selected_cohort, cohort_title, features_df, selected_features,
         selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
 
-    report = classification_report(y_test_basic, clf.predict(x_test_basic))
+    report = classification_report(y_test_final, clf.predict(x_test_final))
     if verbose:
         print(f'\n CHECK: Classification Report for {classification_method} on {cohort_title}, {sampling_title}:')
         print(report)

@@ -60,7 +60,7 @@ def get_preprocessed_avg_cohort(avg_cohort, features_df, cohort_title):
         except KeyError as e:
             pass
 
-    # Create automated Factorization tables -> removed because now done inside patients.py > get_clean_raw_data
+    # Old idea: Create automated Factorization tables -> removed because now done inside patients.py > get_clean_raw_data
     # create_factorization_table(avg_cohort, features_df, cohort_title, features_to_remove)
 
     # Select final features in a list, drop features_to_remove
