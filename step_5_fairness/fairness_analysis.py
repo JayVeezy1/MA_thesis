@@ -25,15 +25,14 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
         selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
 
     # 1) select unprivileged_groups and their respective values
-    # TODO: test if fairness for multiple factorized values of categorical features is possible
     # Advantage: check fairness of exactly one of the categories (1 is positive, 0 is not)
     # Disadvantage: not check influence of the complete feature or multiple values of this feature
     # Solution: use ethnicity_1 AND ethnicity_3 (for example) together to check multiple ethnicity_values
 
     # IMPORTANT: adjust selected_privileged_classes depending on selected_protected_attributes
-    selected_protected_attributes = ['ethnicity_1']
-    selected_privileged_classes = [[1]]  # male is mapped to 1, is privileged
-    # selected_privileged_classes = [[gender = 1], [ethnicity = 1, 2], [insurance = 3, 4], [...] ]
+    selected_protected_attributes = ['gender', 'ethnicity_1']
+    selected_privileged_classes = [[1], [1]]  # privileged: gender=1=male, ethnicity_1=white
+    # insurance_1 = self_pay, insurance_4 = private | marital_status_1 = not-single | religion_1 = catholic
 
     # 2) get an aif360 StandardDataset
     # original_labels = selected_cohort[selected_dependent_variable]
@@ -69,33 +68,40 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
     # 4) Calculate Fairness Metrics
     accuracy = round(classification_metric.accuracy(), 3)
     recall = round(classification_metric.recall(), 3)
-    consistency = classification_metric.consistency()
-    for i, value in enumerate(consistency):
-        consistency[i] = round(value, 3)
+    precision = round(classification_metric.precision(), 3)
     num_instances = round(classification_metric.num_instances(), 0)
 
-    # TODO: missing metrics: demographic_parity_metric, equalized_odds_metric
     statistical_parity_difference = round(classification_metric.statistical_parity_difference(), 3)
-    average_abs_odds_difference = round(classification_metric.average_abs_odds_difference(), 3)
-    average_odds_difference = round(classification_metric.average_odds_difference(), 3)
     disparate_impact = round(classification_metric.disparate_impact(), 3)
-    equal_opportunity_difference = round(classification_metric.equal_opportunity_difference(), 3)
-    differential_fairness_bias_amplification = round(classification_metric.differential_fairness_bias_amplification(), 3)
+    true_positive_rate_difference = round(classification_metric.true_positive_rate_difference(), 3)       # = equal_opportunity_difference
+    false_negative_rate_difference = round(classification_metric.false_negative_rate_difference(), 3)
+    average_odds_difference = round(classification_metric.average_odds_difference(), 3)                 # = equalized_odds_difference
+
+    # differential_fairness_bias_amplification = round(classification_metric.differential_fairness_bias_amplification(), 3)
+    # compares empirical_differential_fairness between original and classified dataset
+    # edf = occurrence of positive cases between privileged and unprivileged
+    # for the question: does my classifier make the occurrence of positive cases higher?
     generalized_entropy_index = round(classification_metric.generalized_entropy_index(), 3)     # alias: theil_index
 
     # 4) return Fairness Report as print if verbose, save as table if save_files
     report = pd.DataFrame({'accuracy': [accuracy],
                            'recall': [recall],
-                           'consistency': [consistency],
+                           'precision': [precision],
                            'num_instances': [num_instances],
                            'statistical_parity_difference': [statistical_parity_difference],
-                           'average_abs_odds_difference': [average_abs_odds_difference],
                            'disparate_impact': [disparate_impact],
-                           'equal_opportunity_difference': [equal_opportunity_difference],
+                           'true_positive_rate_difference': [true_positive_rate_difference],
+                           'false_negative_rate_difference': [false_negative_rate_difference],
                            'average_odds_difference': [average_odds_difference],
-                           'differential_fairness_bias_amplification': [differential_fairness_bias_amplification],
+                           # 'differential_fairness_bias_amplification': [differential_fairness_bias_amplification],
                            'generalized_entropy_index': [generalized_entropy_index]
                            })
+
+    # TODO: find way to plot metrics
+    # especially also accurracy etc. for total, male, female (or alternatives)
+    # https://github.com/Trusted-AI/AIF360/blob/master/examples/tutorial_medical_expenditure.ipynb follow this
+    # Check: how to combine ethnicity + gender (or others)
+
     if verbose:
         print(f'\n CHECK: Fairness Report for {classification_method} on {cohort_title}, {sampling_title}:')
         print(report.transpose().to_string())
