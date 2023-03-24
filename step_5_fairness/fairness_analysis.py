@@ -25,10 +25,6 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
         selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
 
     # 1) select unprivileged_groups and their respective values
-    # Advantage: check fairness of exactly one of the categories (1 is positive, 0 is not)
-    # Disadvantage: not check influence of the complete feature or multiple values of this feature
-    # Solution: use ethnicity_1 AND ethnicity_3 (for example) together to check multiple ethnicity_values
-
     # IMPORTANT: adjust selected_privileged_classes depending on selected_protected_attributes
     selected_protected_attributes = ['gender', 'ethnicity_1']
     selected_privileged_classes = [[1], [1]]  # privileged: gender=1=male, ethnicity_1=white
@@ -60,41 +56,57 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
                                                  unprivileged_groups=unprivileged_groups,
                                                  privileged_groups=privileged_groups)
 
-    # Alternative for metrics (only for dataset_pred)
-    # metric_pred = BinaryLabelDatasetMetric(dataset_pred,
-    #                                       unprivileged_groups=unprivileged_groups,
-    #                                       privileged_groups=privileged_groups)
-
+    # TODO: rework definitions and ideal_value
     # 4) Calculate Fairness Metrics
     accuracy = round(classification_metric.accuracy(), 3)
+    accuracy_def = 'performance metric for overall accuracy'
+    accuracy_expected = 1
     recall = round(classification_metric.recall(), 3)
+    recall_def = 'performance metric for TP/True detection'
+    recall_expected = 1
     precision = round(classification_metric.precision(), 3)
+    precision_def = 'performance metric for TP/Positives detection'
+    precision_expected = 1
     num_instances = round(classification_metric.num_instances(), 0)
-
+    num_instances_def = 'Instances used for prediction'
+    num_instances_expected = '-'
     statistical_parity_difference = round(classification_metric.statistical_parity_difference(), 3)
+    parity_def = 'Statistical Parity'
+    parity_expected = 0
     disparate_impact = round(classification_metric.disparate_impact(), 3)
+    disparate_def = 'Disparate Impact'
+    disparate_expected = 1
     true_positive_rate_difference = round(classification_metric.true_positive_rate_difference(), 3)       # = equal_opportunity_difference
+    tp_rate_def = 'True Positive Rate, alias: Equal Opportunity'
+    tp_rate_expected = 0
     false_negative_rate_difference = round(classification_metric.false_negative_rate_difference(), 3)
+    fp_rate_def = 'False Negative Rate'
+    fp_rate_expected = 0
     average_odds_difference = round(classification_metric.average_odds_difference(), 3)                 # = equalized_odds_difference
+    average_odds_def = 'Average Odds, alias: Equalized Odds'
+    average_odds_expected = 0
+    generalized_entropy_index = round(classification_metric.generalized_entropy_index(), 3)     # alias: theil_index
+    entropy_def = 'Generalized Entropy, alias: Theil Index'
+    entropy_expected = 0
 
+    # OPTIONAL metric:
     # differential_fairness_bias_amplification = round(classification_metric.differential_fairness_bias_amplification(), 3)
     # compares empirical_differential_fairness between original and classified dataset
     # edf = occurrence of positive cases between privileged and unprivileged
     # for the question: does my classifier make the occurrence of positive cases higher?
-    generalized_entropy_index = round(classification_metric.generalized_entropy_index(), 3)     # alias: theil_index
 
     # 4) return Fairness Report as print if verbose, save as table if save_files
-    report = pd.DataFrame({'accuracy': [accuracy],
-                           'recall': [recall],
-                           'precision': [precision],
-                           'num_instances': [num_instances],
-                           'statistical_parity_difference': [statistical_parity_difference],
-                           'disparate_impact': [disparate_impact],
-                           'true_positive_rate_difference': [true_positive_rate_difference],
-                           'false_negative_rate_difference': [false_negative_rate_difference],
-                           'average_odds_difference': [average_odds_difference],
+    report = pd.DataFrame({'accuracy': [accuracy, accuracy_expected, accuracy_def],
+                           'recall': [recall, recall_expected, recall_def],
+                           'precision': [precision, precision_expected, precision_def],
+                           'num_instances': [num_instances, num_instances_expected, num_instances_def],
+                           'statistical_parity_difference': [statistical_parity_difference, parity_expected, parity_def],
+                           'disparate_impact': [disparate_impact, disparate_expected, disparate_def],
+                           'true_positive_rate_difference': [true_positive_rate_difference, tp_rate_expected, tp_rate_def],
+                           'false_negative_rate_difference': [false_negative_rate_difference, fp_rate_expected, fp_rate_def],
+                           'average_odds_difference': [average_odds_difference, average_odds_expected, average_odds_def],
                            # 'differential_fairness_bias_amplification': [differential_fairness_bias_amplification],
-                           'generalized_entropy_index': [generalized_entropy_index]
+                           'generalized_entropy_index': [generalized_entropy_index, entropy_expected, entropy_def]
                            })
 
     # TODO: find way to plot metrics
@@ -114,15 +126,9 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
         # code to export a df
         with open(report_filename, 'w', newline='') as output_file:
             report_export = report.transpose()
-            report_export.rename(columns={0: attributes_string}, inplace=True)
+            report_export.index.names = ['metrics']
+            report_export.rename(columns={0: attributes_string, 1: 'ideal_value', 2: 'information'}, inplace=True)
             report_export.to_csv(output_file, index=True)    # keep index here for metrics titles
             print(f'STATUS: fairness_report was saved to {report_filename}')
-
-        # code to export a dict
-        # with open(report_filename, 'w', newline='') as output_file:
-        #   for key in report.keys():
-        #      output_file.write("%s,%s\n" % (key, report[key]))
-        # output_file.close()
-        # print(f'STATUS: report was saved to {report_filename}')
 
     return report

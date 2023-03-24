@@ -14,7 +14,7 @@ if __name__ == '__main__':
     starting_time = datetime.now()
     PROJECT_PATH: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'  # this variable must be fitted to the users local project folder
     PROJECT_PATH_LAPTOP = 'C:/Users/vanek/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'
-    PROJECT_PATH = PROJECT_PATH_LAPTOP      # TODO: return to old PATH also put removal of outliers back in
+    # PROJECT_PATH = PROJECT_PATH_LAPTOP
     USE_CASE_NAME: str = 'stroke_all_systems'  # stroke_patients_data       # heart_infarct_patients_data
     FEATURES_DF = pd.read_excel('./supplements/FEATURE_PREPROCESSING_TABLE.xlsx')
     SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'
