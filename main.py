@@ -66,7 +66,7 @@ if __name__ == '__main__':
     # CHOOSE: Cohort Parameters
     SELECTED_COHORT = scaled_complete_avg_cohort
     SELECTED_COHORT_TITLE = 'scaled_complete_avg_cohort'
-    SELECT_SAVE_FILES = True
+    SELECT_SAVE_FILES = False
     # Automated: Preprocessed Cohort
     SELECTED_COHORT_preprocessed = get_preprocessed_avg_cohort(avg_cohort=SELECTED_COHORT,
                                                                cohort_title=SELECTED_COHORT_TITLE,
@@ -313,6 +313,7 @@ if __name__ == '__main__':
     ### Fairness Metrics
     # Step 5.1) Calculate Fairness for manual Subgroups
     fairness_analysis.get_fairness_report(use_this_function=True,  # True | False
+                                          plot_performance_metrics=True,
                                           classification_method=SELECTED_CLASSIFICATION_METHOD,
                                           sampling_method=SELECTED_SAMPLING_METHOD,
                                           selected_cohort=SELECTED_COHORT_preprocessed,
