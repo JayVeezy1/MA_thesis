@@ -3,75 +3,60 @@ import datetime
 import pandas as pd
 from aif360.datasets import StandardDataset
 from aif360.metrics import ClassificationMetric
-from fairlearn.metrics import MetricFrame, false_positive_rate, false_negative_rate, selection_rate, count
+from fairlearn.metrics import MetricFrame, selection_rate, count
+from matplotlib import pyplot as plt
 from pandas.core.interchange import dataframe
-from sklearn.metrics import accuracy_score, precision_score
+from sklearn.metrics import accuracy_score, precision_score, roc_auc_score, recall_score
 
 from step_4_classification.classification import split_classification_data
 
 
-# TODO: use aif360 + (or fairlearn? Or even the microsoft package?)
+# TODO: here use the microsoft fairness package for visualization?
 def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, use_case_name,
                                     attributes_string, classification_method, cohort_title, sampling_title,
                                     save_to_file: False):
-    ### First Idea: get predictions for each group from clf
-    # subgroup_privileged, subgroup_unprivileged = get_subgroups(dataset)
-    # 1) Split subgroups of x_test_final into x_privileged and x_unprivileged (also for y_test_final)
-    # 2) make clf.predict(x_privileged) and clf.predict(x_unprivileged)
-    # 3) compare results to split y_test_final or simply get accuracy for these?
-    # 4) Get AUROC curve AND AUPRC (for recall) curve -> does that even depend on the input instances or only on the clf ?
-    # for total, privileged, unprivileged instances
-    # 5) plot all 3 available AUROC curves in one plot
-    ### Second Idea: use already existing predictions inside the ClassificationMetric, count TP etc, calculate metrics
-    # use dataset -> or directly the metric
-    # use https://aif360.readthedocs.io/en/stable/modules/generated/aif360.metrics.utils.compute_num_TF_PN.html
-    # 1. find TP_priv, TN_priv, FP_priv, FN_priv
-    # 2. get the same for _unpriv
-    # probably also get num_instances
-    # 3. calculate Accuracy, Recall etc for each
+    # Use fairlearn MetricFrame to directly plot selected metrics https://fairlearn.org/v0.8/user_guide/assessment/plotting.html
+    metrics = {'accuracy': accuracy_score,
+               'precision': precision_score,
+               'recall': recall_score,
+               'roc_auc': roc_auc_score,
+               'selection rate': selection_rate,    # Calculate the fraction of predicted labels matching the 'good' outcome
+               'count': count}
 
-    # TODO: Finish this plotting
-    ### Third Idea: use fairlearn MetricFrame to directly plot everything you need
-    # https://fairlearn.org/v0.8/user_guide/assessment/plotting.html
-    metrics = {  # todo: why false positive rate??
-        "accuracy": accuracy_score,
-        "precision": precision_score,
-        # "false positive rate": false_positive_rate,
-        # "false negative rate": false_negative_rate,
-        "selection rate": selection_rate,
-        "count": count,
-    }
-    metric_frame = MetricFrame(
-        metrics=metrics, y_true=y_true.to_numpy(), y_pred=y_pred, sensitive_features=selected_attribute_array
-    )
+    metric_frame = MetricFrame(metrics=metrics,
+                               y_true=y_true.to_numpy(),
+                               y_pred=y_pred,
+                               sensitive_features=selected_attribute_array)
 
-    print(metric_frame.overall)
-    print(metric_frame.by_group)        # TODO: Way too many ethnicity_groups! why??
-
-    fig = metric_frame.by_group.plot.bar(
-        subplots=True,
-        layout=[3, 3],
-        legend=False,
-        figsize=[12, 8],
-        title="Metrics per Subgroup",
-    )
+    figure_object = metric_frame.by_group.plot.bar(subplots=True,
+                                                   layout=[3, 3],
+                                                   legend=False,
+                                                   figsize=[12, 8],
+                                                   title=f'Metrics per Subgroup on {attributes_string}')
 
     if save_to_file:
-        current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
-        fig.savefig(
-            f'./output/{use_case_name}/classification/FAIRNESS_{attributes_string}_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png',
+        current_time = datetime.datetime.now().strftime("%H_%M_%S")  # removed %d%m%Y_ from date
+        figure_object[0][0].figure.savefig(
+            f'./output/{use_case_name}/classification/PLOT_FAIRNESS_{attributes_string}_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png',
             dpi=600)
-        fig.show()
-        fig.close()
+
+        filename_string: str = f'./output/{use_case_name}/classification/GROUP_FAIRNESS_{attributes_string}_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
+        filename = filename_string.encode()
+        metrics_per_group_df = metric_frame.by_group
+        with open(filename, 'w', newline='') as output_file:
+            metrics_per_group_df.to_csv(output_file, index=True)
+            print(f'STATUS: metrics_per_group_df was saved to {filename_string}')
+        plt.show()
     else:
-        # fig[0][0].figure.
-        fig[0][0].figure.show()
-        #fig[0][0].figure.close()
+        print('CHECK: Overall metrics:')
+        print(metric_frame.overall)
+        print('CHECK: Metrics by group:')
+        print(metric_frame.by_group)
+        plt.show()
 
-    ### Additionally: Check if 7.2.1 makes sense to plot ROC curve for groups
-    # https://afraenkel.github.io/fairness-book/content/07-score-functions.html
-
-    ### Additionally: Check if plotting accuracy + any_metric depending on threshold (x-axis) can be done?
+    # todo future research: Extensions for Fairness Metrics
+    # Extension 1: Check if 7.2.1 makes sense to plot ROC curve for groups https://afraenkel.github.io/fairness-book/content/07-score-functions.html
+    # Extension 2: Check if plotting accuracy with a metric depending on threshold (x-axis) can be done?
     # This would be useful for threshold optimization, but can I even change threshold anywhere?
     # https://github.com/Trusted-AI/AIF360/blob/master/examples/tutorial_medical_expenditure.ipynb follow this
 
@@ -95,9 +80,10 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
 
     # 1) select unprivileged_groups and their respective values
     # IMPORTANT: adjust selected_privileged_classes depending on selected_protected_attributes
-    selected_protected_attributes = ['gender']
+    selected_protected_attributes = ['gender', 'ethnicity_1']
     selected_privileged_classes = [[1]]  # privileged: gender=1=male, ethnicity_1=white
     # insurance_1 = self_pay, insurance_4 = private | marital_status_1 = not-single | religion_1 = catholic
+    attributes_string = '_'.join(str(e) for e in selected_protected_attributes)
 
     # 2) get an aif360 StandardDataset
     # original_labels = selected_cohort[selected_dependent_variable]
@@ -185,22 +171,22 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
         print(report.transpose().to_string())
 
     if plot_performance_metrics:
-        # todo: gender spalte ändert sich in SMOTE oder in split -> wie originalwerte?
-        selected_attribute_array = x_test_final[selected_protected_attributes]
+        temp_df: dataframe = x_test_final[selected_protected_attributes]
+        # check where all selected columns contain a 1
+        all_ones_array = temp_df.apply(lambda x: all(x == 1), axis=1).astype(int)
+        # temp_df['new_checking_column'] = all_ones_array.astype(int)
         create_performance_metrics_plot(y_pred=predicted_labels,
                                         y_true=y_test_final,
-                                        selected_attribute_array=selected_attribute_array,
+                                        selected_attribute_array=all_ones_array,
                                         use_case_name=use_case_name,
-                                        attributes_string=''.join(str(e) for e in selected_protected_attributes),
+                                        attributes_string=attributes_string,
                                         classification_method=classification_method,
                                         cohort_title=cohort_title,
                                         sampling_title=sampling_title,
-                                        save_to_file=save_to_file
-                                        )
+                                        save_to_file=save_to_file)
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%H_%M_%S")  # removed %d%m%Y_ from date
-        attributes_string = ''.join(str(e) for e in selected_protected_attributes)
         report_filename_string: str = f'./output/{use_case_name}/classification/FAIRNESS_{attributes_string}_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
         report_filename = report_filename_string.encode()
         # code to export a df

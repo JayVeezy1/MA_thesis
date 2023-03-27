@@ -12,7 +12,7 @@ from sklearn.metrics import classification_report, confusion_matrix, roc_auc_sco
 from sklearn.model_selection import train_test_split
 from sklearn.tree import plot_tree
 from sklearn.model_selection import GridSearchCV
-from imblearn.over_sampling import SMOTE, RandomOverSampler
+from imblearn.over_sampling import SMOTE, RandomOverSampler, SMOTENC
 from imblearn.under_sampling import NearMiss
 from xgboost import XGBClassifier
 import seaborn as sn
@@ -83,7 +83,17 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
             y_test_final = new_y_test
             sampling_title = 'random_oversampling'
         else:
-            smote = SMOTE(random_state=1321)
+            # checking for categorical features with only columns with 1 or 0 (and 0.5 for stroke_type)
+            # because this is already after one-hot encoding. Column names are not in FEATURES_PREPROCESSING table
+            categorical_features_positions = []
+            for i, column in enumerate(basic_x_train.columns):
+                if basic_x_train[column].isin([0, 0.5, 1]).all():
+                    categorical_features_positions.append(i)
+
+            smote = SMOTENC(categorical_features=categorical_features_positions,
+                            sampling_strategy='auto', random_state=1321, k_neighbors=5)
+            # smote = SMOTE(random_state=1321)        # this was the old SMOTE version for only numerical features
+
             smote_x_resampled, smote_y_resampled = smote.fit_resample(basic_x_train, basic_y_train)
             new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(smote_x_resampled, smote_y_resampled,
                                                                                 test_size=0.2,
