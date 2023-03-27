@@ -3,14 +3,17 @@ import datetime
 import pandas as pd
 from aif360.datasets import StandardDataset
 from aif360.metrics import ClassificationMetric
-import fairlearn
+from fairlearn.metrics import MetricFrame, false_positive_rate, false_negative_rate, selection_rate, count
 from pandas.core.interchange import dataframe
+from sklearn.metrics import accuracy_score, precision_score
 
 from step_4_classification.classification import split_classification_data
 
 
 # TODO: use aif360 + (or fairlearn? Or even the microsoft package?)
-def plot_performance_metrics(clf, x_test_final, y_test_final, selected_protected_attributes):
+def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, use_case_name,
+                                    attributes_string, classification_method, cohort_title, sampling_title,
+                                    save_to_file: False):
     ### First Idea: get predictions for each group from clf
     # subgroup_privileged, subgroup_unprivileged = get_subgroups(dataset)
     # 1) Split subgroups of x_test_final into x_privileged and x_unprivileged (also for y_test_final)
@@ -19,7 +22,6 @@ def plot_performance_metrics(clf, x_test_final, y_test_final, selected_protected
     # 4) Get AUROC curve AND AUPRC (for recall) curve -> does that even depend on the input instances or only on the clf ?
     # for total, privileged, unprivileged instances
     # 5) plot all 3 available AUROC curves in one plot
-
     ### Second Idea: use already existing predictions inside the ClassificationMetric, count TP etc, calculate metrics
     # use dataset -> or directly the metric
     # use https://aif360.readthedocs.io/en/stable/modules/generated/aif360.metrics.utils.compute_num_TF_PN.html
@@ -28,15 +30,46 @@ def plot_performance_metrics(clf, x_test_final, y_test_final, selected_protected
     # probably also get num_instances
     # 3. calculate Accuracy, Recall etc for each
 
-
-    # TODO: Try this
+    # TODO: Finish this plotting
     ### Third Idea: use fairlearn MetricFrame to directly plot everything you need
     # https://fairlearn.org/v0.8/user_guide/assessment/plotting.html
+    metrics = {  # todo: why false positive rate??
+        "accuracy": accuracy_score,
+        "precision": precision_score,
+        # "false positive rate": false_positive_rate,
+        # "false negative rate": false_negative_rate,
+        "selection rate": selection_rate,
+        "count": count,
+    }
+    metric_frame = MetricFrame(
+        metrics=metrics, y_true=y_true.to_numpy(), y_pred=y_pred, sensitive_features=selected_attribute_array
+    )
 
+    print(metric_frame.overall)
+    print(metric_frame.by_group)        # TODO: Way too many ethnicity_groups! why??
+
+    fig = metric_frame.by_group.plot.bar(
+        subplots=True,
+        layout=[3, 3],
+        legend=False,
+        figsize=[12, 8],
+        title="Metrics per Subgroup",
+    )
+
+    if save_to_file:
+        current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
+        fig.savefig(
+            f'./output/{use_case_name}/classification/FAIRNESS_{attributes_string}_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png',
+            dpi=600)
+        fig.show()
+        fig.close()
+    else:
+        # fig[0][0].figure.
+        fig[0][0].figure.show()
+        #fig[0][0].figure.close()
 
     ### Additionally: Check if 7.2.1 makes sense to plot ROC curve for groups
     # https://afraenkel.github.io/fairness-book/content/07-score-functions.html
-
 
     ### Additionally: Check if plotting accuracy + any_metric depending on threshold (x-axis) can be done?
     # This would be useful for threshold optimization, but can I even change threshold anywhere?
@@ -62,8 +95,8 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
 
     # 1) select unprivileged_groups and their respective values
     # IMPORTANT: adjust selected_privileged_classes depending on selected_protected_attributes
-    selected_protected_attributes = ['gender', 'ethnicity_1']
-    selected_privileged_classes = [[1], [1]]  # privileged: gender=1=male, ethnicity_1=white
+    selected_protected_attributes = ['gender']
+    selected_privileged_classes = [[1]]  # privileged: gender=1=male, ethnicity_1=white
     # insurance_1 = self_pay, insurance_4 = private | marital_status_1 = not-single | religion_1 = catholic
 
     # 2) get an aif360 StandardDataset
@@ -134,11 +167,15 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
                            'Recall': [recall, recall_expected, recall_def],
                            'Precision': [precision, precision_expected, precision_def],
                            'Number of Instances': [num_instances, num_instances_expected, num_instances_def],
-                           'Statistical Parity Difference': [statistical_parity_difference, parity_expected, parity_def],
+                           'Statistical Parity Difference': [statistical_parity_difference, parity_expected,
+                                                             parity_def],
                            'Disparate Impact Ratio': [disparate_impact, disparate_expected, disparate_def],
-                           'True Positive Rate Difference': [true_positive_rate_difference, tp_rate_expected, tp_rate_def],
-                           'False Negative Rate Difference': [false_negative_rate_difference, fp_rate_expected, fp_rate_def],
-                           'Average Odds Difference': [average_odds_difference, average_odds_expected, average_odds_def],
+                           'True Positive Rate Difference': [true_positive_rate_difference, tp_rate_expected,
+                                                             tp_rate_def],
+                           'False Negative Rate Difference': [false_negative_rate_difference, fp_rate_expected,
+                                                              fp_rate_def],
+                           'Average Odds Difference': [average_odds_difference, average_odds_expected,
+                                                       average_odds_def],
                            # 'differential_fairness_bias_amplification': [differential_fairness_bias_amplification],
                            'Generalized Entropy Index': [generalized_entropy_index, entropy_expected, entropy_def]
                            })
@@ -148,10 +185,21 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
         print(report.transpose().to_string())
 
     if plot_performance_metrics:
-        plot_performance_metrics(dataset)
+        # todo: gender spalte ändert sich in SMOTE oder in split -> wie originalwerte?
+        selected_attribute_array = x_test_final[selected_protected_attributes]
+        create_performance_metrics_plot(y_pred=predicted_labels,
+                                        y_true=y_test_final,
+                                        selected_attribute_array=selected_attribute_array,
+                                        use_case_name=use_case_name,
+                                        attributes_string=''.join(str(e) for e in selected_protected_attributes),
+                                        classification_method=classification_method,
+                                        cohort_title=cohort_title,
+                                        sampling_title=sampling_title,
+                                        save_to_file=save_to_file
+                                        )
 
     if save_to_file:
-        current_time = datetime.datetime.now().strftime("%H_%M_%S")         # removed %d%m%Y_ from date
+        current_time = datetime.datetime.now().strftime("%H_%M_%S")  # removed %d%m%Y_ from date
         attributes_string = ''.join(str(e) for e in selected_protected_attributes)
         report_filename_string: str = f'./output/{use_case_name}/classification/FAIRNESS_{attributes_string}_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
         report_filename = report_filename_string.encode()
@@ -160,7 +208,7 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
             report_export = report.transpose()
             report_export.index.names = ['Metrics']
             report_export.rename(columns={0: attributes_string, 1: 'Optimal Value', 2: 'Information'}, inplace=True)
-            report_export.to_csv(output_file, index=True)    # keep index here for metrics titles
+            report_export.to_csv(output_file, index=True)  # keep index here for metrics titles
             print(f'STATUS: fairness_report was saved to {report_filename}')
 
     return report
