@@ -10,7 +10,6 @@ from imblearn.over_sampling import SMOTE, RandomOverSampler
 from tensorflow.python.keras import Sequential
 from tensorflow.python.keras.layers import Dense
 
-
 # Own Functions
 from step_4_classification.classification import preprocess_for_classification
 
@@ -23,7 +22,8 @@ def get_classification_report_deeplearning(use_this_function, display_confusion_
     if not use_this_function:
         return None
 
-    print("Num GPUs Available: ", len(tensorflow.config.list_physical_devices('GPU')))  # output = 0
+    if verbose:
+        print("Num GPUs Available: ", len(tensorflow.config.list_physical_devices('GPU')))  # output = 0
 
     # if display_confusion_matrix:
     # cm = get_confusion_matrix(use_this_function=True,  # True | False
@@ -66,35 +66,42 @@ def get_classification_report_deeplearning(use_this_function, display_confusion_
     #     **kwargs
     # )
 
-
-
     # Create basic training_test_split
     x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data_DL(
         selected_cohort, cohort_title, features_df, selected_features,
         selected_dependent_variable, sampling_method, verbose)
 
-    # TODO: debug and check if x and y are acceptable format for Sequential()
     # define the keras model
-    model = Sequential()
-    model.add(Dense(14, input_shape=(10, 19), activation='relu'))       # todo: why 10, 19 ?
+    model = Sequential()                # basic keras model for deep learning network
+
+    feature_count = len(x_train_final.columns)
+    model.add(Dense(14, input_shape=(None, feature_count), activation='relu'))  # todo: make input shape dynamic depending on selected + encoded features        # OLD: (32, 54)
     model.add(Dense(12, activation='relu'))
-    model.add(Dense(10, activation='relu'))         # added this layer - useful?
-    model.add(Dense(8, activation='relu'))         # added this layer - useful?
-    model.add(Dense(8, activation='relu'))         # added this layer - useful?
+    model.add(Dense(10, activation='relu'))  # added this layer - useful?
+    model.add(Dense(8, activation='relu'))  # added this layer - useful?
+    model.add(Dense(8, activation='relu'))  # added this layer - useful?
     model.add(Dense(1, activation='sigmoid'))
     # compile the keras model
-    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])           # alternative: optimizer='sgd'
+    # using recall as metric: metrics=[tf.keras.metrics.Recall(thresholds=0)]
+
     # fit the keras model on the dataset
     # this is the training step, prediction will be inside the Classification Report
-    model.fit(x=x_train_final, y=y_train_final, epochs=150, batch_size=10)      # change epochs back to 150
+    model.fit(x=x_train_final, y=y_train_final, epochs=150, batch_size=32)  # change epochs back to 150
 
-    # evaluate the keras model
-    #_, accuracy = model.evaluate(X=x_train_final, y=y_train_final)
-    #print(accuracy)
-    # print('Accuracy: %.2f' % (accuracy * 100))        # ERROR: raise TypeError('Invalid keyword arguments: %s' % (kwargs,))
+    loss_and_metrics = model.evaluate(x_test_final, y_test_final, batch_size=128)
+    print(f'\n CHECK: loss_and_metrics:')
+    print(loss_and_metrics)
+    y_pred = model.predict(x_test_final, batch_size=128)
 
-    y_prediction_values = model.predict(x_test_basic)       # TODO: these should not be needed to round in next step but clearly 0 or 1 - why not? whats wrong here?
-    report = classification_report(y_test_basic, y_prediction_values.round())
+    report = classification_report(y_true=y_test_final, y_pred=y_pred.round())         # todo: this should not need 'round' should be clearly 0 or 1 - Why not binary?
+
+    recall_object = tensorflow.keras.metrics.Recall()
+    recall_object.update_state(y_true=y_test_final, y_pred=y_pred)
+    recall_object.result().numpy()
+    print(f'\n CHECK: recall_object:')
+    print(recall_object)
+
     if verbose:
         print(f'\n CHECK: Classification Report for deeplearning on {cohort_title}, {sampling_title}:')
         print(report)
@@ -111,10 +118,9 @@ def get_classification_report_deeplearning(use_this_function, display_confusion_
     return report
 
 
-
 def split_classification_data_DL(selected_cohort: dataframe, cohort_title: str, features_df: dataframe,
-                              selected_features: list, selected_dependent_variable: str, sampling_method: str,
-                            verbose: True):
+                                 selected_features: list, selected_dependent_variable: str, sampling_method: str,
+                                 verbose: True):
     # Classification/Prediction on avg_patient_cohort
     # Cleanup & filtering
     avg_df = preprocess_for_classification(selected_cohort=selected_cohort,
@@ -131,23 +137,20 @@ def split_classification_data_DL(selected_cohort: dataframe, cohort_title: str, 
     # If selected, get over-/under-sampled data
     try:
         x_train_final, x_test_final, y_train_final, y_test_final, sampling_title = get_sampled_data_DL(sampling_method,
-                                                                                                    x_train_basic,
-                                                                                                    x_test_basic,
-                                                                                                    y_train_basic,
-                                                                                                    y_test_basic,
-                                                                                                    cohort_title,
-                                                                                                    verbose)
+                                                                                                       x_train_basic,
+                                                                                                       x_test_basic,
+                                                                                                       y_train_basic,
+                                                                                                       y_test_basic,
+                                                                                                       cohort_title,
+                                                                                                       verbose)
     except TypeError as e:
         return None
-
-
 
     return x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic
 
 
-
 def get_sampled_data_DL(sampling_method, basic_x_train, basic_x_test, basic_y_train, basic_y_test, cohort_title,
-                     verbose: True):
+                        verbose: True):
     if sampling_method == 'no_sampling':  # no over/undersampling
         x_train_final = basic_x_train
         y_train_final = basic_y_train

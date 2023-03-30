@@ -14,7 +14,7 @@ if __name__ == '__main__':
     starting_time = datetime.now()
     PROJECT_PATH: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'  # this variable must be fitted to the users local project folder
     PROJECT_PATH_LAPTOP = 'C:/Users/vanek/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'
-    # PROJECT_PATH = PROJECT_PATH_LAPTOP          # TODO: Remove this when on PC, also put back in Patients.py removal of outliers
+    # PROJECT_PATH = PROJECT_PATH_LAPTOP
     USE_CASE_NAME: str = 'stroke_all_systems'  # stroke_patients_data       # heart_infarct_patients_data
     FEATURES_DF = pd.read_excel('./supplements/FEATURE_PREPROCESSING_TABLE.xlsx')
     SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'
@@ -85,19 +85,22 @@ if __name__ == '__main__':
     ALL_COHORTS_WITH_TITLES: dict = {'scaled_complete_avg_cohort': scaled_complete_cohort_preprocessed,
                                      'scaled_hemorrhage_avg_cohort': scaled_hemorrhage_cohort_preprocessed,
                                      'scaled_ischemic_avg_cohort': scaled_ischemic_cohort_preprocessed}
-    print('STATUS: Preprocessing finished. \n')
+    print('STATUS: Preprocessing finished.\n')
 
-    # TODO write: update predictions chapter in overleaf
+    # todo 1.1: check Wiese Paper for their fairness measures
+    # todo 1.2: include the fairness package? https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md Also in general the AI Responsible package useful as a dashboard?
 
-    # TODO this week: add a Deep Learning model, then test which model has best results for now? -> this is a first part-result, should be comparable to papers
+    # TODO 2: improve Deep Learning model, then test which model has best results for now (add to comparing-loop)? -> this is a first part-result, should be comparable to papers
 
-    # TODO next week: classification add SHAPley values (+ shap waterfalls, with this different importance for subgroups, comparable to correlations) and AUPRC
+    # TODO 3: update predictions + deep learning + fairness chapter in overleaf
 
-    # todo check: include the fairness package? https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md Also in general the AI Responsible package useful as a dashboard?
-    # todo after: analyze clusters for 'fairness' -> bridge to ASDF Dashboard
+    # todo next week: implement ASDF Dashboard
+
+    # TODO after: add SHAPley values to classification chapter (+ shap waterfalls, with this different importance for subgroups, comparable to correlations) and AUPRC
+    # get shapely function from there (also use this analysis to compare clusters?) https://antonsruberts.github.io/kproto-audience/
 
     # todo long term: add filtering mechanism in Patient Class, recheck stroke filtering (move ischemic to front)
-    # todo long term: add 'decision-boundary-plot' to visualize the clustering (on 2 features)
+    # todo long term: add 'decision-boundary-plot' to visualize the clustering (on 2 features), maybe use clustering for predictions?
     # todo long term: add 3-features-visualization plot (like pacmap but with real dimensions)
     # todo long term: graphic to visualize the filtering steps of complete mimic-iii dataset for chapter 2
 
@@ -171,10 +174,6 @@ if __name__ == '__main__':
                                      use_encoding=False,  # not needed for kPrototypes
                                      save_to_file=SELECT_SAVE_FILES)
 
-    # TODO: check if this can be used. Predictions with Clustering algo? Checking validity of clusters with this?
-    # clusters = kproto_obj.fit_predict(X=avg_np, categorical=categorical_columns)
-    # fig = plot_cluster(kproto, clusters.astype(float), title="k-prototypes")
-
     # kmeans: Cluster Comparison (only for manually selected_cluster_count -> only kmeans/kprot)
     clusters_overview_table = clustering.calculate_clusters_overview_table(use_this_function=False,  # True | False
                                                                            selected_cohort=SELECTED_COHORT_preprocessed,
@@ -225,6 +224,7 @@ if __name__ == '__main__':
                                                     save_to_file=SELECT_SAVE_FILES
                                                     )
     # Classification Report
+    # todo long term: add fairness metrics to classification_report
     report = classification.get_classification_report(use_this_function=False,  # True | False
                                                       display_confusion_matrix=False,  # option for CM
                                                       classification_method=SELECTED_CLASSIFICATION_METHOD,
@@ -256,7 +256,7 @@ if __name__ == '__main__':
                                              )
 
     # Step 4.2) Deep Learning Neural Network
-    # Planning:
+    # DL Planning:
     # 1) Tutorial for keras example: https://machinelearningmastery.com/tutorial-first-neural-network-python-keras/
     # tensorflow GRU model https://www.tensorflow.org/api_docs/python/tf/keras/layers/GRU
     # 1.2) directly with tensorflow the GPU: https://www.tensorflow.org/guide/gpu
@@ -267,7 +267,7 @@ if __name__ == '__main__':
     # must also be setup in Visual Studio
 
     # Classification Report DLNN
-    report_DL = classification_deeplearning.get_classification_report_deeplearning(use_this_function=False,
+    report_DL = classification_deeplearning.get_classification_report_deeplearning(use_this_function=True,
                                                                                    # True | False
                                                                                    display_confusion_matrix=True,
                                                                                    # option for CM
@@ -294,9 +294,6 @@ if __name__ == '__main__':
 
     # Input: selected_cohort and its ideal kmeans cluster-count
     # Output: table of prediction quality per cluster, rows = different model configs (per classification_method and dependent_variable)
-    # todo: use this analysis to compare clusters: https://antonsruberts.github.io/kproto-audience/
-    # also get shapely function from there
-
     classification.compare_classification_models_on_clusters(use_this_function=False,  # True | False
                                                              use_case_name=USE_CASE_NAME,
                                                              features_df=FEATURES_DF,
@@ -312,7 +309,7 @@ if __name__ == '__main__':
 
     ### Fairness Metrics
     # Step 5.1) Calculate Fairness for manual Subgroups
-    fairness_analysis.get_fairness_report(use_this_function=True,  # True | False
+    fairness_analysis.get_fairness_report(use_this_function=False,  # True | False
                                           plot_performance_metrics=True,
                                           classification_method=SELECTED_CLASSIFICATION_METHOD,
                                           sampling_method=SELECTED_SAMPLING_METHOD,
@@ -324,14 +321,13 @@ if __name__ == '__main__':
                                           selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                           verbose=True,
                                           use_grid_search=USE_GRIDSEARCH,
-                                          save_to_file=SELECT_SAVE_FILES
-                                          )
+                                          save_to_file=SELECT_SAVE_FILES)
 
     ### Automated Subgroup detection
     # Step 6.1) Calculate automated Subgroups and related fairness metrics
 
     # Step 6.2) Include ASDF-Dashboard as frontend
 
-    print(f'\n STATUS: Analysis finished for {len(SELECTED_FEATURES)} selected_features.')
+    print(f'\nSTATUS: Analysis finished for {len(SELECTED_FEATURES)} selected_features.')
     time_diff = datetime.now() - starting_time
     print(f'STATUS: Seconds needed: ', time_diff.total_seconds())

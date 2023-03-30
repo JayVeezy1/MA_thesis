@@ -228,23 +228,20 @@ class Patient:
         avg_patient_cohort = avg_patient_cohort.sort_values(by=['icustay_id'], axis=0)
         avg_patient_cohort = avg_patient_cohort.reset_index(drop=True)
 
-        # TODO: Put this back on when not working with laptop anymore:
-        """
         # Remove outliers where patient-avg is 5x higher than feature-mean()
-        OUTLIERS_THRESHOLD = 4
+        OUTLIERS_THRESHOLD = 5              # todo discuss: is this too strict? Do I remove important patients?
         continuous_features = features_df['feature_name'].loc[
             features_df['categorical_or_continuous'] == 'continuous'].to_list()
         removed_entries = 0
         for temp_icustay_id in avg_patient_cohort['icustay_id'].to_list():
             for feature in continuous_features:
                 temp_patient_value = avg_patient_cohort.loc[avg_patient_cohort['icustay_id'] == temp_icustay_id, feature].item()
-                if temp_patient_value > avg_patient_cohort[feature].mean() * OUTLIERS_THRESHOLD:        # todo discuss: is this too strict? Do I remove important patients?
+                if temp_patient_value > avg_patient_cohort[feature].mean() * OUTLIERS_THRESHOLD:
                     avg_patient_cohort.loc[avg_patient_cohort['icustay_id'] == temp_icustay_id, feature] = np.nan
                     # print(f'CHECK: Removing avg value for icustay_id: {temp_icustay_id} and feature: {feature}')
                     removed_entries += 1
             # print(f'CHECK: Finished Outliers Check for temp_icustay_id {temp_icustay_id}.')
         print(f'CHECK: Outliers threshold: {OUTLIERS_THRESHOLD}x higher than mean. Removed entries: {removed_entries}')
-        """
 
         # Export avg_patient_cohort
         filename_string: str = f'{project_path}exports/{use_case_name}/avg_patient_cohort.csv'

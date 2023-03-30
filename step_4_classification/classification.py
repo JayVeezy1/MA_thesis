@@ -187,7 +187,8 @@ def split_classification_data(selected_cohort: dataframe, cohort_title: str, fea
         return None
 
     # optimize RF classifier
-    if (classification_method == 'RandomForest' or classification_method == 'RandomForest_with_gridsearch') and use_grid_search:
+    if (
+            classification_method == 'RandomForest' or classification_method == 'RandomForest_with_gridsearch') and use_grid_search:
         clf = grid_search_optimal_RF(clf, x_train_final, y_train_final, verbose)
 
     # this is the training step, prediction will be inside the Classification Report
@@ -347,7 +348,8 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
 
     # split_classification_data
     clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
-        selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=features_df, selected_features=selected_features,
+        selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=features_df,
+        selected_features=selected_features,
         selected_dependent_variable=selected_dependent_variable, classification_method=classification_method,
         sampling_method=sampling_method, use_grid_search=use_grid_search, verbose=verbose)
 
@@ -373,7 +375,7 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
         clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, clf_probs)
     else:
         clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, clf_probs)
-        plt.plot(clf_fpr, clf_tpr, marker='.', label='Random Forest (AUROC = %0.3f)' % auc_score)       # TODO: wrap title
+        plt.plot(clf_fpr, clf_tpr, marker='.', label='Random Forest (AUROC = %0.3f)' % auc_score)  # TODO: wrap title
 
     # Add a random predictor line to plot
     random_probs = [0 for _ in range(len(y_test_basic))]
@@ -512,7 +514,8 @@ def compare_classification_models_on_cohort(use_this_function, use_case_name, fe
 
 def compare_classification_models_on_clusters(use_this_function, use_case_name, features_df, selected_features,
                                               selected_cohort, all_classification_methods, all_dependent_variables,
-                                              selected_k_means_count, check_sh_score, use_grid_search: False, use_encoding: False,
+                                              selected_k_means_count, check_sh_score, use_grid_search: False,
+                                              use_encoding: False,
                                               save_to_file):
     # calculate prediction quality per cluster, save into table classification_clusters_overview
     # todo long term: this is only for kmeans, also add for other clustering methods (dynamic like DBSCAN and ASDF also possible?)
@@ -522,15 +525,15 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
     if check_sh_score:
         # any option to automatically get optimal cluster count from this?
         plot_sh_score(use_this_function=True,  # True | False
-                             selected_cohort=selected_cohort,
-                             cohort_title='complete_selected_cohort',
-                             use_case_name=use_case_name,
-                             features_df=features_df,
-                             selected_features=selected_features,
-                             selected_dependent_variable='death_in_hosp',
-                            clustering_method='kmeans',                             # todo: also make usable for kprot
-                            use_encoding=use_encoding,
-                             save_to_file=False)
+                      selected_cohort=selected_cohort,
+                      cohort_title='complete_selected_cohort',
+                      use_case_name=use_case_name,
+                      features_df=features_df,
+                      selected_features=selected_features,
+                      selected_dependent_variable='death_in_hosp',
+                      clustering_method='kmeans',                       # todo: also make usable for kprot
+                      use_encoding=use_encoding,
+                      save_to_file=False)
 
     classification_clusters_overview = pd.DataFrame()
 
@@ -543,6 +546,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                                         selected_features=selected_features,
                                                         selected_dependent_variable=dependent_variable,
                                                         selected_k_means_count=selected_k_means_count,
+                                                        use_encoding=use_encoding,
                                                         verbose=False)
 
             # get total_auc_score for total set
@@ -557,8 +561,9 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                             selected_dependent_variable=dependent_variable,
                                             show_plot=False,
                                             verbose=False,
-                                            save_to_file=False
-                                            )
+                                            use_grid_search=use_grid_search,
+                                            save_to_file=False)
+
             total_cm_df: dataframe = get_confusion_matrix(use_this_function=True,  # True | False
                                                           classification_method=classification_method,
                                                           sampling_method='oversampling',  # SELECTED_SAMPLING_METHOD
@@ -570,8 +575,8 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                                           selected_dependent_variable=dependent_variable,
                                                           use_grid_search=use_grid_search,
                                                           verbose=False,
-                                                          save_to_file=False
-                                                          )
+                                                          save_to_file=False)
+
             current_settings = pd.DataFrame([{'dependent_variable': dependent_variable,
                                               'classification_method': classification_method,
                                               'cluster': 'total_model',
