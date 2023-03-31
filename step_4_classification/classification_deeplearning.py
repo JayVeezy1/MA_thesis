@@ -1,6 +1,7 @@
 import datetime
 
 import tensorflow
+from matplotlib import pyplot as plt
 from pandas.core.interchange import dataframe
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
@@ -14,8 +15,9 @@ from tensorflow.python.keras.layers import Dense
 from step_4_classification.classification import preprocess_for_classification
 
 
-def get_classification_report_deeplearning(use_this_function, display_confusion_matrix,
-                                           sampling_method, selected_cohort, cohort_title, use_case_name, features_df,
+# Optional idea: use GPU for Deep Learning model for more efficient and faster computation
+def get_classification_report_deeplearning(use_this_function, sampling_method, selected_cohort, cohort_title,
+                                           use_case_name, features_df,
                                            selected_features, selected_dependent_variable, verbose,
                                            save_to_file):
     # calculate the CM and return the corresponding ClassificationReport
@@ -25,88 +27,46 @@ def get_classification_report_deeplearning(use_this_function, display_confusion_
     if verbose:
         print("Num GPUs Available: ", len(tensorflow.config.list_physical_devices('GPU')))  # output = 0
 
-    # if display_confusion_matrix:
-    # cm = get_confusion_matrix(use_this_function=True,  # True | False
-    #                         classification_method=classification_method,
-    #                        sampling_method=sampling_method,
-    #                       selected_cohort=selected_cohort,
-    #                      cohort_title=cohort_title,
-    #                     use_case_name=use_case_name,
-    #                    features_df=features_df,
-    #                   selected_features=selected_features,
-    #                  selected_dependent_variable=selected_dependent_variable,
-    #                 use_grid_search=use_grid_search,
-    #                verbose=verbose,
-    #               save_to_file=save_to_file)
-
-    # tf.keras.layers.GRU(
-    #     units,
-    #     activation='tanh',
-    #     recurrent_activation='sigmoid',
-    #     use_bias=True,
-    #     kernel_initializer='glorot_uniform',
-    #     recurrent_initializer='orthogonal',
-    #     bias_initializer='zeros',
-    #     kernel_regularizer=None,
-    #     recurrent_regularizer=None,
-    #     bias_regularizer=None,
-    #     activity_regularizer=None,
-    #     kernel_constraint=None,
-    #     recurrent_constraint=None,
-    #     bias_constraint=None,
-    #     dropout=0.0,
-    #     recurrent_dropout=0.0,
-    #     return_sequences=False,
-    #     return_state=False,
-    #     go_backwards=False,
-    #     stateful=False,
-    #     unroll=False,
-    #     time_major=False,
-    #     reset_after=True,
-    #     **kwargs
-    # )
-
     # Create basic training_test_split
     x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data_DL(
         selected_cohort, cohort_title, features_df, selected_features,
         selected_dependent_variable, sampling_method, verbose)
 
     # define the keras model
+    # Optional idea: use tf.keras.layers.GRU nodes for Deep Learning model instead of Sequential() model
     model = Sequential()                # basic keras model for deep learning network
-
-    feature_count = len(x_train_final.columns)
-    model.add(Dense(14, input_shape=(None, feature_count), activation='relu'))  # todo: make input shape dynamic depending on selected + encoded features        # OLD: (32, 54)
-    model.add(Dense(12, activation='relu'))
-    model.add(Dense(10, activation='relu'))  # added this layer - useful?
-    model.add(Dense(8, activation='relu'))  # added this layer - useful?
-    model.add(Dense(8, activation='relu'))  # added this layer - useful?
+    model.add(Dense(16, input_shape=(None, len(x_train_final.columns)), activation='relu'))
+    model.add(Dense(12, activation='relu'))         # amount and setup of layers can be changed
+    model.add(Dense(10, activation='relu'))
+    model.add(Dense(8, activation='relu'))
+    model.add(Dense(8, activation='relu'))
     model.add(Dense(1, activation='sigmoid'))
+
     # compile the keras model
-    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])           # alternative: optimizer='sgd'
-    # using recall as metric: metrics=[tf.keras.metrics.Recall(thresholds=0)]
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+    # alternative optimizer: 'sgd'
+    # alternative use recall as metric: metrics=[tf.keras.metrics.Recall(thresholds=0)]
 
-    # fit the keras model on the dataset
-    # this is the training step, prediction will be inside the Classification Report
-    model.fit(x=x_train_final, y=y_train_final, epochs=150, batch_size=32)  # change epochs back to 150
+    # fit the keras model on the dataset + predict values y_pred
+    history = model.fit(x=x_train_final, y=y_train_final, epochs=150, batch_size=32)
+    y_pred = model.predict(x=x_test_final, batch_size=128).round()   # round() needed to get from sigmoid probability to class value 0 or 1
 
-    loss_and_metrics = model.evaluate(x_test_final, y_test_final, batch_size=128)
-    print(f'\n CHECK: loss_and_metrics:')
-    print(loss_and_metrics)
-    y_pred = model.predict(x_test_final, batch_size=128)
+    # Get complete classification_report
+    report = classification_report(y_true=y_test_final, y_pred=y_pred)
 
-    report = classification_report(y_true=y_test_final, y_pred=y_pred.round())         # todo: this should not need 'round' should be clearly 0 or 1 - Why not binary?
-
+    # Get recall value
     recall_object = tensorflow.keras.metrics.Recall()
     recall_object.update_state(y_true=y_test_final, y_pred=y_pred)
-    recall_object.result().numpy()
-    print(f'\n CHECK: recall_object:')
-    print(recall_object)
+    recall_value = recall_object.result().numpy()
 
     if verbose:
         print(f'\n CHECK: Classification Report for deeplearning on {cohort_title}, {sampling_title}:')
         print(report)
+        print(f'\n CHECK: recall_object:')
+        print(recall_value)
 
     if save_to_file:
+        # Save DL classification_report
         current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
         report_filename_string: str = f'./output/{use_case_name}/classification_deeplearning/REPORT_deeplearning_{cohort_title}_{sampling_title}_{current_time}.csv'
         report_filename = report_filename_string.encode()
@@ -114,6 +74,24 @@ def get_classification_report_deeplearning(use_this_function, display_confusion_
             output_file.write(report)
             output_file.close()
             print(f'STATUS: deeplearning classification report was saved to {report_filename}')
+
+        # Save model configurations plot
+        loss_and_metrics = model.evaluate(x=x_test_final, y=y_test_final, batch_size=128)
+        fig, ax = plt.subplots()
+        loss_color = '#B00000'
+        ax.plot(history.history['loss'], color=loss_color)      # , marker=".")
+        ax.set_xlabel('epoch', fontsize=12)
+        ax.set_ylabel('loss', color=loss_color, fontsize=12)
+        ax2 = ax.twinx()  # twin object for second y-axis
+        accuracy_color = '#0000B0'
+        ax2.plot(history.history['accuracy'], color=accuracy_color)     # , marker=".")
+        ax2.set_ylabel('accuracy', color=accuracy_color, fontsize=12)
+        plt.title(f'Loss({round(loss_and_metrics[0], 2)}) and Accuracy({round(loss_and_metrics[1], 2)}) for DL Model on {cohort_title}', wrap=True)
+        plt.savefig(f'./output/{use_case_name}/classification_deeplearning/MODEL_deeplearning_{cohort_title}_{sampling_title}_{current_time}.png',
+                    bbox_inches='tight',
+                    dpi=600)
+        plt.show()
+        plt.close()
 
     return report
 

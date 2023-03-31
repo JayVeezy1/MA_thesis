@@ -267,10 +267,7 @@ if __name__ == '__main__':
     # must also be setup in Visual Studio
 
     # Classification Report DLNN
-    report_DL = classification_deeplearning.get_classification_report_deeplearning(use_this_function=True,
-                                                                                   # True | False
-                                                                                   display_confusion_matrix=True,
-                                                                                   # option for CM
+    report_DL = classification_deeplearning.get_classification_report_deeplearning(use_this_function=True,  # True | False
                                                                                    sampling_method=SELECTED_SAMPLING_METHOD,
                                                                                    selected_cohort=SELECTED_COHORT_preprocessed,
                                                                                    cohort_title=SELECTED_COHORT_TITLE,
