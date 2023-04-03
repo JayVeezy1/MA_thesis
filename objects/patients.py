@@ -65,10 +65,8 @@ def get_clean_raw_data(patient_data: dataframe, feature_df: dataframe) -> datafr
     cleaned_raw_data.loc[cleaned_raw_data['marital_status'] == 'no_data',  'marital_status'] = -10
     cleaned_raw_data.loc[cleaned_raw_data['marital_status'] == 'no_data ',  'marital_status'] = -10
     cleaned_raw_data.loc[cleaned_raw_data['marital_status'] == np.nan,  'marital_status'] = -10
-    # cleaned_raw_data.loc[cleaned_raw_data['marital_status'] is None, 'marital_status'] = -10
     cleaned_raw_data.loc[cleaned_raw_data['marital_status'] == '',  'marital_status'] = -10
     cleaned_raw_data.loc[cleaned_raw_data['marital_status'] == ' ',  'marital_status'] = -10
-
     cleaned_raw_data.loc[cleaned_raw_data['religion'] == 'no_data',  'religion'] = 0
 
     # Remove 'ERROR' fields
@@ -141,9 +139,9 @@ class Patient:
 
         # patient related datasets
         self.raw_data: dataframe = get_clean_raw_data(patient_data, features_df)  # raw = timeseries & no imputation/interpolation
-        self.imputed_data: dataframe = self.get_imputed_data()
-        self.interpolated_data: dataframe = self.get_interpolated_data()  # interpolated built upon imputed?
-        self.normalized_data: dataframe = self.get_normalized_data()  # normalized = z-values
+        # self.imputed_data: dataframe = self.get_imputed_data()
+        # self.interpolated_data: dataframe = self.get_interpolated_data()  # interpolated built upon imputed?
+        # self.normalized_data: dataframe = self.get_normalized_data()  # normalized = z-values
         self.avg_data: dataframe = self.get_avg_data(features_df)  # avg built upon interpolated?
 
 
@@ -152,15 +150,6 @@ class Patient:
             Patient.all_patient_ids_set.remove(self.patient_id)
         if self in Patient.all_patient_objs_set:
             Patient.all_patient_objs_set.remove(self)
-
-    def get_imputed_data(self) -> dataframe:
-        return self.raw_data
-
-    def get_interpolated_data(self) -> dataframe:
-        return self.raw_data
-
-    def get_normalized_data(self) -> dataframe:
-        return self.raw_data
 
     def get_avg_data(self, features_df: dataframe) -> dataframe:
         avg_df: dataframe = pd.DataFrame()
@@ -229,7 +218,7 @@ class Patient:
         avg_patient_cohort = avg_patient_cohort.reset_index(drop=True)
 
         # Remove outliers where patient-avg is 5x higher than feature-mean()
-        OUTLIERS_THRESHOLD = 5              # todo discuss: is this too strict? Do I remove important patients?
+        OUTLIERS_THRESHOLD = 10             # todo discuss: is this too strict? Do I remove important patients?
         continuous_features = features_df['feature_name'].loc[
             features_df['categorical_or_continuous'] == 'continuous'].to_list()
         removed_entries = 0

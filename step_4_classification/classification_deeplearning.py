@@ -242,12 +242,12 @@ def get_sequential_model(x_train_final, y_train_final):
     model.add(Dense(1, activation='sigmoid'))
 
     # compile the keras model
-    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy', tensorflow.keras.metrics.Recall()])
     # alternative optimizer: 'sgd'
     # alternative use recall as metric: metrics=[tf.keras.metrics.Recall(thresholds=0)]
 
     # fit the keras model on the dataset + predict values y_pred
-    history = model.fit(x=x_train_final, y=y_train_final, epochs=150, batch_size=32)
+    history = model.fit(x=x_train_final, y=y_train_final, epochs=175, batch_size=32)
 
     return model, history
 
@@ -271,14 +271,14 @@ def get_classification_report_deeplearning(use_this_function, sampling_method, s
         sampling_method=sampling_method, verbose=verbose)
 
     clf, history = get_sequential_model(x_train_final=x_train_final, y_train_final=y_train_final)
-    y_pred = clf.predict(x=x_test_final, batch_size=128).round()  # round() needed to get from sigmoid probability to class value 0 or 1
+    y_pred = clf.predict(x=x_test_basic, batch_size=128).round()  # round() needed to get from sigmoid probability to class value 0 or 1
 
     # Get complete classification_report
-    report = classification_report(y_true=y_test_final, y_pred=y_pred)
+    report = classification_report(y_true=y_test_basic, y_pred=y_pred)
 
     # Get recall value
     recall_object = tensorflow.keras.metrics.Recall()
-    recall_object.update_state(y_true=y_test_final, y_pred=y_pred)
+    recall_object.update_state(y_true=y_test_basic, y_pred=y_pred)
     recall_value = recall_object.result().numpy()
 
     if verbose:
@@ -298,7 +298,7 @@ def get_classification_report_deeplearning(use_this_function, sampling_method, s
             print(f'STATUS: deeplearning classification report was saved to {report_filename}')
 
         # Save model configurations plot
-        loss_and_metrics = clf.evaluate(x=x_test_final, y=y_test_final, batch_size=128)
+        loss_and_metrics = clf.evaluate(x=x_test_basic, y=y_test_basic, batch_size=128)
         fig, ax = plt.subplots()
         loss_color = '#B00000'
         ax.plot(history.history['loss'], color=loss_color)  # , marker=".")
@@ -317,6 +317,7 @@ def get_classification_report_deeplearning(use_this_function, sampling_method, s
             dpi=600)
         plt.show()
         plt.close()
+
 
     return report
 

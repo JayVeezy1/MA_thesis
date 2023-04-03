@@ -48,15 +48,14 @@ if __name__ == '__main__':
     ### Preprocessing
     # Step 2) Calculate Avg, Filter, Scale, Impute & Interpolate for each patient
     # Options: dbsource filter
-    complete_avg_cohort = Patient.get_avg_patient_cohort(PROJECT_PATH, USE_CASE_NAME, FEATURES_DF,
-                                                         selected_patients=[])  # empty=all
+    complete_avg_cohort = Patient.get_avg_patient_cohort(PROJECT_PATH, USE_CASE_NAME, FEATURES_DF, selected_patients=[])  # empty=all
     metavision_avg_cohort = complete_avg_cohort[complete_avg_cohort['dbsource'] == 'metavision']
     carevue_avg_cohort = complete_avg_cohort[complete_avg_cohort['dbsource'] == 'carevue']
     # Options: stroke_type filter, also option: change complete_avg_cohort to metavision_avg_cohort or carevue_avg_cohort
-    hemorrhage_avg_cohort = complete_avg_cohort[
-        complete_avg_cohort['stroke_type'] == 1]  # 'ischemic' = -1 | 'other_stroke' = 0 | 'hemorrhagic' = 1
-    other_stroke_avg_cohort = complete_avg_cohort[complete_avg_cohort['stroke_type'] == 0]
+    # 'ischemic' = -1 | 'other_stroke' = 0 | 'hemorrhagic' = 1
     ischemic_avg_cohort = complete_avg_cohort[complete_avg_cohort['stroke_type'] == -1]
+    other_stroke_avg_cohort = complete_avg_cohort[complete_avg_cohort['stroke_type'] == 0]
+    hemorrhage_avg_cohort = complete_avg_cohort[complete_avg_cohort['stroke_type'] == 1]
     # Options: scaled_cohort (recommended)
     scaled_complete_avg_cohort = Patient.get_avg_scaled_data(complete_avg_cohort.copy(), FEATURES_DF)
     scaled_hemorrhage_avg_cohort = Patient.get_avg_scaled_data(hemorrhage_avg_cohort.copy(), FEATURES_DF)
@@ -87,8 +86,7 @@ if __name__ == '__main__':
                                      'scaled_ischemic_avg_cohort': scaled_ischemic_cohort_preprocessed}
     print('STATUS: Preprocessing finished.\n')
 
-    # TODO 1.1: check compare_classification_models_on_cohort - too good results? Remove SMOTE? -> this is a first part-result, should be comparable to papers
-    # TODO 1.2: update predictions + deep learning chapter in overleaf
+    # TODO 1: update predictions + deep learning chapter in overleaf
 
     # todo 2.1: check Wiese Paper for their fairness measures
     # todo 2.2: include the fairness package? https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md Also in general the AI Responsible package useful as a dashboard?
@@ -204,7 +202,7 @@ if __name__ == '__main__':
 
     ### Machine Learning Predictions
     # Step 4.1) Classification: (RandomForest, XGBoost, ...)
-    SELECTED_CLASSIFICATION_METHOD = 'XGBoost'  # options: RandomForest | XGBoost
+    SELECTED_CLASSIFICATION_METHOD = 'XGBoost'  # options: RandomForest | XGBoost || NOT deeplearning_sequential -> use function get_classification_report_deeplearning()
     USE_GRIDSEARCH = True
     SELECTED_SAMPLING_METHOD = 'oversampling'  # options: no_sampling | oversampling | undersampling   -> estimation: oversampling > no_sampling > undersampling (very bad results)
     ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost',
@@ -225,9 +223,8 @@ if __name__ == '__main__':
                                                     verbose=True,
                                                     save_to_file=SELECT_SAVE_FILES)
     # Classification Report
-    # todo long term: add fairness metrics to classification_report?
-    report = classification.get_classification_report(use_this_function=True,  # True | False
-                                                      display_confusion_matrix=False,  # option for CM
+    report = classification.get_classification_report(use_this_function=False,  # True | False
+                                                      display_confusion_matrix=True,  # option for CM
                                                       classification_method=SELECTED_CLASSIFICATION_METHOD,
                                                       sampling_method=SELECTED_SAMPLING_METHOD,
                                                       selected_cohort=SELECTED_COHORT_preprocessed,
@@ -254,10 +251,8 @@ if __name__ == '__main__':
                                                             verbose=True,
                                                             save_to_file=SELECT_SAVE_FILES)
 
-    # Step 4.2) Deep Learning Neural Network
-    # Classification Report DLNN
-    report_DL = classification_deeplearning.get_classification_report_deeplearning(use_this_function=False,
-                                                                                   # True | False
+    # Step 4.2) Classification Report Deep Learning Neural Network
+    report_DL = classification_deeplearning.get_classification_report_deeplearning(use_this_function=False,  # True | False
                                                                                    sampling_method=SELECTED_SAMPLING_METHOD,
                                                                                    selected_cohort=SELECTED_COHORT_preprocessed,
                                                                                    cohort_title=SELECTED_COHORT_TITLE,
@@ -296,7 +291,7 @@ if __name__ == '__main__':
 
     ### Fairness Metrics
     # Step 5.1) Calculate Fairness for manual Subgroups
-    fairness_analysis.get_fairness_report(use_this_function=True,  # True | False
+    fairness_analysis.get_fairness_report(use_this_function=False,  # True | False
                                           plot_performance_metrics=True,
                                           classification_method=SELECTED_CLASSIFICATION_METHOD,
                                           sampling_method=SELECTED_SAMPLING_METHOD,
