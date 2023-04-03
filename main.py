@@ -226,8 +226,8 @@ if __name__ == '__main__':
                                                     save_to_file=SELECT_SAVE_FILES)
     # Classification Report
     # todo long term: add fairness metrics to classification_report?
-    report = classification.get_classification_report(use_this_function=False,  # True | False
-                                                      display_confusion_matrix=False,  # option for CM
+    report = classification.get_classification_report(use_this_function=True,  # True | False
+                                                      display_confusion_matrix=True,  # option for CM
                                                       classification_method=SELECTED_CLASSIFICATION_METHOD,
                                                       sampling_method=SELECTED_SAMPLING_METHOD,
                                                       selected_cohort=SELECTED_COHORT_preprocessed,

@@ -43,8 +43,9 @@ def preprocess_for_classification(selected_cohort: dataframe, features_df: dataf
     categorical_features = features_df['feature_name'].loc[
         features_df['categorical_or_continuous'] == 'categorical'].to_list()
     categorical_features = [x for x in categorical_features if x in selected_features]
-    selected_cohort = get_one_hot_encoding(selected_cohort,
-                                           categorical_features)  # raises recall from 0.56 to 0.58 for XGBOOST
+
+    # One Hot Encoding: raises recall from 0.56 to 0.58 for XGBOOST
+    selected_cohort = get_one_hot_encoding(selected_cohort, categorical_features)
 
     try:
         selected_cohort.drop(columns='icustay_id', inplace=True)
@@ -188,8 +189,7 @@ def split_classification_data(selected_cohort: dataframe, cohort_title: str, fea
         return None
 
     # optimize RF classifier
-    if (
-            classification_method == 'RandomForest' or classification_method == 'RandomForest_with_gridsearch') and use_grid_search:
+    if (classification_method == 'RandomForest' or classification_method == 'RandomForest_with_gridsearch') and use_grid_search:
         clf = grid_search_optimal_RF(clf, x_train_final, y_train_final, verbose)
 
     # this is the training step, prediction will be inside the Classification Report
@@ -218,8 +218,7 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
         selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
 
     # Get CM
-    cm: ndarray = confusion_matrix(y_test_final,
-                                   clf.predict(x_test_final))
+    cm: ndarray = confusion_matrix(y_test_basic, clf.predict(x_test_basic))
     # Get CM as table
     try:
         cm_df = pd.DataFrame({
@@ -374,7 +373,7 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
         sampling_method=sampling_method, use_grid_search=use_grid_search, verbose=verbose)
 
     # Calculate predictions for x_test
-    y_pred = clf.predict_proba(x_test_final)  # Prediction probabilities (= estimated values of prediction)
+    y_pred = clf.predict_proba(x_test_basic)  # Prediction probabilities (= estimated values of prediction)
     y_pred = y_pred[:, 1]  # Only the probabilities for positive outcome are kept
 
     # Get auc_score and auc_prc_score
@@ -384,30 +383,30 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
         auc_prc_score = 0
     else:
         # ROC = receiver operating characteristic, AUROC = area under the ROC curve
-        auc_score = round(roc_auc_score(y_test_final, y_pred), 3)
+        auc_score = round(roc_auc_score(y_test_basic, y_pred), 3)
         # average precision score = https://scikit-learn.org/stable/modules/generated/sklearn.metrics.average_precision_score.html
         # displays relation between precision to recall
-        auc_prc_score = round(average_precision_score(y_test_final, y_pred), 3)
+        auc_prc_score = round(average_precision_score(y_test_basic, y_pred), 3)
     # print(f'CHECK: {classification_method}: AUROC = %.3f' % auc_score)
 
     # Plot AUC-ROC Curve
     # Get false-positive-rate = x-axis and true-positive-rate = y-axis
-    if y_test_final.sum() == 0:
+    if y_test_basic.sum() == 0:
         print('WARNING: No death cases in y_test_final. Calculation of roc_curve not possible.')
         warnings.filterwarnings(action='ignore',
                                 message='No positive samples in y_true, true positive value should be meaningless')  # UndefinedMetricWarning:
-        clf_fpr, clf_tpr, _ = roc_curve(y_test_final, y_pred)
+        clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, y_pred)
     else:
-        clf_fpr, clf_tpr, _ = roc_curve(y_test_final, y_pred)
+        clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, y_pred)
         plt.plot(clf_fpr, clf_tpr, marker='.', label=f'{classification_method} (AUROC = {auc_score})')
 
     # Add a random predictor line to plot
-    random_probs = [0 for _ in range(len(y_test_final))]
-    if y_test_final.sum() == 0:
+    random_probs = [0 for _ in range(len(y_test_basic))]
+    if y_test_basic.sum() == 0:
         pass
     else:
-        random_auc = roc_auc_score(y_test_final, random_probs)
-        random_fpr, random_tpr, _ = roc_curve(y_test_final, random_probs)
+        random_auc = roc_auc_score(y_test_basic, random_probs)
+        random_fpr, random_tpr, _ = roc_curve(y_test_basic, random_probs)
         plt.plot(random_fpr, random_tpr, linestyle='--', label=f'Random prediction (AUROC = {random_auc})')
 
     # Plot Settings
@@ -425,7 +424,7 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
     # plt.close()
 
     # Plot AUPRC Curve
-    display = PrecisionRecallDisplay.from_predictions(y_test_final, y_pred,
+    display = PrecisionRecallDisplay.from_predictions(y_test_basic, y_pred,
                                                       name=f'{classification_method} (AUPRC = {auc_prc_score})')
     _ = display.ax_.set_title(f'{classification_method} (AUPRC = {auc_prc_score})')
     plt.title(f"{classification_method} for {cohort_title} AUPRC: {auc_prc_score}, {sampling_title}", wrap=True)
