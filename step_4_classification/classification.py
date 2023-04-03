@@ -19,6 +19,7 @@ import seaborn as sn
 
 from step_2_preprocessing.preprocessing_functions import get_one_hot_encoding
 from step_3_data_analysis.clustering import get_kmeans_clusters, plot_sh_score
+from step_4_classification.classification_deeplearning import get_DL_auc_score, get_DL_confusion_matrix
 
 
 def preprocess_for_classification(selected_cohort: dataframe, features_df: dataframe, selected_features: list,
@@ -205,6 +206,12 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
     if not use_this_function:
         return None
 
+    if classification_method == 'deeplearning_sequential':
+        cm_df = get_DL_confusion_matrix(selected_cohort, cohort_title, features_df,
+                                        selected_features, selected_dependent_variable, classification_method,
+                                        sampling_method, use_case_name, save_to_file, verbose)
+        return cm_df
+
     # get_classification_basics
     clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
         selected_cohort, cohort_title, features_df, selected_features,
@@ -221,7 +228,7 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
         })
     except IndexError as e:
         print(
-            f'WARNING: Confusion Matrix does not have all columns/rows. Probably no death cases in {cohort_title} (y_test_basic only 0).'
+            f'WARNING: Confusion Matrix does not have all columns/rows. Probably no death cases in {cohort_title} (y_test_final only 0).'
             f'Calculation of Classification Report is not possible for this cohort.')
         cm_df = pd.DataFrame({
             "predicts_death": {"death": 0, "no_death": 0},
@@ -342,9 +349,19 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
                   selected_features: list, selected_dependent_variable: str, classification_method: str,
                   sampling_method: str, use_case_name, show_plot: False, save_to_file: False, use_grid_search: False,
                   verbose: True):
-    # calculate & plot the AUROC, return: auc_score
+    # calculate & plot the AUROC, return: auc_score + AUPRC and auc_prc_score
     if not use_this_function:
         return None
+
+    if classification_method == 'deeplearning_sequential':
+        auc_score = get_DL_auc_score(selected_cohort=selected_cohort, cohort_title=cohort_title,
+                                     features_df=features_df, selected_features=selected_features,
+                                     selected_dependent_variable=selected_dependent_variable,
+                                     classification_method=classification_method, sampling_method=sampling_method,
+                                     show_plot=show_plot, use_case_name=use_case_name, save_to_file=save_to_file,
+                                     verbose=verbose)
+
+        return auc_score
 
     # split_classification_data
     clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
@@ -354,36 +371,36 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
         sampling_method=sampling_method, use_grid_search=use_grid_search, verbose=verbose)
 
     # Calculate predictions for x_test
-    clf_probs = clf.predict_proba(x_test_basic)  # Prediction probabilities (= estimated values of prediction)
+    clf_probs = clf.predict_proba(x_test_final)  # Prediction probabilities (= estimated values of prediction)
     clf_probs = clf_probs[:, 1]  # Only the probabilities for positive outcome are kept
 
     # Get auc_score for probabilities compared to real values
-    if y_test_basic.sum() == 0:
-        print('WARNING: No death cases in y_test_basic. Calculation of auc_score not possible.')
+    if y_test_final.sum() == 0:
+        print('WARNING: No death cases in y_test_final. Calculation of auc_score not possible.')
         auc_score = 0
     else:
-        auc_score = round(roc_auc_score(y_test_basic,
+        auc_score = round(roc_auc_score(y_test_final,
                                         clf_probs),
                           3)  # ROC = receiver operating characteristic, AUROC = area under the ROC curve
     # print(f'CHECK: {classification_method}: AUROC = %.3f' % auc_score)
 
     # Get false-positive-rate = x-axis and true-positive-rate = y-axis
-    if y_test_basic.sum() == 0:
-        print('WARNING: No death cases in y_test_basic. Calculation of roc_curve not possible.')
+    if y_test_final.sum() == 0:
+        print('WARNING: No death cases in y_test_final. Calculation of roc_curve not possible.')
         warnings.filterwarnings(action='ignore',
                                 message='No positive samples in y_true, true positive value should be meaningless')  # UndefinedMetricWarning:
-        clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, clf_probs)
+        clf_fpr, clf_tpr, _ = roc_curve(y_test_final, clf_probs)
     else:
-        clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, clf_probs)
+        clf_fpr, clf_tpr, _ = roc_curve(y_test_final, clf_probs)
         plt.plot(clf_fpr, clf_tpr, marker='.', label='Random Forest (AUROC = %0.3f)' % auc_score)  # TODO: wrap title
 
     # Add a random predictor line to plot
-    random_probs = [0 for _ in range(len(y_test_basic))]
-    if y_test_basic.sum() == 0:
+    random_probs = [0 for _ in range(len(y_test_final))]
+    if y_test_final.sum() == 0:
         pass
     else:
-        random_auc = roc_auc_score(y_test_basic, random_probs)
-        random_fpr, random_tpr, _ = roc_curve(y_test_basic, random_probs)
+        random_auc = roc_auc_score(y_test_final, random_probs)
+        random_fpr, random_tpr, _ = roc_curve(y_test_final, random_probs)
         plt.plot(random_fpr, random_tpr, linestyle='--', label='Random prediction (AUROC = %0.3f)' % random_auc)
 
     # Plot Settings
@@ -470,8 +487,7 @@ def compare_classification_models_on_cohort(use_this_function, use_case_name, fe
                                           show_plot=False,
                                           verbose=False,
                                           use_grid_search=use_grid_search,
-                                          save_to_file=False
-                                          )
+                                          save_to_file=False)
                 cm_df: dataframe = get_confusion_matrix(use_this_function=True,  # True | False
                                                         classification_method=classification_method,
                                                         sampling_method='oversampling',  # SELECTED_SAMPLING_METHOD
@@ -483,8 +499,7 @@ def compare_classification_models_on_cohort(use_this_function, use_case_name, fe
                                                         selected_dependent_variable=dependent_variable,
                                                         use_grid_search=use_grid_search,
                                                         verbose=False,
-                                                        save_to_file=False
-                                                        )
+                                                        save_to_file=False)
                 current_settings = pd.DataFrame([{'cohort': f'{title_with_cohort[0]}',
                                                   'classification_method': classification_method,
                                                   'dependent_variable': dependent_variable,
@@ -531,7 +546,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                       features_df=features_df,
                       selected_features=selected_features,
                       selected_dependent_variable='death_in_hosp',
-                      clustering_method='kmeans',                       # todo: also make usable for kprot
+                      clustering_method='kmeans',  # todo: also make usable for kprot
                       use_encoding=use_encoding,
                       save_to_file=False)
 

@@ -87,16 +87,16 @@ if __name__ == '__main__':
                                      'scaled_ischemic_avg_cohort': scaled_ischemic_cohort_preprocessed}
     print('STATUS: Preprocessing finished.\n')
 
-    # todo 1.1: check Wiese Paper for their fairness measures
-    # todo 1.2: include the fairness package? https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md Also in general the AI Responsible package useful as a dashboard?
+    # TODO 1.1: include DL to compare_classification_models_on_cohort, test which model has best results for now? -> this is a first part-result, should be comparable to papers
+    # TODO 1.2: update predictions + deep learning chapter in overleaf
 
-    # TODO 2: improve Deep Learning model, then test which model has best results for now (add to comparing-loop)? -> this is a first part-result, should be comparable to papers
-
-    # TODO 3: update predictions + deep learning + fairness chapter in overleaf
+    # todo 2.1: check Wiese Paper for their fairness measures
+    # todo 2.2: include the fairness package? https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md Also in general the AI Responsible package useful as a dashboard?
+    # todo 2.3: update fairness chapter in overleaf
 
     # todo next week: implement ASDF Dashboard
 
-    # TODO after: add SHAPley values to classification chapter (+ shap waterfalls, with this different importance for subgroups, comparable to correlations) and AUPRC
+    # TODO after: add SHAPley values and AUPRC to classification chapter (+ shap waterfalls, with this different importance for subgroups)
     # get shapely function from there (also use this analysis to compare clusters?) https://antonsruberts.github.io/kproto-audience/
 
     # todo long term: add filtering mechanism in Patient Class, recheck stroke filtering (move ischemic to front)
@@ -207,7 +207,8 @@ if __name__ == '__main__':
     SELECTED_CLASSIFICATION_METHOD = 'XGBoost'  # options: RandomForest | XGBoost
     USE_GRIDSEARCH = True
     SELECTED_SAMPLING_METHOD = 'oversampling'  # options: no_sampling | oversampling | undersampling   -> estimation: oversampling > no_sampling > undersampling (very bad results)
-    ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost']
+    ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost', 'deeplearning_sequential']
+
     # Plot optimal RandomForest (based on GridSearchCV)
     forest_plot = classification.plot_random_forest(use_this_function=False,  # True | False
                                                     classification_method='RandomForest',
@@ -221,8 +222,7 @@ if __name__ == '__main__':
                                                     show_plot=True,
                                                     use_grid_search=USE_GRIDSEARCH,
                                                     verbose=True,
-                                                    save_to_file=SELECT_SAVE_FILES
-                                                    )
+                                                    save_to_file=SELECT_SAVE_FILES)
     # Classification Report
     # todo long term: add fairness metrics to classification_report
     report = classification.get_classification_report(use_this_function=False,  # True | False
@@ -237,10 +237,9 @@ if __name__ == '__main__':
                                                       selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                                       use_grid_search=USE_GRIDSEARCH,
                                                       verbose=True,
-                                                      save_to_file=SELECT_SAVE_FILES
-                                                      )
+                                                      save_to_file=SELECT_SAVE_FILES)
     # AUROC (plot & score)
-    auc_score = classification.get_auc_score(use_this_function=False,  # True | False
+    auc_score = classification.get_auc_score(use_this_function=True,  # True | False
                                              classification_method=SELECTED_CLASSIFICATION_METHOD,
                                              sampling_method=SELECTED_SAMPLING_METHOD,
                                              selected_cohort=SELECTED_COHORT_preprocessed,
@@ -252,22 +251,11 @@ if __name__ == '__main__':
                                              show_plot=True,
                                              use_grid_search=USE_GRIDSEARCH,
                                              verbose=True,
-                                             save_to_file=SELECT_SAVE_FILES
-                                             )
+                                             save_to_file=SELECT_SAVE_FILES)
 
     # Step 4.2) Deep Learning Neural Network
-    # DL Planning:
-    # 1) Tutorial for keras example: https://machinelearningmastery.com/tutorial-first-neural-network-python-keras/
-    # tensorflow GRU model https://www.tensorflow.org/api_docs/python/tf/keras/layers/GRU
-    # 1.2) directly with tensorflow the GPU: https://www.tensorflow.org/guide/gpu
-    # 2) installing theano for GPU: https://theano-pymc.readthedocs.io/en/latest/install_windows.html
-    # 3) pybinding for miniconda + pip: https://docs.pybinding.site/en/stable/install/quick.html#troubleshooting
-    # I could use this to directly install BLAS if needed for Theano?
-    # Alternative OpenBLas: https://github.com/xianyi/OpenBLAS/wiki/How-to-use-OpenBLAS-in-Microsoft-Visual-Studio
-    # must also be setup in Visual Studio
-
     # Classification Report DLNN
-    report_DL = classification_deeplearning.get_classification_report_deeplearning(use_this_function=True,  # True | False
+    report_DL = classification_deeplearning.get_classification_report_deeplearning(use_this_function=False,  # True | False
                                                                                    sampling_method=SELECTED_SAMPLING_METHOD,
                                                                                    selected_cohort=SELECTED_COHORT_preprocessed,
                                                                                    cohort_title=SELECTED_COHORT_TITLE,
@@ -276,8 +264,7 @@ if __name__ == '__main__':
                                                                                    selected_features=SELECTED_FEATURES,
                                                                                    selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                                                                    verbose=True,
-                                                                                   save_to_file=SELECT_SAVE_FILES
-                                                                                   )
+                                                                                   save_to_file=SELECT_SAVE_FILES)
 
     # Step 4.3) Models Overview -> table to compare all accuracy & recall results
     classification.compare_classification_models_on_cohort(use_this_function=False,  # True | False
