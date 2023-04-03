@@ -227,7 +227,7 @@ if __name__ == '__main__':
     # Classification Report
     # todo long term: add fairness metrics to classification_report?
     report = classification.get_classification_report(use_this_function=True,  # True | False
-                                                      display_confusion_matrix=True,  # option for CM
+                                                      display_confusion_matrix=False,  # option for CM
                                                       classification_method=SELECTED_CLASSIFICATION_METHOD,
                                                       sampling_method=SELECTED_SAMPLING_METHOD,
                                                       selected_cohort=SELECTED_COHORT_preprocessed,
@@ -296,7 +296,7 @@ if __name__ == '__main__':
 
     ### Fairness Metrics
     # Step 5.1) Calculate Fairness for manual Subgroups
-    fairness_analysis.get_fairness_report(use_this_function=False,  # True | False
+    fairness_analysis.get_fairness_report(use_this_function=True,  # True | False
                                           plot_performance_metrics=True,
                                           classification_method=SELECTED_CLASSIFICATION_METHOD,
                                           sampling_method=SELECTED_SAMPLING_METHOD,

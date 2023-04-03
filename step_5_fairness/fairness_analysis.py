@@ -5,6 +5,7 @@ from aif360.datasets import StandardDataset
 from aif360.metrics import ClassificationMetric
 from fairlearn.metrics import MetricFrame, selection_rate, count
 from matplotlib import pyplot as plt
+from numpy import ndarray
 from pandas.core.interchange import dataframe
 from sklearn.metrics import accuracy_score, precision_score, roc_auc_score, recall_score
 
@@ -87,16 +88,16 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
 
     # 2) get an aif360 StandardDataset
     # original_labels = selected_cohort[selected_dependent_variable]
-    merged_test_data = x_test_final.merge(right=y_test_final, left_index=True, right_index=True)
+    merged_test_data = x_test_basic.merge(right=y_test_basic, left_index=True, right_index=True)
     dataset = StandardDataset(df=merged_test_data,
                               label_name=selected_dependent_variable,
-                              favorable_classes=[0],  # no death = favorable
+                              favorable_classes=[1],  # 'death' has to be used as 'favorable_class'
                               protected_attribute_names=selected_protected_attributes,
                               privileged_classes=selected_privileged_classes)
 
     # create dataset_pred
     dataset_pred = dataset.copy()
-    predicted_labels = clf.predict(x_test_final)
+    predicted_labels = clf.predict(x_test_basic)
     dataset_pred.labels = predicted_labels
 
     # derive privileged groups for all protected_attribute_names
@@ -171,12 +172,12 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
         print(report.transpose().to_string())
 
     if plot_performance_metrics:
-        temp_df: dataframe = x_test_final[selected_protected_attributes]
+        temp_df: dataframe = x_test_basic[selected_protected_attributes]
         # check where all selected columns contain a 1
         all_ones_array = temp_df.apply(lambda x: all(x == 1), axis=1).astype(int)
         # temp_df['new_checking_column'] = all_ones_array.astype(int)
         create_performance_metrics_plot(y_pred=predicted_labels,
-                                        y_true=y_test_final,
+                                        y_true=y_test_basic,
                                         selected_attribute_array=all_ones_array,
                                         use_case_name=use_case_name,
                                         attributes_string=attributes_string,
