@@ -8,7 +8,8 @@ import seaborn as sn
 import tensorflow
 from matplotlib import pyplot as plt
 from pandas.core.interchange import dataframe
-from sklearn.metrics import classification_report, roc_auc_score, roc_curve, confusion_matrix
+from sklearn.metrics import classification_report, roc_auc_score, roc_curve, confusion_matrix, average_precision_score, \
+    PrecisionRecallDisplay
 from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE, RandomOverSampler
 
@@ -70,8 +71,13 @@ def get_DL_auc_score(selected_cohort, cohort_title, features_df,
     if y_test_final.sum() == 0:
         print('WARNING: No death cases in y_test_final. Calculation of auc_score not possible.')
         auc_score = 0
+        auc_prc_score = 0
     else:
-        auc_score = round(roc_auc_score(y_test_final, y_pred), 3)  # ROC = receiver operating characteristic, AUROC = area under the ROC curve
+        # ROC = receiver operating characteristic, AUROC = area under the ROC curve
+        auc_score = round(roc_auc_score(y_test_final, y_pred), 3)
+        # average precision score = https://scikit-learn.org/stable/modules/generated/sklearn.metrics.average_precision_score.html
+        # displays relation between precision to recall
+        auc_prc_score = round(average_precision_score(y_test_final, y_pred), 3)
     # print(f'CHECK: {classification_method}: AUROC = %.3f' % auc_score)
 
     # Get false-positive-rate = x-axis and true-positive-rate = y-axis
@@ -82,7 +88,7 @@ def get_DL_auc_score(selected_cohort, cohort_title, features_df,
         clf_fpr, clf_tpr, _ = roc_curve(y_test_final, y_pred)
     else:
         clf_fpr, clf_tpr, _ = roc_curve(y_test_final, y_pred)
-        plt.plot(clf_fpr, clf_tpr, marker='.', label='Random Forest (AUROC = %0.3f)' % auc_score)
+        plt.plot(clf_fpr, clf_tpr, marker='.', label=f'{classification_method} (AUROC = {auc_score})')
 
     # Add a random predictor line to plot
     random_probs = [0 for _ in range(len(y_test_final))]
@@ -98,16 +104,27 @@ def get_DL_auc_score(selected_cohort, cohort_title, features_df,
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.legend()
-
     if save_to_file:
         auroc_filename = f'./output/{use_case_name}/classification_deeplearning/AUROC_{classification_method}_{cohort_title}_{sampling_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png'
         plt.savefig(auroc_filename, dpi=600)
         print(f'STATUS: AUROC was saved to {auroc_filename}')
-
     if show_plot:
         plt.show()
 
-    return auc_score
+    # Plot AUPRC Curve
+    display = PrecisionRecallDisplay.from_predictions(y_test_final, y_pred,
+                                                      name=f'{classification_method} (AUPRC = {auc_prc_score})')
+    _ = display.ax_.set_title(f'{classification_method} (AUPRC = {auc_prc_score})')
+    plt.title(f"{classification_method} for {cohort_title} AUPRC: {auc_prc_score}, {sampling_title}", wrap=True)
+    if save_to_file:
+        current_time = datetime.datetime.now().strftime("%H_%M_%S")
+        auprc_filename = f'./output/{use_case_name}/classification_deeplearning/AUPRC_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png'
+        plt.savefig(auprc_filename, dpi=600)
+        print(f'STATUS: AUPRC was saved to {auprc_filename}')
+    if show_plot:
+        plt.show()
+
+    return auc_score, auc_prc_score
 
 
 def get_DL_confusion_matrix(selected_cohort, cohort_title, features_df, selected_features, selected_dependent_variable,

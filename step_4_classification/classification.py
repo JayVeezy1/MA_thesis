@@ -8,7 +8,7 @@ from numpy import ndarray
 from pandas.core.interchange import dataframe
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve, make_scorer, \
-    accuracy_score, recall_score
+    accuracy_score, recall_score, average_precision_score, PrecisionRecallDisplay
 from sklearn.model_selection import train_test_split
 from sklearn.tree import plot_tree
 from sklearn.model_selection import GridSearchCV
@@ -349,19 +349,22 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
                   selected_features: list, selected_dependent_variable: str, classification_method: str,
                   sampling_method: str, use_case_name, show_plot: False, save_to_file: False, use_grid_search: False,
                   verbose: True):
-    # calculate & plot the AUROC, return: auc_score + AUPRC and auc_prc_score
+    # calculate & plot the AUROC, return: auc_score
+    # also calculate & plot AUPRC and return: auc_prc_score
     if not use_this_function:
-        return None
+        return None, None
 
     if classification_method == 'deeplearning_sequential':
-        auc_score = get_DL_auc_score(selected_cohort=selected_cohort, cohort_title=cohort_title,
-                                     features_df=features_df, selected_features=selected_features,
-                                     selected_dependent_variable=selected_dependent_variable,
-                                     classification_method=classification_method, sampling_method=sampling_method,
-                                     show_plot=show_plot, use_case_name=use_case_name, save_to_file=save_to_file,
-                                     verbose=verbose)
+        auc_score, auc_prc_score = get_DL_auc_score(selected_cohort=selected_cohort, cohort_title=cohort_title,
+                                                    features_df=features_df, selected_features=selected_features,
+                                                    selected_dependent_variable=selected_dependent_variable,
+                                                    classification_method=classification_method,
+                                                    sampling_method=sampling_method,
+                                                    show_plot=show_plot, use_case_name=use_case_name,
+                                                    save_to_file=save_to_file,
+                                                    verbose=verbose)
 
-        return auc_score
+        return auc_score, auc_prc_score
 
     # split_classification_data
     clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
@@ -371,28 +374,32 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
         sampling_method=sampling_method, use_grid_search=use_grid_search, verbose=verbose)
 
     # Calculate predictions for x_test
-    clf_probs = clf.predict_proba(x_test_final)  # Prediction probabilities (= estimated values of prediction)
-    clf_probs = clf_probs[:, 1]  # Only the probabilities for positive outcome are kept
+    y_pred = clf.predict_proba(x_test_final)  # Prediction probabilities (= estimated values of prediction)
+    y_pred = y_pred[:, 1]  # Only the probabilities for positive outcome are kept
 
-    # Get auc_score for probabilities compared to real values
+    # Get auc_score and auc_prc_score
     if y_test_final.sum() == 0:
         print('WARNING: No death cases in y_test_final. Calculation of auc_score not possible.')
         auc_score = 0
+        auc_prc_score = 0
     else:
-        auc_score = round(roc_auc_score(y_test_final,
-                                        clf_probs),
-                          3)  # ROC = receiver operating characteristic, AUROC = area under the ROC curve
+        # ROC = receiver operating characteristic, AUROC = area under the ROC curve
+        auc_score = round(roc_auc_score(y_test_final, y_pred), 3)
+        # average precision score = https://scikit-learn.org/stable/modules/generated/sklearn.metrics.average_precision_score.html
+        # displays relation between precision to recall
+        auc_prc_score = round(average_precision_score(y_test_final, y_pred), 3)
     # print(f'CHECK: {classification_method}: AUROC = %.3f' % auc_score)
 
+    # Plot AUC-ROC Curve
     # Get false-positive-rate = x-axis and true-positive-rate = y-axis
     if y_test_final.sum() == 0:
         print('WARNING: No death cases in y_test_final. Calculation of roc_curve not possible.')
         warnings.filterwarnings(action='ignore',
                                 message='No positive samples in y_true, true positive value should be meaningless')  # UndefinedMetricWarning:
-        clf_fpr, clf_tpr, _ = roc_curve(y_test_final, clf_probs)
+        clf_fpr, clf_tpr, _ = roc_curve(y_test_final, y_pred)
     else:
-        clf_fpr, clf_tpr, _ = roc_curve(y_test_final, clf_probs)
-        plt.plot(clf_fpr, clf_tpr, marker='.', label='Random Forest (AUROC = %0.3f)' % auc_score)  # TODO: wrap title
+        clf_fpr, clf_tpr, _ = roc_curve(y_test_final, y_pred)
+        plt.plot(clf_fpr, clf_tpr, marker='.', label=f'{classification_method} (AUROC = {auc_score})')
 
     # Add a random predictor line to plot
     random_probs = [0 for _ in range(len(y_test_final))]
@@ -401,23 +408,38 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
     else:
         random_auc = roc_auc_score(y_test_final, random_probs)
         random_fpr, random_tpr, _ = roc_curve(y_test_final, random_probs)
-        plt.plot(random_fpr, random_tpr, linestyle='--', label='Random prediction (AUROC = %0.3f)' % random_auc)
+        plt.plot(random_fpr, random_tpr, linestyle='--', label=f'Random prediction (AUROC = {random_auc})')
 
     # Plot Settings
-    plt.title(f"{classification_method} for {cohort_title} AUROC: {auc_score}, {sampling_title}")
+    plt.title(f"{classification_method} for {cohort_title} AUROC: {auc_score}, {sampling_title}", wrap=True)
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.legend()
-
     if save_to_file:
-        auroc_filename = f'./output/{use_case_name}/classification/AUROC_{classification_method}_{cohort_title}_{sampling_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png'
+        current_time = datetime.datetime.now().strftime("%H_%M_%S")
+        auroc_filename = f'./output/{use_case_name}/classification/AUROC_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png'
         plt.savefig(auroc_filename, dpi=600)
         print(f'STATUS: AUROC was saved to {auroc_filename}')
-
     if show_plot:
         plt.show()
+    # plt.close()
 
-    return auc_score
+    # Plot AUPRC Curve
+    display = PrecisionRecallDisplay.from_predictions(y_test_final, y_pred,
+                                                      name=f'{classification_method} (AUPRC = {auc_prc_score})')
+    _ = display.ax_.set_title(f'{classification_method} (AUPRC = {auc_prc_score})')
+    plt.title(f"{classification_method} for {cohort_title} AUPRC: {auc_prc_score}, {sampling_title}", wrap=True)
+    if save_to_file:
+        current_time = datetime.datetime.now().strftime("%H_%M_%S")
+        auprc_filename = f'./output/{use_case_name}/classification/AUPRC_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png'
+        plt.savefig(auprc_filename, dpi=600)
+        print(f'STATUS: AUPRC was saved to {auprc_filename}')
+    if show_plot:
+        plt.show()
+    # plt.close()
+    # do not close plt, this throws RunTimeError because TKinter not thread safe https://stackoverflow.com/questions/14694408/runtimeerror-main-thread-is-not-in-main-loop#14695007
+
+    return auc_score, auc_prc_score
 
 
 def get_accuracy(cm_df):
@@ -455,8 +477,7 @@ def get_precision(cm_df):
 
 
 def compare_classification_models_on_cohort(use_this_function, use_case_name, features_df, selected_features,
-                                            all_cohorts_with_titles,
-                                            all_classification_methods,
+                                            sampling_method, all_cohorts_with_titles, all_classification_methods,
                                             all_dependent_variables, save_to_file):
     # calculate & plot the AUROC, return: auc_score
     if not use_this_function:
@@ -474,23 +495,23 @@ def compare_classification_models_on_cohort(use_this_function, use_case_name, fe
                 print(
                     f'STATUS: Calculating auc_score for model settings: {title_with_cohort[0]}, {classification_method}, {dependent_variable}')
                 # get auc_score
-                auc_score = get_auc_score(use_this_function=True,  # True | False
-                                          classification_method=classification_method,
-                                          sampling_method='oversampling',
-                                          # SELECTED_SAMPLING_METHOD  -> currently always oversampling, can also be parameterized
-                                          selected_cohort=title_with_cohort[1],
-                                          cohort_title=f'{title_with_cohort[0]}',
-                                          use_case_name=use_case_name,
-                                          features_df=features_df,
-                                          selected_features=selected_features,
-                                          selected_dependent_variable=dependent_variable,
-                                          show_plot=False,
-                                          verbose=False,
-                                          use_grid_search=use_grid_search,
-                                          save_to_file=False)
+                auc_score, auc_prc_score = get_auc_score(use_this_function=True,  # True | False
+                                                         classification_method=classification_method,
+                                                         sampling_method='oversampling',  # sampling_method,
+                                                         # SELECTED_SAMPLING_METHOD  -> currently always oversampling, can also be parameterized
+                                                         selected_cohort=title_with_cohort[1],
+                                                         cohort_title=f'{title_with_cohort[0]}',
+                                                         use_case_name=use_case_name,
+                                                         features_df=features_df,
+                                                         selected_features=selected_features,
+                                                         selected_dependent_variable=dependent_variable,
+                                                         show_plot=False,
+                                                         verbose=False,
+                                                         use_grid_search=use_grid_search,
+                                                         save_to_file=False)
                 cm_df: dataframe = get_confusion_matrix(use_this_function=True,  # True | False
                                                         classification_method=classification_method,
-                                                        sampling_method='oversampling',  # SELECTED_SAMPLING_METHOD
+                                                        sampling_method='oversampling',  # sampling_method,
                                                         selected_cohort=title_with_cohort[1],
                                                         cohort_title=f'{title_with_cohort[0]}',
                                                         use_case_name=use_case_name,
@@ -504,6 +525,7 @@ def compare_classification_models_on_cohort(use_this_function, use_case_name, fe
                                                   'classification_method': classification_method,
                                                   'dependent_variable': dependent_variable,
                                                   'auc_score': auc_score,
+                                                  'auc_prc_score': auc_prc_score,
                                                   'accuracy': get_accuracy(cm_df),
                                                   'recall': get_recall(cm_df),
                                                   'precision': get_precision(cm_df)
@@ -565,19 +587,19 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                                         verbose=False)
 
             # get total_auc_score for total set
-            total_auc_score = get_auc_score(use_this_function=True,  # True | False
-                                            classification_method=classification_method,
-                                            sampling_method='oversampling',  # SELECTED_SAMPLING_METHOD
-                                            selected_cohort=selected_cohort,
-                                            cohort_title='complete_set',
-                                            use_case_name=use_case_name,
-                                            features_df=features_df,
-                                            selected_features=selected_features,
-                                            selected_dependent_variable=dependent_variable,
-                                            show_plot=False,
-                                            verbose=False,
-                                            use_grid_search=use_grid_search,
-                                            save_to_file=False)
+            total_auc_score, auc_prc_score = get_auc_score(use_this_function=True,  # True | False
+                                                           classification_method=classification_method,
+                                                           sampling_method='oversampling',  # SELECTED_SAMPLING_METHOD
+                                                           selected_cohort=selected_cohort,
+                                                           cohort_title='complete_set',
+                                                           use_case_name=use_case_name,
+                                                           features_df=features_df,
+                                                           selected_features=selected_features,
+                                                           selected_dependent_variable=dependent_variable,
+                                                           show_plot=False,
+                                                           verbose=False,
+                                                           use_grid_search=use_grid_search,
+                                                           save_to_file=False)
 
             total_cm_df: dataframe = get_confusion_matrix(use_this_function=True,  # True | False
                                                           classification_method=classification_method,
@@ -596,6 +618,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                               'classification_method': classification_method,
                                               'cluster': 'total_model',
                                               'auc_score': total_auc_score,
+                                              'auc_prc_score': auc_prc_score,
                                               'accuracy': get_accuracy(total_cm_df),
                                               'recall': get_recall(total_cm_df),
                                               'precision': get_precision(total_cm_df)
@@ -608,21 +631,20 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                 print(
                     f'STATUS: Calculating auc_score for cluster: {i}, with model settings: {classification_method}, {dependent_variable}')
                 # get auc_score for cluster
-                auc_score = get_auc_score(use_this_function=True,  # True | False
-                                          classification_method=classification_method,
-                                          sampling_method='oversampling',
-                                          # SELECTED_SAMPLING_METHOD  -> currently always oversampling, can also be parameterized
-                                          selected_cohort=cluster,
-                                          cohort_title=f'cluster_{i}',
-                                          use_case_name=use_case_name,
-                                          features_df=features_df,
-                                          selected_features=selected_features,
-                                          selected_dependent_variable=dependent_variable,
-                                          show_plot=False,
-                                          use_grid_search=use_grid_search,
-                                          verbose=False,
-                                          save_to_file=False
-                                          )
+                auc_score, auc_prc_score = get_auc_score(use_this_function=True,  # True | False
+                                                         classification_method=classification_method,
+                                                         sampling_method='oversampling',
+                                                         # SELECTED_SAMPLING_METHOD  -> currently always oversampling, can also be parameterized
+                                                         selected_cohort=cluster,
+                                                         cohort_title=f'cluster_{i}',
+                                                         use_case_name=use_case_name,
+                                                         features_df=features_df,
+                                                         selected_features=selected_features,
+                                                         selected_dependent_variable=dependent_variable,
+                                                         show_plot=False,
+                                                         use_grid_search=use_grid_search,
+                                                         verbose=False,
+                                                         save_to_file=False)
                 cm_df: dataframe = get_confusion_matrix(use_this_function=True,  # True | False
                                                         classification_method=classification_method,
                                                         sampling_method='oversampling',  # SELECTED_SAMPLING_METHOD
@@ -640,6 +662,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                                   'classification_method': classification_method,
                                                   'cluster': f'cluster_{i}',
                                                   'auc_score': auc_score,
+                                                  'auc_prc_score': auc_prc_score,
                                                   'accuracy': get_accuracy(cm_df),
                                                   'recall': get_recall(cm_df),
                                                   'precision': get_precision(cm_df)
