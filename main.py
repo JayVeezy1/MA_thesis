@@ -205,23 +205,7 @@ if __name__ == '__main__':
     SELECTED_CLASSIFICATION_METHOD = 'XGBoost'  # options: RandomForest | XGBoost || NOT deeplearning_sequential -> use function get_classification_report_deeplearning()
     USE_GRIDSEARCH = True
     SELECTED_SAMPLING_METHOD = 'oversampling'  # options: no_sampling | oversampling | undersampling   -> estimation: oversampling > no_sampling > undersampling (very bad results)
-    ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost',
-                                        'deeplearning_sequential']
-
-    # Plot optimal RandomForest (based on GridSearchCV)
-    forest_plot = classification.plot_random_forest(use_this_function=False,  # True | False
-                                                    classification_method='RandomForest',
-                                                    sampling_method=SELECTED_SAMPLING_METHOD,
-                                                    selected_cohort=SELECTED_COHORT_preprocessed,
-                                                    cohort_title=SELECTED_COHORT_TITLE,
-                                                    use_case_name=USE_CASE_NAME,
-                                                    features_df=FEATURES_DF,
-                                                    selected_features=SELECTED_FEATURES,
-                                                    selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                                    show_plot=True,
-                                                    use_grid_search=USE_GRIDSEARCH,
-                                                    verbose=True,
-                                                    save_to_file=SELECT_SAVE_FILES)
+    ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost', 'deeplearning_sequential']
     # Classification Report
     report = classification.get_classification_report(use_this_function=False,  # True | False
                                                       display_confusion_matrix=True,  # option for CM
@@ -251,8 +235,23 @@ if __name__ == '__main__':
                                                             verbose=True,
                                                             save_to_file=SELECT_SAVE_FILES)
 
+    # Plot optimal RandomForest (based on GridSearchCV)
+    forest_plot = classification.plot_random_forest(use_this_function=False,  # True | False
+                                                    classification_method='RandomForest',
+                                                    sampling_method=SELECTED_SAMPLING_METHOD,
+                                                    selected_cohort=SELECTED_COHORT_preprocessed,
+                                                    cohort_title=SELECTED_COHORT_TITLE,
+                                                    use_case_name=USE_CASE_NAME,
+                                                    features_df=FEATURES_DF,
+                                                    selected_features=SELECTED_FEATURES,
+                                                    selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                    show_plot=True,
+                                                    use_grid_search=USE_GRIDSEARCH,
+                                                    verbose=True,
+                                                    save_to_file=SELECT_SAVE_FILES)
+
     # Step 4.2) Classification Report Deep Learning Neural Network
-    report_DL = classification_deeplearning.get_classification_report_deeplearning(use_this_function=False,  # True | False
+    report_DL = classification_deeplearning.get_classification_report_deeplearning(use_this_function=True,  # True | False
                                                                                    sampling_method=SELECTED_SAMPLING_METHOD,
                                                                                    selected_cohort=SELECTED_COHORT_preprocessed,
                                                                                    cohort_title=SELECTED_COHORT_TITLE,

@@ -128,22 +128,9 @@ def get_DL_auc_score(selected_cohort, cohort_title, features_df,
     return auc_score, auc_prc_score
 
 
-def get_DL_confusion_matrix(selected_cohort, cohort_title, features_df, selected_features, selected_dependent_variable,
-                            classification_method, sampling_method, use_case_name, save_to_file, verbose):
-    # get_classification_basics
-    x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data_DL(
-        selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=features_df,
-        selected_features=selected_features,
-        selected_dependent_variable=selected_dependent_variable,
-        sampling_method=sampling_method, verbose=verbose)
-
-    model, history = get_sequential_model(x_train_final=x_train_final, y_train_final=y_train_final)
-
-    # Get CM
-    y_pred = model.predict(x_test_basic)
-    y_pred = [numpy.round(x) for x in y_pred]
-    cm: ndarray = confusion_matrix(y_test_basic, y_pred)
-
+# plot DL CM from existing CM
+def plot_DL_confusion_matrix(cm, cohort_title, classification_method, sampling_title,
+                             verbose, save_to_file, use_case_name):
     # Get CM as table
     try:
         cm_df = pd.DataFrame({
@@ -210,17 +197,39 @@ def get_DL_confusion_matrix(selected_cohort, cohort_title, features_df, selected
         if classification_method == 'RandomForest':
             classification_method = 'RF'
         plt.savefig(
-            f'./output/{use_case_name}/classification/CM_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png',
+            f'./output/{use_case_name}/classification_deeplearning/CM_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png',
             dpi=600)
         plt.show()
         plt.close()
 
-        # save CM as .csv
-        cm_filename_string: str = f'./output/{use_case_name}/classification/CM_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
-        cm_filename = cm_filename_string.encode()
-        with open(cm_filename, 'w', newline='') as output_file:
-            cm_df.to_csv(output_file)
-            print(f'STATUS: cm_df was saved to {cm_filename}')
+        # save CM as .csv -> never needed
+        # cm_filename_string: str = f'./output/{use_case_name}/classification/CM_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
+        # cm_filename = cm_filename_string.encode()
+        # with open(cm_filename, 'w', newline='') as output_file:
+        #     cm_df.to_csv(output_file)
+        #     print(f'STATUS: cm_df was saved to {cm_filename}')
+
+    return cm_df
+
+
+# get DL from raw data
+def get_DL_confusion_matrix(selected_cohort, cohort_title, features_df, selected_features, selected_dependent_variable,
+                            classification_method, sampling_method, use_case_name, save_to_file, verbose):
+    # get_classification_basics
+    x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data_DL(
+        selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=features_df,
+        selected_features=selected_features,
+        selected_dependent_variable=selected_dependent_variable,
+        sampling_method=sampling_method, verbose=verbose)
+
+    model, history = get_sequential_model(x_train_final=x_train_final, y_train_final=y_train_final)
+
+    y_pred = model.predict(x=x_test_basic,
+                           batch_size=128).round()  # round() needed to get from sigmoid probability to class value 0 or 1
+    cm: ndarray = confusion_matrix(y_test_basic, y_pred)
+
+    cm_df = plot_DL_confusion_matrix(cm, cohort_title, classification_method, sampling_title,
+                                     verbose, save_to_file, use_case_name)
 
     return cm_df
 
@@ -270,8 +279,9 @@ def get_classification_report_deeplearning(use_this_function, sampling_method, s
         selected_dependent_variable=selected_dependent_variable,
         sampling_method=sampling_method, verbose=verbose)
 
-    clf, history = get_sequential_model(x_train_final=x_train_final, y_train_final=y_train_final)
-    y_pred = clf.predict(x=x_test_basic, batch_size=128).round()  # round() needed to get from sigmoid probability to class value 0 or 1
+    model, history = get_sequential_model(x_train_final=x_train_final, y_train_final=y_train_final)
+    y_pred = model.predict(x=x_test_basic,
+                           batch_size=128).round()  # round() needed to get from sigmoid probability to class value 0 or 1
 
     # Get complete classification_report
     report = classification_report(y_true=y_test_basic, y_pred=y_pred)
@@ -298,7 +308,7 @@ def get_classification_report_deeplearning(use_this_function, sampling_method, s
             print(f'STATUS: deeplearning classification report was saved to {report_filename}')
 
         # Save model configurations plot
-        loss_and_metrics = clf.evaluate(x=x_test_basic, y=y_test_basic, batch_size=128)
+        loss_and_metrics = model.evaluate(x=x_test_basic, y=y_test_basic, batch_size=128)
         fig, ax = plt.subplots()
         loss_color = '#B00000'
         ax.plot(history.history['loss'], color=loss_color)  # , marker=".")
@@ -318,6 +328,11 @@ def get_classification_report_deeplearning(use_this_function, sampling_method, s
         plt.show()
         plt.close()
 
+        # Plot CM
+        cm: ndarray = confusion_matrix(y_test_basic, y_pred)
+        plot_DL_confusion_matrix(cm=cm, cohort_title=cohort_title,
+                                 classification_method='deeplearning_sequential', sampling_title=sampling_title,
+                                 verbose=verbose, save_to_file=save_to_file, use_case_name=use_case_name)
 
     return report
 

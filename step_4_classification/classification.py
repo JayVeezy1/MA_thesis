@@ -261,7 +261,7 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
             data=cm_df,
             annot=True,
             fmt=".0f",
-            annot_kws={"size": 10},
+            annot_kws={"size": 15},
             linewidths=0.5,
             ax=ax1,
             cbar=False,
@@ -270,6 +270,7 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
             vmax=(cm_df['sum_actual']['sum_predicted'] + 20)
             # adding a bit to max value -> not such a strong color difference
         )
+        # sn.set(font_scale=3.0)
 
         # set ticklabels rotation (0 rotation, but with this horizontal)
         ax1.set_xticklabels(ax1.get_xticklabels(), rotation=0, fontsize=10)
@@ -290,12 +291,12 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
         plt.show()
         plt.close()
 
-        # save CM as .csv
-        cm_filename_string: str = f'./output/{use_case_name}/classification/CM_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
-        cm_filename = cm_filename_string.encode()
-        with open(cm_filename, 'w', newline='') as output_file:
-            cm_df.to_csv(output_file)
-            print(f'STATUS: cm_df was saved to {cm_filename}')
+        # save CM as .csv - was not necessary
+        # cm_filename_string: str = f'./output/{use_case_name}/classification/CM_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
+        # cm_filename = cm_filename_string.encode()
+        # with open(cm_filename, 'w', newline='') as output_file:
+        #     cm_df.to_csv(output_file)
+        #     print(f'STATUS: cm_df was saved to {cm_filename}')
 
     return cm_df
 
