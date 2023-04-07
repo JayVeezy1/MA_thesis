@@ -21,7 +21,8 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
                'precision': precision_score,
                'recall': recall_score,
                'roc_auc': roc_auc_score,
-               'selection rate': selection_rate,    # Calculate the fraction of predicted labels matching the 'good' outcome
+               'selection rate': selection_rate,
+               # Calculate the fraction of predicted labels matching the 'good' outcome
                'count': count}
 
     metric_frame = MetricFrame(metrics=metrics,
@@ -43,7 +44,7 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
 
         filename_string: str = f'./output/{use_case_name}/classification/GROUP_FAIRNESS_{attributes_string}_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
         filename = filename_string.encode()
-        metrics_per_group_df = metric_frame.by_group
+        metrics_per_group_df = metric_frame.by_group            # TODO: Add 'combined' group here into the metrics_per_group_df, calculation from outside function or from .by_group function?
         with open(filename, 'w', newline='') as output_file:
             metrics_per_group_df.to_csv(output_file, index=True)
             print(f'STATUS: metrics_per_group_df was saved to {filename_string}')
@@ -81,7 +82,7 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
 
     # 1) select unprivileged_groups and their respective values
     # IMPORTANT: adjust selected_privileged_classes depending on selected_protected_attributes
-    selected_protected_attributes = ['gender', 'ethnicity_1']
+    selected_protected_attributes = ['gender']  # , 'ethnicity_1']
     selected_privileged_classes = [[1]]  # privileged: gender=1=male, ethnicity_1=white
     # insurance_1 = self_pay, insurance_4 = private | marital_status_1 = not-single | religion_1 = catholic
     attributes_string = '_'.join(str(e) for e in selected_protected_attributes)
@@ -150,10 +151,10 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
     # for the question: does my classifier make the occurrence of positive cases higher?
 
     # 4) return Fairness Report as print if verbose, save as table if save_files
-    report = pd.DataFrame({'Accuracy': [accuracy, accuracy_expected, accuracy_def],
+    report = pd.DataFrame({'Number of Instances': [num_instances, num_instances_expected, num_instances_def],
+                           'Accuracy': [accuracy, accuracy_expected, accuracy_def],
                            'Recall': [recall, recall_expected, recall_def],
                            'Precision': [precision, precision_expected, precision_def],
-                           'Number of Instances': [num_instances, num_instances_expected, num_instances_def],
                            'Statistical Parity Difference': [statistical_parity_difference, parity_expected,
                                                              parity_def],
                            'Disparate Impact Ratio': [disparate_impact, disparate_expected, disparate_def],

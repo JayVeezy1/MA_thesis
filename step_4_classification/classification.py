@@ -390,6 +390,8 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
         # displays relation between precision to recall
         auc_prc_score = round(average_precision_score(y_test_basic, y_pred), 3)
     # print(f'CHECK: {classification_method}: AUROC = %.3f' % auc_score)
+    print(f'CHECK: {classification_method}: average_precision_score = %.3f' % auc_prc_score)
+
 
     # Plot AUC-ROC Curve
     # Get false-positive-rate = x-axis and true-positive-rate = y-axis
@@ -400,7 +402,7 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
         clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, y_pred)
     else:
         clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, y_pred)
-        plt.plot(clf_fpr, clf_tpr, marker='.', label=f'{classification_method} (AUROC = {auc_score})')
+        plt.plot(clf_fpr, clf_tpr, label=f'{classification_method} (AUROC = {auc_score})')      # marker='.',
 
     # Add a random predictor line to plot
     random_probs = [0 for _ in range(len(y_test_basic))]

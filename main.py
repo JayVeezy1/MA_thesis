@@ -251,7 +251,7 @@ if __name__ == '__main__':
                                                     save_to_file=SELECT_SAVE_FILES)
 
     # Step 4.2) Classification Report Deep Learning Neural Network
-    report_DL = classification_deeplearning.get_classification_report_deeplearning(use_this_function=True,  # True | False
+    report_DL = classification_deeplearning.get_classification_report_deeplearning(use_this_function=False,  # True | False
                                                                                    sampling_method=SELECTED_SAMPLING_METHOD,
                                                                                    selected_cohort=SELECTED_COHORT_preprocessed,
                                                                                    cohort_title=SELECTED_COHORT_TITLE,
@@ -290,7 +290,7 @@ if __name__ == '__main__':
 
     ### Fairness Metrics
     # Step 5.1) Calculate Fairness for manual Subgroups
-    fairness_analysis.get_fairness_report(use_this_function=False,  # True | False
+    fairness_analysis.get_fairness_report(use_this_function=True,  # True | False
                                           plot_performance_metrics=True,
                                           classification_method=SELECTED_CLASSIFICATION_METHOD,
                                           sampling_method=SELECTED_SAMPLING_METHOD,
