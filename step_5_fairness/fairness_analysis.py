@@ -44,9 +44,14 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
 
         filename_string: str = f'./output/{use_case_name}/classification/GROUP_FAIRNESS_{attributes_string}_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
         filename = filename_string.encode()
-        metrics_per_group_df = metric_frame.by_group            # TODO: Add 'combined' group here into the metrics_per_group_df, calculation from outside function or from .by_group function?
+        metrics_per_group_df = metric_frame.by_group
+        metrics_per_group_df.loc['overall', ['accuracy', 'precision', 'recall', 'roc_auc', 'selection rate', 'count']] = metric_frame.overall
+        cols = metrics_per_group_df.columns.tolist()
+        cols = cols[-1:] + cols[:-1]
+        metrics_per_group_df = metrics_per_group_df[cols]
+        metrics_per_group_df.loc[:, ['accuracy', 'precision', 'recall', 'roc_auc', 'selection rate']] = metrics_per_group_df.loc[:, ['accuracy', 'precision', 'recall', 'roc_auc', 'selection rate']].round(3)
         with open(filename, 'w', newline='') as output_file:
-            metrics_per_group_df.to_csv(output_file, index=True)
+            metrics_per_group_df.transpose().to_csv(output_file, index=True)
             print(f'STATUS: metrics_per_group_df was saved to {filename_string}')
         plt.show()
     else:
@@ -82,7 +87,7 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
 
     # 1) select unprivileged_groups and their respective values
     # IMPORTANT: adjust selected_privileged_classes depending on selected_protected_attributes
-    selected_protected_attributes = ['gender']  # , 'ethnicity_1']
+    selected_protected_attributes = ['gender', 'ethnicity_1']  # , 'ethnicity_1']
     selected_privileged_classes = [[1]]  # privileged: gender=1=male, ethnicity_1=white
     # insurance_1 = self_pay, insurance_4 = private | marital_status_1 = not-single | religion_1 = catholic
     attributes_string = '_'.join(str(e) for e in selected_protected_attributes)
@@ -142,7 +147,7 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
     average_odds_def = 'alias for Equalized Odds'
     average_odds_expected = 0
     generalized_entropy_index = round(classification_metric.generalized_entropy_index(), 3)
-    entropy_def = 'alias for Theil Index with alpha=1'
+    entropy_def = 'alias for Theil Index when alpha=1'
     entropy_expected = 0
     # OPTIONAL metric:
     # differential_fairness_bias_amplification = round(classification_metric.differential_fairness_bias_amplification(), 3)
@@ -152,16 +157,15 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
 
     # 4) return Fairness Report as print if verbose, save as table if save_files
     report = pd.DataFrame({'Number of Instances': [num_instances, num_instances_expected, num_instances_def],
-                           'Accuracy': [accuracy, accuracy_expected, accuracy_def],
-                           'Recall': [recall, recall_expected, recall_def],
-                           'Precision': [precision, precision_expected, precision_def],
+                           # 'Accuracy': [accuracy, accuracy_expected, accuracy_def],
+                           # 'Recall': [recall, recall_expected, recall_def],
+                           # 'Precision': [precision, precision_expected, precision_def],
                            'Statistical Parity Difference': [statistical_parity_difference, parity_expected,
                                                              parity_def],
                            'Disparate Impact Ratio': [disparate_impact, disparate_expected, disparate_def],
                            'True Positive Rate Difference': [true_positive_rate_difference, tp_rate_expected,
                                                              tp_rate_def],
-                           'False Negative Rate Difference': [false_negative_rate_difference, fp_rate_expected,
-                                                              fp_rate_def],
+                           # 'False Negative Rate Difference': [false_negative_rate_difference, fp_rate_expected, fp_rate_def],
                            'Average Odds Difference': [average_odds_difference, average_odds_expected,
                                                        average_odds_def],
                            # 'differential_fairness_bias_amplification': [differential_fairness_bias_amplification],
@@ -195,7 +199,7 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
         with open(report_filename, 'w', newline='') as output_file:
             report_export = report.transpose()
             report_export.index.names = ['Metrics']
-            report_export.rename(columns={0: attributes_string, 1: 'Optimal Value', 2: 'Information'}, inplace=True)
+            report_export.rename(columns={0: attributes_string, 1: 'Optimum', 2: 'Information'}, inplace=True)
             report_export.to_csv(output_file, index=True)  # keep index here for metrics titles
             print(f'STATUS: fairness_report was saved to {report_filename}')
 

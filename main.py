@@ -290,7 +290,7 @@ if __name__ == '__main__':
 
     ### Fairness Metrics
     # Step 5.1) Calculate Fairness for manual Subgroups
-    fairness_analysis.get_fairness_report(use_this_function=True,  # True | False
+    fairness_analysis.get_fairness_report(use_this_function=False,  # True | False
                                           plot_performance_metrics=True,
                                           classification_method=SELECTED_CLASSIFICATION_METHOD,
                                           sampling_method=SELECTED_SAMPLING_METHOD,
