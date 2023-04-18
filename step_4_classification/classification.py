@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from numpy import ndarray
+from pandas import Series
 from pandas.core.interchange import dataframe
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve, make_scorer, \
@@ -335,7 +336,7 @@ def get_classification_report(use_this_function: False, display_confusion_matrix
         print(report)
 
     if save_to_file:
-        current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
+        current_time = datetime.datetime.now().strftime("%H_%M_%S")
         report_filename_string: str = f'./output/{use_case_name}/classification/REPORT_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
         report_filename = report_filename_string.encode()
         with open(report_filename, 'w', newline='') as output_file:
@@ -539,7 +540,7 @@ def compare_classification_models_on_cohort(use_this_function, use_case_name, fe
                                                            ignore_index=True)
 
     if save_to_file:
-        current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
+        current_time = datetime.datetime.now().strftime("%H_%M_%S")
         filename_string: str = f'./output/{use_case_name}/classification/models_overview_{current_time}.csv'
         filename = filename_string.encode()
         with open(filename, 'w', newline='') as output_file:
@@ -676,7 +677,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                                              ignore_index=True)
 
     if save_to_file:
-        current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
+        current_time = datetime.datetime.now().strftime("%H_%M_%S")
         filename_string: str = f'./output/{use_case_name}/classification/clusters_overview_{current_time}.csv'
         filename = filename_string.encode()
         with open(filename, 'w', newline='') as output_file:
@@ -756,7 +757,7 @@ def plot_random_forest(use_this_function, classification_method, sampling_method
     # decision-of-tree = class_0/class_1
 
     if save_to_file:
-        current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
+        current_time = datetime.datetime.now().strftime("%H_%M_%S")
         plt.savefig(
             f'./output/{use_case_name}/classification/RF_plot_{cohort_title}_{sampling_title}_{current_time}.png')
     if show_plot:
@@ -764,3 +765,38 @@ def plot_random_forest(use_this_function, classification_method, sampling_method
     plt.close()
 
     return None
+
+
+def get_cohort_classified(use_this_function, project_path, classification_method, sampling_method,
+                          selected_cohort, cohort_title, use_case_name, features_df, selected_features,
+                          selected_dependent_variable, use_grid_search, verbose, save_to_file):
+    # calculate the CM and return the corresponding ClassificationReport
+    if not use_this_function:
+        return None
+
+    # get_classification_basics
+    clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
+        selected_cohort, cohort_title, features_df, selected_features,
+        selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
+
+    # Create concatenated classified_cohort
+    y_pred: ndarray = clf.predict(x_test_basic)      # do not predict on oversampled data, only train
+    y_test_basic_array: ndarray = y_test_basic.to_numpy()
+
+    classified_cohort = x_test_basic
+    classified_cohort['class'] = y_test_basic_array         # naming convention from ASDF
+    classified_cohort['out'] = y_pred
+
+    # dependent_variable_df = pd.DataFrame({'ground_truth_values': y_test_basic_array, 'y_pred': y_pred})
+    # classified_cohort: dataframe = x_test_basic.merge(right=dependent_variable_df)  # , axis=1)            # Todo: somehow add icustay_id to x_test_basic
+
+    if save_to_file:
+        current_time = datetime.datetime.now().strftime("%H_%M_%S")
+        cohort_filename_string: str = f'{project_path}exports/{use_case_name}/classified_cohort_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
+        cohort_filename = cohort_filename_string.encode()
+        with open(cohort_filename, 'w', newline='') as output_file:
+            classified_cohort.to_csv(output_file, index=False)
+
+            print(f'STATUS: Classified Cohort was saved to {cohort_filename}')
+
+    return classified_cohort

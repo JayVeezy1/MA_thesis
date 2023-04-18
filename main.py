@@ -18,7 +18,8 @@ if __name__ == '__main__':
     USE_CASE_NAME: str = 'stroke_all_systems'  # stroke_patients_data       # heart_infarct_patients_data
     FEATURES_DF = pd.read_excel('./supplements/FEATURE_PREPROCESSING_TABLE.xlsx')
     SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'
-    ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days', 'death_365_days']
+    ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
+                                     'death_365_days']
     # FEATURES_DF.loc[FEATURES_DF['potential_for_analysis'] == 'prediction_variable', 'feature_name'].to_list()
 
     ### Setup, MIMIC-III Export from DB, Load from Cache
@@ -48,7 +49,8 @@ if __name__ == '__main__':
     ### Preprocessing
     # Step 2) Calculate Avg, Filter, Scale, Impute & Interpolate for each patient
     # Options: dbsource filter
-    complete_avg_cohort = Patient.get_avg_patient_cohort(PROJECT_PATH, USE_CASE_NAME, FEATURES_DF, selected_patients=[])  # empty=all
+    complete_avg_cohort = Patient.get_avg_patient_cohort(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME,
+                                                         features_df=FEATURES_DF, selected_patients=[])  # empty=all
     metavision_avg_cohort = complete_avg_cohort[complete_avg_cohort['dbsource'] == 'metavision']
     carevue_avg_cohort = complete_avg_cohort[complete_avg_cohort['dbsource'] == 'carevue']
     # Options: stroke_type filter, also option: change complete_avg_cohort to metavision_avg_cohort or carevue_avg_cohort
@@ -86,21 +88,20 @@ if __name__ == '__main__':
                                      'scaled_ischemic_avg_cohort': scaled_ischemic_cohort_preprocessed}
     print('STATUS: Preprocessing finished.\n')
 
-    # TODO 1: update predictions + deep learning chapter in overleaf
-
-    # todo 2.1: check Wiese Paper for their fairness measures
-    # todo 2.2: include the fairness package? https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md Also in general the AI Responsible package useful as a dashboard?
-    # todo 2.3: update fairness chapter in overleaf
-
     # todo next week: implement ASDF Dashboard
 
     # TODO after: add SHAPley values to classification chapter (+ shap waterfalls, with this different importance for subgroups)
     # get shapely function from there (also use this analysis to compare clusters?) https://antonsruberts.github.io/kproto-audience/
 
-    # todo long term: add filtering mechanism in Patient Class, recheck stroke filtering (move ischemic to front)
-    # todo long term: add 'decision-boundary-plot' to visualize the clustering (on 2 features), maybe use clustering for predictions?
-    # todo long term: add 3-features-visualization plot (like pacmap but with real dimensions)
-    # todo long term: graphic to visualize the filtering steps of complete mimic-iii dataset for chapter 2
+    # todo after: check Wiese Paper for their fairness measures
+    # todo after: include the fairness package? https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md Also in general the AI Responsible package useful as a dashboard?
+    # todo after: update + interpret fairness chapter in overleaf
+
+    # todo after: graphic to visualize the filtering steps of complete mimic-iii dataset for chapter 2
+
+    # todo maybe long term: add filtering mechanism in Patient Class, recheck stroke filtering (move ischemic to front)
+    # todo maybe long term: add 'decision-boundary-plot' to visualize the clustering (on 2 features), maybe use clustering for predictions?
+    # todo maybe long term: add 3-features-visualization plot (like pacmap but with real dimensions)
 
     ### Data Analysis
     # Step 3.1) General Statistics
@@ -205,7 +206,8 @@ if __name__ == '__main__':
     SELECTED_CLASSIFICATION_METHOD = 'XGBoost'  # options: RandomForest | XGBoost || NOT deeplearning_sequential -> use function get_classification_report_deeplearning()
     USE_GRIDSEARCH = True
     SELECTED_SAMPLING_METHOD = 'oversampling'  # options: no_sampling | oversampling | undersampling   -> estimation: oversampling > no_sampling > undersampling (very bad results)
-    ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost', 'deeplearning_sequential']
+    ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost',
+                                        'deeplearning_sequential']
     # Classification Report
     report = classification.get_classification_report(use_this_function=False,  # True | False
                                                       display_confusion_matrix=True,  # option for CM
@@ -251,7 +253,8 @@ if __name__ == '__main__':
                                                     save_to_file=SELECT_SAVE_FILES)
 
     # Step 4.2) Classification Report Deep Learning Neural Network
-    report_DL = classification_deeplearning.get_classification_report_deeplearning(use_this_function=False,  # True | False
+    report_DL = classification_deeplearning.get_classification_report_deeplearning(use_this_function=False,
+                                                                                   # True | False
                                                                                    sampling_method=SELECTED_SAMPLING_METHOD,
                                                                                    selected_cohort=SELECTED_COHORT_preprocessed,
                                                                                    cohort_title=SELECTED_COHORT_TITLE,
@@ -305,9 +308,45 @@ if __name__ == '__main__':
                                           save_to_file=SELECT_SAVE_FILES)
 
     ### Automated Subgroup detection
-    # Step 6.1) Calculate automated Subgroups and related fairness metrics
+    # Step 6.1) Include ASDF-Dashboard as frontend
 
-    # Step 6.2) Include ASDF-Dashboard as frontend
+    # Setup of ASDF-Dashboard: https://github.com/jeschaef/ASDF-Dashboard
+    # 0.1) Install necessary Programs: Docker Desktop and Git
+    # 0.2) Make a fork for own Git Repository: https://github.com/JayVeezy1/ASDF-Dashboard
+    # 0.3) Copy Git Code to local inside shell: git clone https://github.com/JayVeezy1/ASDF-Dashboard
+
+    # Now two options:
+    # Productive Environment: for external hosting, uses nginx server program and postgres, not needed for thesis
+    # configure .env files according to info from ReadMe.md in the repository
+    # Move with Console into local Project Folder: cd C:\Users\Jakob\ASDF-Dashboard
+    # Execute build for 5 Docker Containers inside the Project folder with: docker-compose up --build
+    # Frontend should be available via defined URL in .env file or localhost
+
+    # Development Environment: Minimal Setup to use Frontend for local visualization, this is sufficient for thesis
+    # 1) Inside Pycharm open the python project in the local folder of the repository, install the required packages
+    # 2) Start the Redis and Celery Containers as described in ReadMe.md, can be done in console or in pycharm terminal
+    # 3) Start Frontend by running the app._init_ file of the project
+    # 4) Upload dataset into frontend
+
+    # Get Classified Cohort for Frontend
+    cohort_classified = classification.get_cohort_classified(use_this_function=True,     # True | False
+                                                             project_path=PROJECT_PATH,  # to save where avg_cohort is
+                                                             classification_method=SELECTED_CLASSIFICATION_METHOD,
+                                                             sampling_method=SELECTED_SAMPLING_METHOD,
+                                                             selected_cohort=SELECTED_COHORT_preprocessed,
+                                                             cohort_title=SELECTED_COHORT_TITLE,
+                                                             use_case_name=USE_CASE_NAME,
+                                                             features_df=FEATURES_DF,
+                                                             selected_features=SELECTED_FEATURES,
+                                                             selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                             use_grid_search=USE_GRIDSEARCH,
+                                                             verbose=True,
+                                                             save_to_file=True)
+
+    # TODO: Make function 'start asdf dashboard' -> calls other python project and starts background processes, opens Dashboard
+    # TODO: Make function 'close asdf & background processes'
+
+    # Step 6.2) Calculate automated Subgroups and related fairness metrics
 
     print(f'\nSTATUS: Analysis finished for {len(SELECTED_FEATURES)} selected_features.')
     time_diff = datetime.now() - starting_time
