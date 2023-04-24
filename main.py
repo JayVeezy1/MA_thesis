@@ -1,13 +1,13 @@
 from datetime import datetime
 import pandas as pd
 
-from frontend.app import start_app_from_main
 from objects.patients import Patient
 from step_1_setup_data import cache_IO
 from step_2_preprocessing.preprocessing_functions import get_preprocessed_avg_cohort
 from step_3_data_analysis import correlations, clustering, general_statistics, data_visualization
 from step_4_classification import classification_deeplearning, classification
 from step_5_fairness import fairness_analysis
+from frontend.app import start_dashboard_from_main
 
 
 ####### MAIN #######
@@ -309,10 +309,17 @@ if __name__ == '__main__':
                                           use_grid_search=USE_GRIDSEARCH,
                                           save_to_file=SELECT_SAVE_FILES)
 
-    ### Automated Subgroup detection
 
-    # Step 6.0) Get Classified Cohort for Frontend
-    cohort_classified = classification.get_cohort_classified(use_this_function=False,     # True | False
+    ### Frontend for Visualization
+    # Step 6.1) Include ASDF-Dashboard as frontend https://github.com/jeschaef/ASDF-Dashboard
+    # Important: Start Background Services First
+    # Redis: docker run --name redis -p 6379:6379 -d redis (once created 'start' in Docker Desktop)
+    # Celery: celery -A frontend.app.celery_app worker -P solo -l info (in second cmd terminal)
+    app = start_dashboard_from_main(use_this_function=True)
+
+    # Step 6.2) Upload complete avg dataset for visualization of this thesis (manually in the frontend)
+    # Additionally use following function to create dataset for original fairness visualizations of the ASDF-Dashboard
+    cohort_classified = classification.get_cohort_classified(use_this_function=False,  # True | False
                                                              project_path=PROJECT_PATH,  # to save where avg_cohort is
                                                              classification_method=SELECTED_CLASSIFICATION_METHOD,
                                                              sampling_method=SELECTED_SAMPLING_METHOD,
@@ -326,36 +333,9 @@ if __name__ == '__main__':
                                                              verbose=True,
                                                              save_to_file=True)
 
-    # Step 6.1) Include ASDF-Dashboard as frontend
 
-    # Setup of ASDF-Dashboard: https://github.com/jeschaef/ASDF-Dashboard
-    # 0.1) Install necessary Programs: Docker Desktop and Git
-    # 0.2) Make a fork for own Git Repository: https://github.com/JayVeezy1/ASDF-Dashboard
-    # 0.3) Copy Git Code to local inside shell: git clone https://github.com/JayVeezy1/ASDF-Dashboard
-
-    # Now two options:
-    # Productive Environment: for external hosting, uses nginx server program and postgres, not needed for thesis
-    # configure .env files according to info from ReadMe.md in the repository
-    # Move with Console into local Project Folder: cd C:\Users\Jakob\ASDF-Dashboard
-    # Execute build for 5 Docker Containers inside the Project folder with: docker-compose up --build
-    # Frontend should be available via defined URL in .env file or localhost
-
-    # Development Environment: Minimal Setup to use Frontend for local visualization, this is sufficient for thesis
-    # 1) Inside Pycharm open the python project in the local folder of the repository, install the required packages
-    # 2) Start the Redis and Celery Containers as described in ReadMe.md, can be done in console or in pycharm terminal
-
-    # cd C:\Users\Jakob\PycharmProjects\MA_thesis\frontend
-    # docker run --name redis -p 6379:6379 -d redis (if exists click on 'run' in Docker Desktop)
-    # in its own app: celery -A app.celery_app worker -P solo -l info
-    # in this app: celery -A frontend.app.celery_app worker -P solo -l info
-
-    # 3) Start Frontend by running the app._init_ file of the project
-    # TODO: start frontend and also starts background processes (redis + celery), directly opens Dashboard
-    app = start_app_from_main(use_this_function=True)
-
-    # TODO: Make function 'close asdf & background processes'
-
-    # Step 6.2) Calculate automated Subgroups and related fairness metrics
+    ### Automated Subgroup detection
+    # Step 7.1) Calculate automated Subgroups and related fairness metrics -> Inside ASDF-Dashboard
 
     print(f'\nSTATUS: Analysis finished for {len(SELECTED_FEATURES)} selected_features.')
     time_diff = datetime.now() - starting_time
