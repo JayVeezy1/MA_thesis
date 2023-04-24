@@ -1,7 +1,8 @@
-Metrics,gender_ethnicity_1,Optimal Value,Information
+Metrics,gender,Optimal Value,Information
 Number of Instances,531.0,-,Instances used for prediction
 Statistical Parity Difference,-0.035,0,Difference between Subgroups
 Disparate Impact Ratio,0.846,1,Ratio between Subgroups
 True Positive Rate Difference,0.107,0,alias for Equal Opportunity
+False Negative Rate Difference,-0.107,0,"False Negative Rate, used for Equalized Odds"
 Average Odds Difference,0.039,0,alias for Equalized Odds
-Generalized Entropy Index,0.066,0,alias for Theil Index when alpha=1
+Generalized Entropy Index,0.066,0,alias for Theil Index with alpha=1
