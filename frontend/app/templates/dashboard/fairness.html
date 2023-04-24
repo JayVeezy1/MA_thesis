@@ -1,0 +1,201 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block styles %}
+{{ super() }}
+<link href="{{ url_for('static', filename='css/fairness.css') }}" rel="stylesheet">
+{% endblock %}}
+
+
+{% block inner_content %}
+<form class="border rounded shadow px-3" id="fairness-form">
+    <h1 class="h2">Subgroup Fairness Analysis</h1>
+    <div class="row p-2 gx-5 gy-3">
+
+        <!-- Dataset selectpicker -->
+        <div class="col col-1">
+            <label for="dataset-select" class="form-label col-form-label-lg">Dataset:</label>
+        </div>
+        <div class="col col-2 offset-1">
+            <select class="selectpicker" id="dataset-select" name="dataset" data-live-search="true"
+                    title="Choose a dataset..." required>
+                {% for d in all_datasets %}
+                <option value="{{ d.id }}">{{ d.name }}</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">
+                Please select a dataset.
+            </div>
+        </div>
+
+        <!-- Positive class switch -->
+        <div class="col col-3 offset-1 form-check form-switch form-control-lg">
+            <input class="form-check-input" type="checkbox" role="switch" id="switch">
+            <label class="form-check-label" for="switch">Positive class label: 0</label>
+        </div>
+
+        <!-- Entropy threshold slider -->
+        <div class="col col-3">
+            <label for="threshold" class="form-label col-form-label-lg">Entropy threshold: 0.65</label>
+            <input type="range" class="form-range" min="0" max="1" step="0.01" value="0.65" id="threshold">
+        </div>
+
+        <!-- Categorical columns multi selectpicker-->
+        <div class="col col-2">
+            <label for="select-categ" class="form-label col-form-label-lg">Categorical columns:</label>
+        </div>
+        <div class="col col-2">
+            <span class="d-inline-block" tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus"
+                  data-bs-content="Select a dataset first!" id="popover-categ">
+                <select class="selectpicker" id="select-categ" data-actions-box="true"
+                        title="Categorical columns ..." data-selected-text-format="count" multiple disabled>
+                </select>
+            </span>
+        </div>
+
+        <!-- Clustering algorithm selectpicker -->
+        <div class="col col-2">
+            <label for="select-algo" class="form-label col-form-label-lg">Clustering algorithm:</label>
+        </div>
+        <div class="col col-2">
+            <select class="selectpicker" id="select-algo" data-live-search="true"
+                    title="Choose a clustering ...">
+            </select>
+        </div>
+
+        <!-- Algorithm parameters + Modal -->
+        <div class="col col-3 offset-1">
+            <span class="d-inline-block" tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover focus"
+                  data-bs-content="Select an algorithm first!" id="popover-params">
+                <button type="button" class="btn btn-lg btn-danger" data-bs-toggle="modal"
+                        data-bs-target="#parameter-modal" id="parameter-button" disabled>
+                    <svg class="bi" width="20" height="20" role="img" aria-label="Home">
+                        <use xlink:href="#sliders-vertical"/>
+                    </svg>
+                    Algorithm parameters
+                </button>
+            </span>
+        </div>
+
+        <div class="modal fade" id="parameter-modal" tabindex="-1" aria-labelledby="parameter-modal-label"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="parameter-modal-label">Parameters</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="parameter-modal-body">
+                        ... Parameters ...
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-danger" id="parameter-clear">
+                            <svg class="bi" width="16" height="16">
+                                <use xlink:href="#trash-fill"></use>
+                            </svg>
+                            Clear All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+    <!-- Evaluation buttons -->
+    <div class="d-flex mt-4 mb-3">
+        <input class="btn btn-lg btn-primary w-25 ms-auto me-auto" id="task-auto-submit" name="submit" type="button"
+               value="Automatic Evaluation">
+        <input class="btn btn-lg btn-primary w-25 me-auto" id="task-submit" name="submit" type="button"
+               value="Manual Evaluation"/>
+    </div>
+</form>
+
+
+<div class="row my-1">
+    <div class="alert alert-info" id="task-status" role="alert" style="display: none;">
+        Display progress information
+    </div>
+</div>
+
+<div id="chart-area" class="chart-area" style="display: none">
+    <div class="row gy-4 gx-3">
+        <div class="col col-6">
+            <div class="border rounded shadow p-0">
+                <div class="chart-container">
+                    <canvas id="chart-fair"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col col-6">
+            <div class="border rounded shadow p-0">
+                <div class="overflow-x-auto">
+                    <div class="chart-container">
+                        <canvas id="chart-group"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col col-12">
+            <div class="border rounded shadow p-0">
+                <table id="table-groups"
+                       data-pagination="true"
+                       data-page-list="[5, 10, 25, 50, all]"
+                       data-detail-view="true"
+                       data-detail-view-by-click="true"
+                       data-height="500">
+                </table>
+            </div>
+        </div>
+
+        <div class="col col-6">
+            <div class="border rounded shadow p-0">
+                <div class="chart-container">
+                    <canvas id="chart-select"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col col-6">
+            <div class="border rounded shadow p-0">
+                <div class="row p-2 gx-5" id="ranking-config">
+                    <select class="selectpicker col col-6" id="select-ranking" data-width="50%">
+                        <option value="c_stat_par">Cluster statistical parity</option>
+                        <option value="c_eq_opp">Cluster equal opportunity</option>
+                        <option value="c_avg_odds">Cluster avg. equalized odds</option>
+                        <option value="c_acc">Cluster accuracy</option>
+                        <option value="g_stat_par">Subgroup statistical parity</option>
+                        <option value="g_eq_opp">Subgroup equal opportunity</option>
+                        <option value="g_avg_odds">Subgroup avg. equalized odds</option>
+                        <option value="g_acc">Subgroup accuracy</option>
+                    </select>
+                    <div class="col col-6 form-check form-switch col-form-label-lg">
+                        <input class="form-check-input" type="checkbox" role="switch" id="switch-ranking-order">
+                        <label class="form-check-label" for="switch-ranking-order">Ascending</label>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chart-ranking"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+{{ super() }}
+<script>
+    const start_task_url = JSON.parse('{{ url_for("task.start_fairness_task") | tojson }}')
+    const clustering_info_url = JSON.parse('{{ url_for("dashboard.clustering_info") | tojson }}')
+    const columns_info_url = JSON.parse('{{ url_for("dashboard.raw_data_columns") | tojson }}')
+</script>
+<script src="{{ url_for('static', filename='js/fairness.js') }}"></script>
+{% endblock %}

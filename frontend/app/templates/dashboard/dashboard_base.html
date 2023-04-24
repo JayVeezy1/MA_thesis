@@ -1,0 +1,113 @@
+{%- extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+<!-- Styles -->
+{% block styles %}
+{{ super() }}
+<link href="{{ url_for('static', filename='css/sidebars.css') }}" rel="stylesheet">
+{% endblock %}
+
+
+<!-- No navbar here but a side bar instead -->
+{% block navbar %}
+{% endblock %}
+
+
+<!-- Content -->
+{% block content %}
+
+<div class="container-fluid p-0">
+    <main class="main">
+        <div class="d-flex flex-column bg-light sidebar">
+            <a href="{{ url_for('main.index') }}" class="d-block p-3 link-dark text-decoration-none border-bottom"
+               style="margin-top: -5px;">
+                <img src="{{ url_for('static', filename='logo.png') }}" width="40" height="40">
+                <span class="visually-hidden">Icon-only</span>
+            </a>
+            <ul class="nav nav-pills nav-flush flex-column mb-auto text-center" id="navList">
+                <li class="nav-item">
+                    <a href="{{ url_for('dashboard.index') }}" class="nav-link py-3 border-bottom"
+                       aria-current="page"
+                       title="Home"
+                       data-bs-toggle="tooltip" data-bs-placement="right">
+                        <svg class="bi" width="24" height="24" role="img" aria-label="Home">
+                            <use xlink:href="#home"/>
+                        </svg>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('dashboard.datasets') }}" class="nav-link py-3 border-bottom"
+                       title="Datasets" data-bs-toggle="tooltip" data-bs-placement="right">
+                        <svg class="bi" width="24" height="24" role="img" aria-label="Datasets">
+                            <use xlink:href="#upload"/>
+                        </svg>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('dashboard.inspect') }}" class="nav-link py-3 border-bottom"
+                       title="Inspect" data-bs-toggle="tooltip" data-bs-placement="right">
+                        <svg class="bi" width="24" height="24" role="img" aria-label="Inspect">
+                            <use xlink:href="#table"/>
+                        </svg>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('dashboard.fairness') }}" class="nav-link py-3 border-bottom"
+                       title="Fairness Dashboard" data-bs-toggle="tooltip" data-bs-placement="right">
+                        <svg class="bi" width="24" height="24" role="img" aria-label="Fairness">
+                            <use xlink:href="#speedometer2"/>
+                        </svg>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('dashboard.thesis') }}" class="nav-link py-3 border-bottom"
+                       title="Thesis" data-bs-toggle="tooltip" data-bs-placement="right">
+                        <svg class="bi" width="24" height="24" role="img" aria-label="Thesis">
+                            <use xlink:href="#speedometer"/>
+                        </svg>
+                    </a>
+                </li>
+            </ul>
+            <div class="dropdown border-top">
+                <a href="#"
+                   class="d-flex align-items-center justify-content-center p-3 dropdown-toggle-color
+                   text-decoration-none dropdown-toggle" id="dropdownUser" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    <svg class="bi" width="24" height="24" role="img" aria-label="Customers">
+                        <use xlink:href="#people-circle"/>
+                    </svg>
+                </a>
+                <ul class="dropdown-menu text-small shadow custom-drop" aria-labelledby="dropdownUser">
+                    <li><a class="dropdown-item" href="{{ url_for('dashboard.datasets') }}">Manage datasets</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('dashboard.fairness') }}">Subgroup fairness</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('main.profile') }}">Profile</a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Sign out</a></li>
+                </ul>
+            </div>
+        </div>
+
+
+        <!--        <div class="col-md-10 col-lg-11">-->
+        <div class="p-3 dashboard-content">
+            {% block inner_content %}
+            {% endblock %}
+        </div>
+        <!--        </div>-->
+
+
+    </main>
+
+</div>
+
+
+{% endblock %}
+
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/sidebars.js') }}"></script>
+{% endblock %}

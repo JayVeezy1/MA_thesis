@@ -1,0 +1,73 @@
+services:
+  redis:
+    env_file:
+      - ".env"
+    image: "redis:latest"
+    restart: "${DOCKER_RESTART_POLICY}"
+    stop_grace_period: "${DOCKER_STOP_GRACE_PERIOD}"
+    volumes:
+      - "redis:/data"
+
+  web:
+    build:
+      context: "."
+      args:
+        - FLASK_ENV=production
+    depends_on:
+      - "redis"
+      - "postgres"
+    env_file:
+      - ".env"
+    environment:    # overwrites .env
+      - CACHE_REDIS_HOST=redis
+      - CACHE_REDIS_PORT=6379
+      - broker_url=redis://redis:6379
+      - result_backend=redis://redis:6379
+    expose:
+      - ${DOCKER_WEB_PORT}
+    restart: "${DOCKER_RESTART_POLICY}"
+    stop_grace_period: "${DOCKER_STOP_GRACE_PERIOD}"
+    volumes:
+      - "${DOCKER_WEB_VOLUME}"
+
+  worker:
+    build:
+      context: "."
+      args:
+        - FLASK_ENV=production
+    command: celery -A app.celery_app worker -P solo -l info
+    depends_on:
+      - "redis"
+    env_file:
+      - ".env"
+    environment:    # overwrites .env file
+      - broker_url=redis://redis:6379
+      - result_backend=redis://redis:6379
+    restart: "${DOCKER_RESTART_POLICY}"
+    stop_grace_period: "${DOCKER_STOP_GRACE_PERIOD}"
+    volumes:
+      - "${DOCKER_WEB_VOLUME}"
+
+  postgres:
+    image: "postgres:latest"
+    env_file:
+      - ".env"
+
+  nginx:
+    build: ./app/conf/nginx
+    env_file:
+      - ".env"
+    ports:
+      - "${NGINX_PORT}:80"
+    depends_on:
+      - web
+    volumes:
+      - ./app/conf/nginx/nginx.conf:/etc/nginx/nginx.conf
+
+volumes:
+  redis: { }
+
+networks:
+  default:
+    external: true
+    name: proxy_nw

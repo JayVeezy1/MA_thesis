@@ -1,0 +1,61 @@
+{% extends "dashboard/dashboard_base.html" %}
+
+{% block inner_content %}
+
+<form method="POST" enctype=multipart/form-data action="{{ url_for('dashboard.inspect') }}"
+    class="border rounded shadow p-2">
+    <h1 class="h2">Dataset Inspection</h1>
+    <div class="row row p-2 gx-5 gy-3">
+        <label for="dataset-select" class="col-sm-2 col-form-label-lg">Select a dataset</label>
+        <div class="col-sm-3">
+            <select class="selectpicker" id="dataset-select" name="dataset"
+                    data-live-search="true">
+                {% for d in all_datasets %}
+                {% if d.name == dataset.name %}
+                <option value="{{ d.name }}" selected>{{ d.name }}</option>
+                {% else %}
+                <option value="{{ d.name }}">{{ d.name }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+</form>
+
+
+<div class="border rounded shadow p-2 mt-3">
+    <h1 class="h2">{{dataset.name}}</h1>
+    <table id="dstable"
+       data-toggle="table"
+       data-classes="table table-hover"
+       data-side-pagination="server"
+       data-pagination="true"
+       data-page-list="[5, 10, 25, 50, 100, all]"
+       data-url="{{ url_for('dashboard.raw_data', name=dataset.name) }}"
+       data-query-params="queryParams"
+       data-sort-reset="true"
+       data-show-search-clear-button="true"
+       data-filter-control="true"
+       data-show-filter-control-switch="true"
+       data-show-columns="true"
+       data-show-columns-toggle-all="true"
+       data-maintain-meta-data="true">
+    <thead>
+    <tr>
+        <!-- Column names -->
+        {% for cname, dtype in columns.items() %}
+        <th data-field="{{cname}}" data-sortable="true" data-filter-control="input">{{cname}}</th>
+        {% endfor %}
+    </tr>
+    </thead>
+</table>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/inspect.js') }}"></script>
+{% endblock %}
