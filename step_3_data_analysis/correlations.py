@@ -4,12 +4,11 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
-from pandas.core.interchange import dataframe
 from scipy.stats import stats, chi2_contingency  # also for chi2_contingency
 from dython.nominal import associations  # for categorical correlation
 
 
-def preprocess_for_correlation(selected_cohort: dataframe, features_df: dataframe, selected_features: list,
+def preprocess_for_correlation(selected_cohort, features_df, selected_features: list,
                                selected_dependent_variable: str):
     # Preprocessing for Correlation: Remove the not selected prediction_variables and icustay_id
     prediction_variables = features_df['feature_name'].loc[
@@ -38,7 +37,7 @@ def preprocess_for_correlation(selected_cohort: dataframe, features_df: datafram
     return selected_cohort, selected_features
 
 
-def split_cohort_into_feature_types(preprocessed_cohort: dataframe, features_df: dataframe, preprocessed_features: list,
+def split_cohort_into_feature_types(preprocessed_cohort, features_df, preprocessed_features: list,
                                     selected_dependent_variable: str):
     # split selected_cohort into categorical_cohort, continuous_cohort, binary_cohort
     categorical_features = features_df['feature_name'].loc[
@@ -60,7 +59,7 @@ def split_cohort_into_feature_types(preprocessed_cohort: dataframe, features_df:
     binary_cohort = preprocessed_cohort[binary_features]
 
     # add the temp_dependent_variable to each of the 2 dfs that dont have it
-    temp_dependent_variable_df: dataframe = preprocessed_cohort[selected_dependent_variable]
+    temp_dependent_variable_df = preprocessed_cohort[selected_dependent_variable]
     continuous_cohort = continuous_cohort.merge(right=temp_dependent_variable_df, left_index=True, right_index=True)
     binary_cohort = binary_cohort.merge(right=temp_dependent_variable_df, left_index=True, right_index=True)
 
@@ -76,8 +75,8 @@ def get_continuous_corr(continuous_cohort, selected_dependent_variable):
     death_corr = death_corr.rename('correlation')
 
     # Significance
-    cleaned_df: dataframe = continuous_cohort.fillna(0)
-    validity_df: dataframe = pd.DataFrame()
+    cleaned_df = continuous_cohort.fillna(0)
+    validity_df = pd.DataFrame()
     try:
         for feature in continuous_cohort.columns:
             r_val, p_val = stats.pearsonr(cleaned_df[feature], continuous_cohort[
@@ -108,7 +107,7 @@ def get_categorical_corr(categorical_cohort, selected_dependent_variable):
     death_corr = death_corr.rename('correlation')
 
     # Significance: Chi-squared test on a contingency table per feature
-    validity_df: dataframe = pd.DataFrame()
+    validity_df = pd.DataFrame()
     for feature in categorical_cohort.columns:
         contingency_tab = pd.crosstab(categorical_cohort[feature], categorical_cohort[selected_dependent_variable])
         c, p_val, dof, expected = chi2_contingency(contingency_tab)  # c = chi-squared test statistic, not needed
@@ -152,7 +151,7 @@ def get_binary_corr(binary_cohort, selected_dependent_variable):
 
     # todo: check if normal chi-squared for binary
     # Significance: Chi-squared test on a contingency table per feature
-    validity_df: dataframe = pd.DataFrame()
+    validity_df = pd.DataFrame()
     for feature in binary_cohort.columns:
         contingency_tab = pd.crosstab(binary_cohort[feature], binary_cohort[selected_dependent_variable])
         c, p_val, dof, expected = chi2_contingency(contingency_tab)  # c = chi-squared test statistic, not needed
@@ -164,8 +163,8 @@ def get_binary_corr(binary_cohort, selected_dependent_variable):
     return pd.merge(death_corr, validity_df, left_index=True, right_index=True)
 
 
-def get_correlations_to_dependent_var(selected_cohort: dataframe, features_df: dataframe, selected_features: list,
-                                      selected_dependent_variable: str) -> dataframe:
+def get_correlations_to_dependent_var(selected_cohort, features_df, selected_features: list,
+                                      selected_dependent_variable: str):
     ## 0) Preprocessing
     preprocessed_cohort, preprocessed_features = preprocess_for_correlation(
         selected_cohort=selected_cohort,
@@ -203,7 +202,7 @@ def get_correlations_to_dependent_var(selected_cohort: dataframe, features_df: d
 
 
 def plot_correlations(use_this_function: False, use_plot_heatmap: False, use_plot_pairplot: False, cohort_title: str,
-                      selected_cohort: dataframe, features_df: dataframe, selected_features: list,
+                      selected_cohort, features_df, selected_features: list,
                       selected_dependent_variable: str, use_case_name: str, save_to_file: bool = False):
     if not use_this_function:
         return None
@@ -282,7 +281,7 @@ def plot_correlations(use_this_function: False, use_plot_heatmap: False, use_plo
     return None
 
 
-def plot_heatmap(cohort_title: str, selected_cohort: dataframe, features_df: dataframe, selected_features: list,
+def plot_heatmap(cohort_title: str, selected_cohort, features_df, selected_features: list,
                  selected_dependent_variable: str, use_case_name: str,
                  save_to_file: bool = False):
     ## 0) Preprocessing
@@ -332,7 +331,7 @@ def plot_heatmap(cohort_title: str, selected_cohort: dataframe, features_df: dat
     return None
 
 
-def plot_pairplot(cohort_title: str, selected_cohort: dataframe, features_df: dataframe, selected_features: list,
+def plot_pairplot(cohort_title: str, selected_cohort, features_df, selected_features: list,
                   selected_dependent_variable: str, use_case_name: str,
                   save_to_file: bool = False):
     ## 0) Preprocessing

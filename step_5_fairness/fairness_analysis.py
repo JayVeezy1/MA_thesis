@@ -5,8 +5,6 @@ from aif360.datasets import StandardDataset
 from aif360.metrics import ClassificationMetric
 from fairlearn.metrics import MetricFrame, selection_rate, count
 from matplotlib import pyplot as plt
-from numpy import ndarray
-from pandas.core.interchange import dataframe
 from sklearn.metrics import accuracy_score, precision_score, roc_auc_score, recall_score
 
 from step_4_classification.classification import split_classification_data
@@ -70,9 +68,9 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
     return None
 
 
-def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
+def get_fairness_report(use_this_function: False, selected_cohort,
                         cohort_title: str,
-                        features_df: dataframe,
+                        features_df,
                         selected_features: list, selected_dependent_variable: str, classification_method: str,
                         sampling_method: str, use_case_name, save_to_file, plot_performance_metrics: False,
                         use_grid_search: False, verbose: True):
@@ -177,7 +175,7 @@ def get_fairness_report(use_this_function: False, selected_cohort: dataframe,
         print(report.transpose().to_string())
 
     if plot_performance_metrics:
-        temp_df: dataframe = x_test_basic[selected_protected_attributes]
+        temp_df = x_test_basic[selected_protected_attributes]
         # check where all selected columns contain a 1
         all_ones_array = temp_df.apply(lambda x: all(x == 1), axis=1).astype(int)
         # temp_df['new_checking_column'] = all_ones_array.astype(int)

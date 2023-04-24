@@ -6,7 +6,6 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from numpy import ndarray
 from pandas import Series
-from pandas.core.interchange import dataframe
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve, make_scorer, \
     accuracy_score, recall_score, average_precision_score, PrecisionRecallDisplay
@@ -23,7 +22,7 @@ from step_3_data_analysis.clustering import get_kmeans_clusters, plot_sh_score
 from step_4_classification.classification_deeplearning import get_DL_auc_score, get_DL_confusion_matrix
 
 
-def preprocess_for_classification(selected_cohort: dataframe, features_df: dataframe, selected_features: list,
+def preprocess_for_classification(selected_cohort, features_df, selected_features: list,
                                   selected_dependent_variable: str):
     # Removal of known features_to_remove
     features_to_remove = features_df['feature_name'].loc[features_df['must_be_removed'] == 'yes'].to_list()
@@ -146,7 +145,7 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
     return x_train_final, x_test_final, y_train_final, y_test_final, sampling_title
 
 
-def split_classification_data(selected_cohort: dataframe, cohort_title: str, features_df: dataframe,
+def split_classification_data(selected_cohort, cohort_title: str, features_df,
                               selected_features: list,
                               selected_dependent_variable: str, classification_method: str, sampling_method: str,
                               use_grid_search: False,
@@ -190,7 +189,8 @@ def split_classification_data(selected_cohort: dataframe, cohort_title: str, fea
         return None
 
     # optimize RF classifier
-    if (classification_method == 'RandomForest' or classification_method == 'RandomForest_with_gridsearch') and use_grid_search:
+    if (
+            classification_method == 'RandomForest' or classification_method == 'RandomForest_with_gridsearch') and use_grid_search:
         clf = grid_search_optimal_RF(clf, x_train_final, y_train_final, verbose)
 
     # this is the training step, prediction will be inside the Classification Report
@@ -199,8 +199,8 @@ def split_classification_data(selected_cohort: dataframe, cohort_title: str, fea
     return clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic
 
 
-def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, cohort_title: str,
-                         features_df: dataframe,
+def get_confusion_matrix(use_this_function: False, selected_cohort, cohort_title: str,
+                         features_df,
                          selected_features: list, selected_dependent_variable: str, classification_method: str,
                          sampling_method: str, use_case_name, save_to_file, use_grid_search, verbose: True):
     # calculate the CM, return: CM as dataframe
@@ -302,9 +302,9 @@ def get_confusion_matrix(use_this_function: False, selected_cohort: dataframe, c
     return cm_df
 
 
-def get_classification_report(use_this_function: False, display_confusion_matrix: False, selected_cohort: dataframe,
+def get_classification_report(use_this_function: False, display_confusion_matrix: False, selected_cohort,
                               cohort_title: str,
-                              features_df: dataframe,
+                              features_df,
                               selected_features: list, selected_dependent_variable: str, classification_method: str,
                               sampling_method: str, use_case_name, save_to_file, use_grid_search: False, verbose: True):
     # calculate the CM and return the corresponding ClassificationReport
@@ -347,7 +347,7 @@ def get_classification_report(use_this_function: False, display_confusion_matrix
     return report
 
 
-def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_title: str, features_df: dataframe,
+def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, features_df,
                   selected_features: list, selected_dependent_variable: str, classification_method: str,
                   sampling_method: str, use_case_name, show_plot: False, save_to_file: False, use_grid_search: False,
                   verbose: True):
@@ -393,7 +393,6 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
     # print(f'CHECK: {classification_method}: AUROC = %.3f' % auc_score)
     print(f'CHECK: {classification_method}: average_precision_score = %.3f' % auc_prc_score)
 
-
     # Plot AUC-ROC Curve
     # Get false-positive-rate = x-axis and true-positive-rate = y-axis
     if y_test_basic.sum() == 0:
@@ -403,7 +402,7 @@ def get_auc_score(use_this_function: False, selected_cohort: dataframe, cohort_t
         clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, y_pred)
     else:
         clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, y_pred)
-        plt.plot(clf_fpr, clf_tpr, label=f'{classification_method} (AUROC = {auc_score})')      # marker='.',
+        plt.plot(clf_fpr, clf_tpr, label=f'{classification_method} (AUROC = {auc_score})')  # marker='.',
 
     # Add a random predictor line to plot
     random_probs = [0 for _ in range(len(y_test_basic))]
@@ -487,7 +486,7 @@ def compare_classification_models_on_cohort(use_this_function, use_case_name, fe
     if not use_this_function:
         return None
 
-    classification_models_overview: dataframe = pd.DataFrame()  # columns: cohort | classification_method | dependent_variable | auc_score -> to add: accuracy | recall
+    classification_models_overview = pd.DataFrame()  # columns: cohort | classification_method | dependent_variable | auc_score -> to add: accuracy | recall
 
     for title_with_cohort in all_cohorts_with_titles.items():
         for classification_method in all_classification_methods:
@@ -513,18 +512,18 @@ def compare_classification_models_on_cohort(use_this_function, use_case_name, fe
                                                          verbose=False,
                                                          use_grid_search=use_grid_search,
                                                          save_to_file=False)
-                cm_df: dataframe = get_confusion_matrix(use_this_function=True,  # True | False
-                                                        classification_method=classification_method,
-                                                        sampling_method='oversampling',  # sampling_method,
-                                                        selected_cohort=title_with_cohort[1],
-                                                        cohort_title=f'{title_with_cohort[0]}',
-                                                        use_case_name=use_case_name,
-                                                        features_df=features_df,
-                                                        selected_features=selected_features,
-                                                        selected_dependent_variable=dependent_variable,
-                                                        use_grid_search=use_grid_search,
-                                                        verbose=False,
-                                                        save_to_file=False)
+                cm_df = get_confusion_matrix(use_this_function=True,  # True | False
+                                             classification_method=classification_method,
+                                             sampling_method='oversampling',  # sampling_method,
+                                             selected_cohort=title_with_cohort[1],
+                                             cohort_title=f'{title_with_cohort[0]}',
+                                             use_case_name=use_case_name,
+                                             features_df=features_df,
+                                             selected_features=selected_features,
+                                             selected_dependent_variable=dependent_variable,
+                                             use_grid_search=use_grid_search,
+                                             verbose=False,
+                                             save_to_file=False)
                 current_settings = pd.DataFrame([{'cohort': f'{title_with_cohort[0]}',
                                                   'classification_method': classification_method,
                                                   'dependent_variable': dependent_variable,
@@ -605,18 +604,18 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                                            use_grid_search=use_grid_search,
                                                            save_to_file=False)
 
-            total_cm_df: dataframe = get_confusion_matrix(use_this_function=True,  # True | False
-                                                          classification_method=classification_method,
-                                                          sampling_method='oversampling',  # SELECTED_SAMPLING_METHOD
-                                                          selected_cohort=selected_cohort,
-                                                          cohort_title='complete_set',
-                                                          use_case_name=use_case_name,
-                                                          features_df=features_df,
-                                                          selected_features=selected_features,
-                                                          selected_dependent_variable=dependent_variable,
-                                                          use_grid_search=use_grid_search,
-                                                          verbose=False,
-                                                          save_to_file=False)
+            total_cm_df = get_confusion_matrix(use_this_function=True,  # True | False
+                                               classification_method=classification_method,
+                                               sampling_method='oversampling',  # SELECTED_SAMPLING_METHOD
+                                               selected_cohort=selected_cohort,
+                                               cohort_title='complete_set',
+                                               use_case_name=use_case_name,
+                                               features_df=features_df,
+                                               selected_features=selected_features,
+                                               selected_dependent_variable=dependent_variable,
+                                               use_grid_search=use_grid_search,
+                                               verbose=False,
+                                               save_to_file=False)
 
             current_settings = pd.DataFrame([{'dependent_variable': dependent_variable,
                                               'classification_method': classification_method,
@@ -649,19 +648,19 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                                          use_grid_search=use_grid_search,
                                                          verbose=False,
                                                          save_to_file=False)
-                cm_df: dataframe = get_confusion_matrix(use_this_function=True,  # True | False
-                                                        classification_method=classification_method,
-                                                        sampling_method='oversampling',  # SELECTED_SAMPLING_METHOD
-                                                        selected_cohort=cluster,
-                                                        cohort_title=f'cluster_{i}',
-                                                        use_case_name=use_case_name,
-                                                        features_df=features_df,
-                                                        selected_features=selected_features,
-                                                        selected_dependent_variable=dependent_variable,
-                                                        use_grid_search=use_grid_search,
-                                                        verbose=False,
-                                                        save_to_file=False
-                                                        )
+                cm_df = get_confusion_matrix(use_this_function=True,  # True | False
+                                             classification_method=classification_method,
+                                             sampling_method='oversampling',  # SELECTED_SAMPLING_METHOD
+                                             selected_cohort=cluster,
+                                             cohort_title=f'cluster_{i}',
+                                             use_case_name=use_case_name,
+                                             features_df=features_df,
+                                             selected_features=selected_features,
+                                             selected_dependent_variable=dependent_variable,
+                                             use_grid_search=use_grid_search,
+                                             verbose=False,
+                                             save_to_file=False
+                                             )
                 current_settings = pd.DataFrame([{'dependent_variable': dependent_variable,
                                                   'classification_method': classification_method,
                                                   'cluster': f'cluster_{i}',
@@ -780,11 +779,11 @@ def get_cohort_classified(use_this_function, project_path, classification_method
         selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
 
     # Create concatenated classified_cohort
-    y_pred: ndarray = clf.predict(x_test_basic)      # do not predict on oversampled data, only train
+    y_pred: ndarray = clf.predict(x_test_basic)  # do not predict on oversampled data, only train
     y_test_basic_array: ndarray = y_test_basic.to_numpy()
 
     classified_cohort = x_test_basic
-    classified_cohort['class'] = y_test_basic_array         # naming convention from ASDF
+    classified_cohort['class'] = y_test_basic_array  # naming convention from ASDF
     classified_cohort['out'] = y_pred
 
     # dependent_variable_df = pd.DataFrame({'ground_truth_values': y_test_basic_array, 'y_pred': y_pred})

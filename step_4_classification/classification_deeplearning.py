@@ -8,7 +8,6 @@ import seaborn as sn
 import tensorflow
 from matplotlib import pyplot as plt
 from numpy import ndarray
-from pandas.core.interchange import dataframe
 from sklearn.metrics import classification_report, roc_auc_score, roc_curve, confusion_matrix, average_precision_score, \
     PrecisionRecallDisplay
 from sklearn.model_selection import train_test_split
@@ -21,7 +20,7 @@ from tensorflow.python.keras.layers import Dense
 from step_2_preprocessing.preprocessing_functions import get_one_hot_encoding
 
 
-def preprocess_for_classification_DL(selected_cohort: dataframe, features_df: dataframe, selected_features: list,
+def preprocess_for_classification_DL(selected_cohort, features_df, selected_features: list,
                                      selected_dependent_variable: str):
     # Removal of known features_to_remove
     features_to_remove = features_df['feature_name'].loc[features_df['must_be_removed'] == 'yes'].to_list()
@@ -337,7 +336,7 @@ def get_classification_report_deeplearning(use_this_function, sampling_method, s
     return report
 
 
-def split_classification_data_DL(selected_cohort: dataframe, cohort_title: str, features_df: dataframe,
+def split_classification_data_DL(selected_cohort, cohort_title: str, features_df,
                                  selected_features: list, selected_dependent_variable: str, sampling_method: str,
                                  verbose: True):
     # Classification/Prediction on avg_patient_cohort

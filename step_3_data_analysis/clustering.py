@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt, cm
 from numpy import sort
-from pandas.core.interchange import dataframe
 from sklearn.cluster import KMeans, DBSCAN
 from sklearn.metrics import silhouette_score
 from kmodes.kprototypes import KPrototypes
@@ -69,7 +68,7 @@ def get_ids_for_cluster(avg_patient_cohort, cohort_title, features_df, selected_
                                                                verbose=False)
 
     # connect k-means clusters back to icustay_ids
-    clusters_df: dataframe = pd.DataFrame({'icustay_id': avg_patient_cohort['icustay_id'], 'cluster': k_means_list})
+    clusters_df = pd.DataFrame({'icustay_id': avg_patient_cohort['icustay_id'], 'cluster': k_means_list})
 
     if verbose:
         print(
@@ -279,7 +278,7 @@ def plot_k_means_on_pacmap(use_this_function: False, display_sh_score: False, se
 def get_clusters_overview_table(original_cohort, selected_features, features_df, cohort_title):
     # creates the base for the base features_overview_table -> Variables | Classification(bins) | Count(complete_set)
 
-    current_overview_table: dataframe = pd.DataFrame({'Variables': 'total_count',
+    current_overview_table = pd.DataFrame({'Variables': 'total_count',
                                                       'Classification': 'icustay_ids',
                                                       'complete_set': [original_cohort['icustay_id'].count()],
                                                       })
@@ -312,7 +311,7 @@ def get_clusters_overview_table(original_cohort, selected_features, features_df,
                             temp_index, 'unfactorized_value']  # simply use first available unfactorized_value
                         appearance_name = appearance_name.iloc[0] + '_GROUP'
 
-                    temp_df: dataframe = pd.DataFrame({'Variables': [feature],
+                    temp_df = pd.DataFrame({'Variables': [feature],
                                                        'Classification': [appearance_name],
                                                        'complete_set': [original_cohort[feature][
                                                                             original_cohort[
@@ -321,7 +320,7 @@ def get_clusters_overview_table(original_cohort, selected_features, features_df,
                     current_overview_table = pd.concat([current_overview_table, temp_df], ignore_index=True)
             else:
                 for appearance in sort(pd.unique(original_cohort[feature])):
-                    temp_df: dataframe = pd.DataFrame({'Variables': [feature],
+                    temp_df = pd.DataFrame({'Variables': [feature],
                                                        'Classification': [appearance],
                                                        'complete_set': [original_cohort[feature][
                                                                             original_cohort[
@@ -358,7 +357,7 @@ def get_clusters_overview_table(original_cohort, selected_features, features_df,
                 binning_counts: list = feature_appearances_df['counts'].to_list()
 
                 for i in range(0, len(binning_intervals)):
-                    temp_df: dataframe = pd.DataFrame({'Variables': [feature],
+                    temp_df = pd.DataFrame({'Variables': [feature],
                                                        'Classification': [str(binning_intervals[i])],
                                                        'complete_set': [binning_counts[i]],
                                                        })
@@ -366,7 +365,7 @@ def get_clusters_overview_table(original_cohort, selected_features, features_df,
 
             except ValueError as e:  # this happens if for the selected cohort (a small cluster) all patients have NaN
                 print(f'WARNING: Column {feature} probably is all-NaN or only one entry. Error-Message: {e}')
-                temp_df: dataframe = pd.DataFrame({'Variables': [feature],
+                temp_df = pd.DataFrame({'Variables': [feature],
                                                    'Classification': ['All Entries NaN'],
                                                    'complete_set': [0],
                                                    })
@@ -375,7 +374,7 @@ def get_clusters_overview_table(original_cohort, selected_features, features_df,
     return current_overview_table
 
 
-def get_overview_for_cluster(cluster_cohort, selected_features, features_df, current_overview_table: dataframe,
+def get_overview_for_cluster(cluster_cohort, selected_features, features_df, current_overview_table,
                              original_cohort, selected_cluster_number, cohort_title):
     # Adds new columns to the features_overview_table for each cluster
 
@@ -517,7 +516,7 @@ def calculate_clusters_overview_table(use_this_function: False, selected_cohort,
 
     for i, cluster in enumerate(kmeans_clusters):
         # step 3: get count of occurrences per bin for this cluster
-        clusters_overview_table: dataframe = get_overview_for_cluster(cluster_cohort=cluster,
+        clusters_overview_table = get_overview_for_cluster(cluster_cohort=cluster,
                                                                       original_cohort=selected_cohort,
                                                                       selected_features=selected_features,
                                                                       features_df=features_df,
@@ -615,9 +614,9 @@ def plot_sh_score_DBSCAN(use_this_function, selected_cohort, cohort_title, use_c
     return None
 
 
-def plot_DBSCAN_on_pacmap(use_this_function: bool, display_sh_score: False, selected_cohort: dataframe,
+def plot_DBSCAN_on_pacmap(use_this_function: bool, display_sh_score: False, selected_cohort,
                           cohort_title: str, use_case_name: str,
-                          features_df: dataframe, selected_features: list, selected_dependent_variable: str,
+                          features_df, selected_features: list, selected_dependent_variable: str,
                           selected_eps, selected_min_sample, use_encoding: False, save_to_file: bool):
     if not use_this_function:
         return None

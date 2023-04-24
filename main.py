@@ -1,12 +1,14 @@
 from datetime import datetime
 import pandas as pd
 
+from frontend.app import start_app_from_main
 from objects.patients import Patient
 from step_1_setup_data import cache_IO
 from step_2_preprocessing.preprocessing_functions import get_preprocessed_avg_cohort
 from step_3_data_analysis import correlations, clustering, general_statistics, data_visualization
 from step_4_classification import classification_deeplearning, classification
 from step_5_fairness import fairness_analysis
+
 
 ####### MAIN #######
 # By: Jakob Vanek, 2023, Master Thesis at Goethe University
@@ -308,6 +310,22 @@ if __name__ == '__main__':
                                           save_to_file=SELECT_SAVE_FILES)
 
     ### Automated Subgroup detection
+
+    # Step 6.0) Get Classified Cohort for Frontend
+    cohort_classified = classification.get_cohort_classified(use_this_function=False,     # True | False
+                                                             project_path=PROJECT_PATH,  # to save where avg_cohort is
+                                                             classification_method=SELECTED_CLASSIFICATION_METHOD,
+                                                             sampling_method=SELECTED_SAMPLING_METHOD,
+                                                             selected_cohort=SELECTED_COHORT_preprocessed,
+                                                             cohort_title=SELECTED_COHORT_TITLE,
+                                                             use_case_name=USE_CASE_NAME,
+                                                             features_df=FEATURES_DF,
+                                                             selected_features=SELECTED_FEATURES,
+                                                             selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                             use_grid_search=USE_GRIDSEARCH,
+                                                             verbose=True,
+                                                             save_to_file=True)
+
     # Step 6.1) Include ASDF-Dashboard as frontend
 
     # Setup of ASDF-Dashboard: https://github.com/jeschaef/ASDF-Dashboard
@@ -325,25 +343,16 @@ if __name__ == '__main__':
     # Development Environment: Minimal Setup to use Frontend for local visualization, this is sufficient for thesis
     # 1) Inside Pycharm open the python project in the local folder of the repository, install the required packages
     # 2) Start the Redis and Celery Containers as described in ReadMe.md, can be done in console or in pycharm terminal
+
+    # cd C:\Users\Jakob\PycharmProjects\MA_thesis\frontend
+    # docker run --name redis -p 6379:6379 -d redis (if exists click on 'run' in Docker Desktop)
+    # in its own app: celery -A app.celery_app worker -P solo -l info
+    # in this app: celery -A frontend.app.celery_app worker -P solo -l info
+
     # 3) Start Frontend by running the app._init_ file of the project
-    # 4) Upload dataset into frontend
+    # TODO: start frontend and also starts background processes (redis + celery), directly opens Dashboard
+    app = start_app_from_main(use_this_function=True)
 
-    # Get Classified Cohort for Frontend
-    cohort_classified = classification.get_cohort_classified(use_this_function=True,     # True | False
-                                                             project_path=PROJECT_PATH,  # to save where avg_cohort is
-                                                             classification_method=SELECTED_CLASSIFICATION_METHOD,
-                                                             sampling_method=SELECTED_SAMPLING_METHOD,
-                                                             selected_cohort=SELECTED_COHORT_preprocessed,
-                                                             cohort_title=SELECTED_COHORT_TITLE,
-                                                             use_case_name=USE_CASE_NAME,
-                                                             features_df=FEATURES_DF,
-                                                             selected_features=SELECTED_FEATURES,
-                                                             selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                                             use_grid_search=USE_GRIDSEARCH,
-                                                             verbose=True,
-                                                             save_to_file=True)
-
-    # TODO: Make function 'start asdf dashboard' -> calls other python project and starts background processes, opens Dashboard
     # TODO: Make function 'close asdf & background processes'
 
     # Step 6.2) Calculate automated Subgroups and related fairness metrics

@@ -3,12 +3,11 @@ import os
 from os.path import isfile, join
 import pickle
 import pandas as pd
-from pandas.core.interchange import dataframe
 
 from objects.patients import Patient
 
 
-def save_csvs_into_cache(project_path: str, features_df: dataframe, use_case_name=None):
+def save_csvs_into_cache(project_path: str, features_df, use_case_name=None):
     """
     This function loads all previously created 'patient.csvs' where for each icustay_id all available
     features have been exported from the postgres DB into the csv files.
@@ -33,7 +32,7 @@ def save_csvs_into_cache(project_path: str, features_df: dataframe, use_case_nam
 
     for patient_file in os.listdir(directory):
         if isfile(join(directory, patient_file)):  # making sure only files, no other dictionaries inside the SQL folder
-            patient_data: dataframe = pd.read_csv(join(directory, patient_file), low_memory=False)
+            patient_data = pd.read_csv(join(directory, patient_file), low_memory=False)
             temp_patient: Patient = Patient(patient_id=patient_file[11:-4],
                                             patient_data=patient_data,
                                             features_df=features_df)      # create a new Patient Obj with this

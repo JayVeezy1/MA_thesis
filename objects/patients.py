@@ -1,9 +1,8 @@
 import pandas as pd
 import numpy as np
-from pandas.core.interchange import dataframe
 
 
-def get_clean_raw_data(patient_data: dataframe, feature_df: dataframe) -> dataframe:
+def get_clean_raw_data(patient_data, feature_df):
     # Transform datetime to int     -> does not work, preiculos is 'string' in format day:hour:minute, this feature is not that important
     # try:
     #     patient_data['preiculos'] = pd.to_timedelta(patient_data['preiculos'])
@@ -120,7 +119,7 @@ class Patient:
     all_patient_ids_set: set = set()                  # not really needed, could be derived with a function get_ids_from_objs_set
     all_patient_objs_set: set = set()                 # keys from the cache file should be patients_ids
 
-    def __init__(self, patient_id: str, patient_data: dataframe, features_df: dataframe):
+    def __init__(self, patient_id: str, patient_data, features_df):
         self.features: list = list(patient_data.columns.values)
         # todo future work: create function for filtering of stroke_type and infarct_type here. Should not be inside SQL Script -> more flexible for future use-cases instead of SQL, check again if hemorrhage and ischemic filtering was correct
         # todo future work: add interpolation/imputation(depending on NaN)/outliers to timeseries -> if use timeseries for analysis
@@ -138,11 +137,11 @@ class Patient:
             # Idea: raise NotUniqueIDError(f'Icustay ID {patient_id} already exists in all_patients_set')
 
         # patient related datasets
-        self.raw_data: dataframe = get_clean_raw_data(patient_data, features_df)  # raw = timeseries & no imputation/interpolation
+        self.raw_data = get_clean_raw_data(patient_data, features_df)  # raw = timeseries & no imputation/interpolation
         # self.imputed_data: dataframe = self.get_imputed_data()
         # self.interpolated_data: dataframe = self.get_interpolated_data()  # interpolated built upon imputed?
         # self.normalized_data: dataframe = self.get_normalized_data()  # normalized = z-values
-        self.avg_data: dataframe = self.get_avg_data(features_df)  # avg built upon interpolated?
+        self.avg_data = self.get_avg_data(features_df)  # avg built upon interpolated?
 
 
     def __del__(self):
@@ -151,8 +150,8 @@ class Patient:
         if self in Patient.all_patient_objs_set:
             Patient.all_patient_objs_set.remove(self)
 
-    def get_avg_data(self, features_df: dataframe) -> dataframe:
-        avg_df: dataframe = pd.DataFrame()
+    def get_avg_data(self, features_df):
+        avg_df = pd.DataFrame()
         avg_df = avg_df.assign(DUMMY_COLUMN=[1])
 
         for feature in self.raw_data.columns:
@@ -202,7 +201,7 @@ class Patient:
                 return patient
 
     @classmethod
-    def get_avg_patient_cohort(cls, project_path, use_case_name, features_df, selected_patients) -> dataframe:
+    def get_avg_patient_cohort(cls, project_path, use_case_name, features_df, selected_patients):
         # Important: all patients must be already loaded (from cache) at this point
         if not selected_patients:
             selected_patients = Patient.all_patient_objs_set
@@ -213,7 +212,7 @@ class Patient:
         for patient in selected_patients:
             avg_dataframes.append(patient.avg_data)
 
-        avg_patient_cohort: dataframe = pd.concat(avg_dataframes)
+        avg_patient_cohort = pd.concat(avg_dataframes)
         avg_patient_cohort = avg_patient_cohort.sort_values(by=['icustay_id'], axis=0)
         avg_patient_cohort = avg_patient_cohort.reset_index(drop=True)
 
@@ -243,7 +242,7 @@ class Patient:
         return avg_patient_cohort
 
     @classmethod
-    def get_avg_scaled_data(cls, avg_patient_cohort, features_df) -> dataframe:
+    def get_avg_scaled_data(cls, avg_patient_cohort, features_df):
         # TODO: Choose which normalization option!
         # normalization (between 0 and 1):
         # min-max-scaling: (df - df.min()) / (df.max() - df.min())
@@ -276,7 +275,7 @@ class Patient:
 
 
     @classmethod
-    def get_NAN_for_feature_in_cohort(cls, avg_patient_cohort_dataframe: dataframe, selected_feature) -> int:
+    def get_NAN_for_feature_in_cohort(cls, avg_patient_cohort_dataframe, selected_feature) -> int:
         return avg_patient_cohort_dataframe[selected_feature].isna().sum()
 
     @classmethod

@@ -5,7 +5,6 @@ import warnings
 import numpy as np
 import pandas as pd
 from numpy import sort
-from pandas.core.interchange import dataframe
 
 from objects.patients import Patient
 from step_3_data_analysis.correlations import get_correlations_to_dependent_var
@@ -17,7 +16,7 @@ def calculate_deaths_table(use_this_function: False, selected_cohort, cohort_tit
         return None
 
     # create deaths_df
-    deaths_df: dataframe = pd.DataFrame(
+    deaths_df = pd.DataFrame(
         columns=['case', 'total', 'death_3_days', 'death_30_days', 'death_180_days', 'death_365_days'])
 
     # fill the counters = respective cells in final table
@@ -125,7 +124,7 @@ def calculate_feature_overview_table(use_this_function: False, selected_cohort, 
     # create overview_df
     data = {'Variables': ['total_count'], 'Classification': ['icustay_ids'], 'Count': [len(selected_cohort.index)],
             'NaN_Count': ['0'], f'Correlation_to_{selected_dependent_variable}': ['-'], 'p_value': ['-']}
-    overview_df: dataframe = pd.DataFrame(data)
+    overview_df = pd.DataFrame(data)
 
     # get features_to_factorize
     factorization_df = pd.read_excel(f'./supplements/FACTORIZATION_TABLE.xlsx')
@@ -152,31 +151,34 @@ def calculate_feature_overview_table(use_this_function: False, selected_cohort, 
                         appearance_name = temp_fact_df.loc[temp_index, 'unfactorized_value'].item()
                     except ValueError as e:
                         # print(f'CHECK: multiple unfactorized_values for feature {feature}.')
-                        appearance_name = temp_fact_df.loc[temp_index, 'unfactorized_value']    # simply use first available unfactorized_value
+                        appearance_name = temp_fact_df.loc[
+                            temp_index, 'unfactorized_value']  # simply use first available unfactorized_value
                         appearance_name = appearance_name.iloc[0] + '_GROUP'
 
                     temp_corr_value = correlation_validity_df.loc[feature, 'correlation'].item()
                     temp_p_value = correlation_validity_df.loc[feature, 'p_value'].item()
-                    temp_df: dataframe = pd.DataFrame({'Variables': [feature],
-                                                       'Classification': [appearance_name],
-                                                       'Count': [selected_cohort[feature][selected_cohort[feature] == appearance].count()],
-                                                       'NaN_Count': Patient.get_NAN_for_feature_in_cohort(selected_cohort, feature),
-                                                       f'Correlation_to_{selected_dependent_variable}': [temp_corr_value],
-                                                       'p_value': [temp_p_value]})
+                    temp_df = pd.DataFrame({'Variables': [feature],
+                                            'Classification': [appearance_name],
+                                            'Count': [selected_cohort[feature][
+                                                          selected_cohort[feature] == appearance].count()],
+                                            'NaN_Count': Patient.get_NAN_for_feature_in_cohort(selected_cohort,
+                                                                                               feature),
+                                            f'Correlation_to_{selected_dependent_variable}': [temp_corr_value],
+                                            'p_value': [temp_p_value]})
                     overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
             else:
                 for appearance in sort(pd.unique(selected_cohort[feature])):
                     temp_corr_value = correlation_validity_df.loc[feature, 'correlation'].item()
                     temp_p_value = correlation_validity_df.loc[feature, 'p_value'].item()
-                    temp_df: dataframe = pd.DataFrame({'Variables': [feature],
-                                                       'Classification': [appearance],
-                                                       'Count': [selected_cohort[feature][
-                                                                     selected_cohort[
-                                                                         feature] == appearance].count()],
-                                                       'NaN_Count': Patient.get_NAN_for_feature_in_cohort(
-                                                           selected_cohort, feature),
-                                                       f'Correlation_to_{selected_dependent_variable}': [temp_corr_value],
-                                                       'p_value': [temp_p_value]})
+                    temp_df = pd.DataFrame({'Variables': [feature],
+                                            'Classification': [appearance],
+                                            'Count': [selected_cohort[feature][
+                                                          selected_cohort[
+                                                              feature] == appearance].count()],
+                                            'NaN_Count': Patient.get_NAN_for_feature_in_cohort(
+                                                selected_cohort, feature),
+                                            f'Correlation_to_{selected_dependent_variable}': [temp_corr_value],
+                                            'p_value': [temp_p_value]})
                     overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
 
         # binning needed for vital signs, etc.
@@ -215,24 +217,24 @@ def calculate_feature_overview_table(use_this_function: False, selected_cohort, 
                 for i in range(0, len(binning_intervals)):
                     temp_corr_value = correlation_validity_df.loc[feature, 'correlation'].item()
                     temp_p_value = correlation_validity_df.loc[feature, 'p_value'].item()
-                    temp_df: dataframe = pd.DataFrame({'Variables': [feature],
-                                                       'Classification': [str(binning_intervals[i])],
-                                                       'Count': [binning_counts[i]],
-                                                       'NaN_Count': temp_nan,
-                                                       f'Correlation_to_{selected_dependent_variable}': [temp_corr_value],
-                                                       'p_value': [temp_p_value]})
+                    temp_df = pd.DataFrame({'Variables': [feature],
+                                            'Classification': [str(binning_intervals[i])],
+                                            'Count': [binning_counts[i]],
+                                            'NaN_Count': temp_nan,
+                                            f'Correlation_to_{selected_dependent_variable}': [temp_corr_value],
+                                            'p_value': [temp_p_value]})
                     overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
 
             except ValueError as e:  # this happens if for the selected cohort (a small cluster) all patients have NaN
                 # print(f'WARNING: Column {feature} probably is all-NaN or only one entry. Error-Message: {e}')
                 temp_corr_value = correlation_validity_df.loc[feature, 'correlation'].item()
                 temp_p_value = correlation_validity_df.loc[feature, 'p_value'].item()
-                temp_df: dataframe = pd.DataFrame({'Variables': [feature],
-                                                   'Classification': ['All Entries NaN'],
-                                                   'Count': [0],
-                                                   'NaN_Count': len(selected_cohort),
-                                                   f'Correlation_to_{selected_dependent_variable}': [temp_corr_value],
-                                                   'p_value': [temp_p_value]})
+                temp_df = pd.DataFrame({'Variables': [feature],
+                                        'Classification': ['All Entries NaN'],
+                                        'Count': [0],
+                                        'NaN_Count': len(selected_cohort),
+                                        f'Correlation_to_{selected_dependent_variable}': [temp_corr_value],
+                                        'p_value': [temp_p_value]})
                 overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
 
         # known feature that can be removed
@@ -240,12 +242,12 @@ def calculate_feature_overview_table(use_this_function: False, selected_cohort, 
             pass
         # other cases, this contains 'unclear' and 'not_for_classification'
         else:
-            temp_df: dataframe = pd.DataFrame({'Variables': [feature],
-                                               'Classification': [f'no category for: {feature}'],
-                                               'Count': '-',
-                                               'NaN_Count': '-',
-                                               f'Correlation_to_{selected_dependent_variable}': ['-'],
-                                               'p_value': ['-']})
+            temp_df = pd.DataFrame({'Variables': [feature],
+                                    'Classification': [f'no category for: {feature}'],
+                                    'Count': '-',
+                                    'NaN_Count': '-',
+                                    f'Correlation_to_{selected_dependent_variable}': ['-'],
+                                    'p_value': ['-']})
             overview_df = pd.concat([overview_df, temp_df], ignore_index=True)
 
     if save_to_file:
