@@ -145,14 +145,14 @@ def start_dashboard_from_main(use_this_function: False):
         print(f'\nSTATUS: Starting Frontend: ')
 
         try:
+            print(f'\nSTATUS: Frontend will be available at http://127.0.0.1:5000/')
             app = create_app(configuration=DevConfig())
             app.run(debug=True)
-            print(f'\nSTATUS: Frontend available at http://127.0.0.1:5000/')
 
         except RuntimeError as e:
             print(f'Error when starting frontend: {e}')
 
-    webbrowser.open('http://127.0.0.1:5000/', new=0, autoraise=True)
+    webbrowser.open('http://127.0.0.1:5000/', new=0, autoraise=True)        # todo: doesnt open automatically
 
     # todo future work: Add function to 'close asdf & background processes'
 

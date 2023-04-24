@@ -91,6 +91,9 @@ if __name__ == '__main__':
     print('STATUS: Preprocessing finished.\n')
 
     # todo next week: implement ASDF Dashboard
+    # Decide if use complete dataset (for predictions) or the classified_cohort?
+    # Add icustay_id to classified_cohort
+    # Get help for interpretation of Dashboard (automatic, manual, how to read those graphs?)
 
     # TODO after: add SHAPley values to classification chapter (+ shap waterfalls, with this different importance for subgroups)
     # get shapely function from there (also use this analysis to compare clusters?) https://antonsruberts.github.io/kproto-audience/
@@ -314,7 +317,7 @@ if __name__ == '__main__':
     # Step 6.1) Include ASDF-Dashboard as frontend https://github.com/jeschaef/ASDF-Dashboard
     # Important: Start Background Services First
     # Redis: docker run --name redis -p 6379:6379 -d redis (once created 'start' in Docker Desktop)
-    # Celery: celery -A frontend.app.celery_app worker -P solo -l info (in second cmd terminal)
+    # Celery (in second cmd terminal): celery -A frontend.app.celery_app worker -P solo -l info
     app = start_dashboard_from_main(use_this_function=True)
 
     # Step 6.2) Upload complete avg dataset for visualization of this thesis (manually in the frontend)
