@@ -2,6 +2,9 @@
 ./output/
 *.png
 
+# Postgres DB
+step_1_setup_data/database.ini
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
