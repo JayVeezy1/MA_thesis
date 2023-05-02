@@ -43,8 +43,7 @@
     </div>
 </div>
 
-<div class="border rounded shadow mt-3 p-2">
-    <form id="thesis-form">
+<form class="border rounded shadow mt-3 p-2" id="thesis-form">
         <h1 class="h2">Thesis Dataset</h1>
         <!-- Dataset selectpicker -->
             <div class="col col-1">
@@ -67,21 +66,20 @@
                 <input class="btn btn-lg btn-primary w-25 ms-auto me-auto" id="task-auto-submit" name="submit" type="button"
                        value="Show Analysis">
             </div>
+</form>
 
-    <div class="row my-1">
-        <div class="alert alert-info" id="task-status" role="alert" style="display: none;">
-            Display progress information
-        </div>
+<!-- Info Alert Row -->
+<div class="row my-1">
+    <div class="alert alert-info" id="task-status" role="alert" style="display: none;">
+        Display progress information
     </div>
-    </form>
-
 </div>
 
 <!-- TODO: Add graphs/interactive charts and tables
 1) make style dependent on button
 2) give button its own id
 3) give canvas its own id
-4) display predicitons canvas -> how to get data in there?
+4) display predictions canvas -> how to get data in there?
 
 Important: how and where are calculations run for the graphs?
 Should I just demand the user to upload a second, different dataset for the base of my calculations?
@@ -91,8 +89,10 @@ Should I just demand the user to upload a second, different dataset for the base
     <div class="row gy-4 gx-3">
         <div class="border rounded shadow p-0">
             <div class="chart-container">
-                <canvas id="chart-fair"></canvas>
+                <canvas id="chart-my_01"></canvas>
             </div>
+
+
              <div class="pt-3 fs-6">
                     Testtext here.
              </div>
@@ -102,7 +102,6 @@ Should I just demand the user to upload a second, different dataset for the base
 
 
 {% endblock %}
-
 
 {% block scripts %}
 {{ super() }}

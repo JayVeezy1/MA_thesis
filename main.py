@@ -8,7 +8,7 @@ from step_3_data_analysis import correlations, clustering, general_statistics, d
 from step_4_classification import classification_deeplearning, classification
 from step_5_fairness import fairness_analysis
 from frontend.app import start_dashboard_from_main
-
+from web_app.app import start_streamlit_frontend
 
 ####### MAIN #######
 # By: Jakob Vanek, 2023, Master Thesis at Goethe University
@@ -312,29 +312,30 @@ if __name__ == '__main__':
                                           use_grid_search=USE_GRIDSEARCH,
                                           save_to_file=SELECT_SAVE_FILES)
 
-
-    ### Frontend for Visualization
-    # Step 6.1) Include ASDF-Dashboard as frontend https://github.com/jeschaef/ASDF-Dashboard
+    ### Deprecated Approach: ASDF-Dashboard for visualization  https://github.com/jeschaef/ASDF-Dashboard
     # Important: Start Background Services First
     # Redis: docker run --name redis -p 6379:6379 -d redis (once created 'start' in Docker Desktop)
     # Celery (in second cmd terminal): celery -A frontend.app.celery_app worker -P solo -l info
-    app = start_dashboard_from_main(use_this_function=True)
+    # app = start_dashboard_from_main(use_this_function=True)
+    # Needed for upload: use following to create dataset for original fairness visualizations of the ASDF-Dashboard
+    # cohort_classified = classification.get_cohort_classified(use_this_function=False,  # True | False
+    #                                                          project_path=PROJECT_PATH,  # to save where avg_cohort is
+    #                                                          classification_method=SELECTED_CLASSIFICATION_METHOD,
+    #                                                          sampling_method=SELECTED_SAMPLING_METHOD,
+    #                                                          selected_cohort=SELECTED_COHORT_preprocessed,
+    #                                                          cohort_title=SELECTED_COHORT_TITLE,
+    #                                                          use_case_name=USE_CASE_NAME,
+    #                                                          features_df=FEATURES_DF,
+    #                                                          selected_features=SELECTED_FEATURES,
+    #                                                          selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+    #                                                          use_grid_search=USE_GRIDSEARCH,
+    #                                                          verbose=True,
+    #                                                          save_to_file=True)
 
-    # Step 6.2) Upload complete avg dataset for visualization of this thesis (manually in the frontend)
-    # Additionally use following function to create dataset for original fairness visualizations of the ASDF-Dashboard
-    cohort_classified = classification.get_cohort_classified(use_this_function=False,  # True | False
-                                                             project_path=PROJECT_PATH,  # to save where avg_cohort is
-                                                             classification_method=SELECTED_CLASSIFICATION_METHOD,
-                                                             sampling_method=SELECTED_SAMPLING_METHOD,
-                                                             selected_cohort=SELECTED_COHORT_preprocessed,
-                                                             cohort_title=SELECTED_COHORT_TITLE,
-                                                             use_case_name=USE_CASE_NAME,
-                                                             features_df=FEATURES_DF,
-                                                             selected_features=SELECTED_FEATURES,
-                                                             selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                                             use_grid_search=USE_GRIDSEARCH,
-                                                             verbose=True,
-                                                             save_to_file=True)
+
+    ### Step 6.1) Streamlit App for Visualization
+    # In console: streamlit run main.py
+    app = start_streamlit_frontend(use_this_function=True)
 
 
     ### Automated Subgroup detection

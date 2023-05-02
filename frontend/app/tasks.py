@@ -71,7 +71,7 @@ def fairness_analysis(self, df_json, algorithm, pos_label=1, threshold=0.65, cat
     data = pd.read_json(df_json)  # deserialize json
 
     # If estimate_k is True, apply xmeans to get an estimate of the number of clusters k
-    if estimate_k:
+    if estimate_k:          # todo: this might be wrong for "automatic" clustering methods like DBSCAN
         k = estimate_n_clusters(data, categ_columns, label_column, prediction_column)
         log.info(f"Estimated n clusters: {k}")
         param_dict['n_clusters'] = k  # overwrites previous setting
