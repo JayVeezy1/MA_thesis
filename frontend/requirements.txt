@@ -8,7 +8,7 @@ WTForms-Components==0.10.5
 Flask-Login==0.6.2			        # latest: 0.6.2     original: 0.6.1
 Flask-Mailman==0.3.0
 Flask-Nav==0.6
-Flask-Caching==1.10.1	    	    # latest: 2.0.2     original: 1.10.1
+Flask-Caching==2.0.2	    	    # latest: 2.0.2     original: 1.10.1
 bcrypt==3.2.2
 
 numpy==1.23.5                       # original: 1.22.3
@@ -26,6 +26,5 @@ itsdangerous==2.1.2
 pyclustering==0.10.1.2
 lime~=0.2.0.1
 
-# added packages
-WTForms~=3.0.1      # was added by Pycharm
-shap~=0.41.0        # was added by Pycharm
+WTForms~=3.0.1       # was added by Pycharm
+shap~=0.41.0         # was added by Pycharm

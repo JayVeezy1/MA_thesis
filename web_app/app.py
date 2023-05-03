@@ -1,52 +1,49 @@
 import streamlit as st
-import hydralit_components as hc
+from PIL import Image
+
+from web_app.subpages.Automated_Subgroups import automated_subgroups_page
+from web_app.subpages.Classification import classification_page
+from web_app.subpages.Data_Analysis import data_analysis_page
+from web_app.subpages.Data_Loader import data_loader_page
+from web_app.subpages.Fairness_Analysis import fairness_page
+from web_app.subpages.Home import home_page
+from web_app.util import create_st_button
 
 
-def start_streamlit_frontend(use_this_function: False):
-    st.set_page_config(
-        page_title="Ex-stream-ly Cool App", page_icon="🧊", layout='wide', initial_sidebar_state='expanded',
-        menu_items={
-        'Get Help': 'https://www.extremelycoolapp.com/help',
-        'Report a bug': "https://www.extremelycoolapp.com/bug",
-        'About': "# This is a header. This is an *extremely* cool app!"
-    })
+def create_streamlit_frontend():
+    # General Config
+    st.set_page_config(page_title='Master Thesis Vanek',
+                       page_icon=Image.open('web_app/web_supplement/favicon.png'),
+                       layout='wide',
+                       initial_sidebar_state='expanded',
+                       menu_items = {'About': "This Dashboard was developed to display the results of the master thesis "
+                                              "'Analysis of Machine Learning Prediction Quality for Automated Subgroups within the MIMIC III Dataset' "
+                                              "by Jakob Vanek, 2023. For further information, please contact via https://jayveezy1.github.io/"})
 
-    print(f'\nSTATUS: Starting Frontend: ')
+    # Sidebar Page Checkboxes
+    st.sidebar.title('Main Menu')
+    pages = [{'title': 'Home', 'function': home_page},
+             {'title': 'Data Loader', 'function': data_loader_page},
+             {'title': 'General Data Analysis', 'function': data_analysis_page},
+             {'title': 'Classification', 'function': classification_page},
+             {'title': 'Fairness Analysis', 'function': fairness_page},
+             {'title': 'Automated Subgroups', 'function': automated_subgroups_page}]
+    menu = st.sidebar.radio(label='Select Page', options=pages, format_func=lambda page: page['title'], label_visibility='collapsed')
+    menu['function']()
 
+    # Add Spaces Before Links
+    for i in range(0, 26):
+        st.sidebar.markdown(' ')
+    st.sidebar.markdown('---')
 
-    # specify the primary menu definition
-    menu_data = [
-        {'icon': "far fa-copy", 'label': "Data Loader", 'option_active': "white"},
-        # <i class="far fa-dove" style="color: #339af0;"></i>
-        {'icon': "far fa-chart-bar", 'label': "Exploratory Data Analysis"},
-        {'icon': "far fa-address-book", 'label': "Sepsis Research"},
-        {'icon': "fas fa-tachometer-alt", 'label': "Time Series Analysis"}
-    ]
-    # we can override any part of the primary colors of the menu
-    over_theme = {'txc_inactive': 'white',
-                  'menu_background': 'grey',
-                  'txc_active': 'black',
-                  'option_active': 'white'}
+    # Add Links to Sidebar
+    st.sidebar.markdown("## Further Information")
+    information_link_dict = {
+            'Master Thesis Paper': "https://www.overleaf.com/project/637645c65a754832b1e27443",
+            'GitHub Repository': "https://github.com/JayVeezy1/MA_thesis",
+            'Professorship DBDA': "http://www.dbda.cs.uni-frankfurt.de/index.html"}
+    for link_text, link_url in information_link_dict.items():
+        create_st_button(link_text, link_url, st_col=st.sidebar)
+    # st.sidebar.markdown('---')
 
-    menu_id = hc.nav_bar(menu_definition=menu_data,
-                         override_theme=over_theme,
-                         home_name='Home',
-                         hide_streamlit_markers=False,
-                         sticky_nav=True,  # at the top or not
-                         sticky_mode='not-jumpy')
-
-    # if menu_id == 'Home':
-    #     landing_page = LandingPage()
-    # if menu_id == 'Data Loader':
-    #     data_loader = DataLoader()
-    # if menu_id == 'Exploratory Data Analysis':
-    #     expl_ana = ExploratoryDataAnalysis()
-    # if menu_id == 'Sepsis Research':
-    #     math_stat = SepsisResearch()
-    # if menu_id == 'Time Series Analysis':
-    #     math_stat = TimeSeriesAnalysis()
-
-    # webbrowser.open('http://127.0.0.1:5000/', new=0, autoraise=True)        # todo: doesnt open automatically
-
-
-    return None
+create_streamlit_frontend()

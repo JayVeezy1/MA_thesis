@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import numpy as np
 
@@ -201,43 +203,54 @@ class Patient:
                 return patient
 
     @classmethod
-    def get_avg_patient_cohort(cls, project_path, use_case_name, features_df, selected_patients):
-        # Important: all patients must be already loaded (from cache) at this point
-        if not selected_patients:
-            selected_patients = Patient.all_patient_objs_set
+    def get_avg_patient_cohort(cls, project_path, use_case_name, features_df, delete_existing_cache, selected_patients):
+        cache_file_path = f'{project_path}exports/{use_case_name}/avg_patient_cohort.csv'
+        if delete_existing_cache:
+            try:
+                os.remove(cache_file_path)
+            except FileNotFoundError:
+                pass
+        if os.path.isfile(cache_file_path):
+            # get from cache
+            print('STATUS: Loading avg_patient_cohort from cache.')
+            avg_patient_cohort = pd.read_csv(filepath_or_buffer=f'{project_path}exports/{use_case_name}/avg_patient_cohort.csv')
+        else:
+            # get new avg_cohort from patients pickle
+            # Important: all patients must be already loaded (from cache) at this point
+            if not selected_patients:
+                selected_patients = Patient.all_patient_objs_set
+            print('STATUS: Calculating new avg_patient_cohort (no cache). Count of selected patients for get_avg_patient_cohort: ', len(selected_patients))
 
-        print('CHECK: Count of selected patients for get_avg_patient_cohort: ', len(selected_patients))
+            avg_dataframes: list = []
+            for patient in selected_patients:
+                avg_dataframes.append(patient.avg_data)
 
-        avg_dataframes: list = []
-        for patient in selected_patients:
-            avg_dataframes.append(patient.avg_data)
+            avg_patient_cohort = pd.concat(avg_dataframes)
+            avg_patient_cohort = avg_patient_cohort.sort_values(by=['icustay_id'], axis=0)
+            avg_patient_cohort = avg_patient_cohort.reset_index(drop=True)
 
-        avg_patient_cohort = pd.concat(avg_dataframes)
-        avg_patient_cohort = avg_patient_cohort.sort_values(by=['icustay_id'], axis=0)
-        avg_patient_cohort = avg_patient_cohort.reset_index(drop=True)
+            # Remove outliers where patient-avg is 5x higher than feature-mean()
+            OUTLIERS_THRESHOLD = 10             # todo discuss: is this too strict? Do I remove important patients?
+            continuous_features = features_df['feature_name'].loc[
+                features_df['categorical_or_continuous'] == 'continuous'].to_list()
+            removed_entries = 0
+            for temp_icustay_id in avg_patient_cohort['icustay_id'].to_list():
+                for feature in continuous_features:
+                    temp_patient_value = avg_patient_cohort.loc[avg_patient_cohort['icustay_id'] == temp_icustay_id, feature].item()
+                    if temp_patient_value > avg_patient_cohort[feature].mean() * OUTLIERS_THRESHOLD:
+                        avg_patient_cohort.loc[avg_patient_cohort['icustay_id'] == temp_icustay_id, feature] = np.nan
+                        # print(f'CHECK: Removing avg value for icustay_id: {temp_icustay_id} and feature: {feature}')
+                        removed_entries += 1
+                # print(f'CHECK: Finished Outliers Check for temp_icustay_id {temp_icustay_id}.')
+            print(f'CHECK: Outliers threshold: {OUTLIERS_THRESHOLD}x higher than mean. Removed entries: {removed_entries}')
 
-        # Remove outliers where patient-avg is 5x higher than feature-mean()
-        OUTLIERS_THRESHOLD = 10             # todo discuss: is this too strict? Do I remove important patients?
-        continuous_features = features_df['feature_name'].loc[
-            features_df['categorical_or_continuous'] == 'continuous'].to_list()
-        removed_entries = 0
-        for temp_icustay_id in avg_patient_cohort['icustay_id'].to_list():
-            for feature in continuous_features:
-                temp_patient_value = avg_patient_cohort.loc[avg_patient_cohort['icustay_id'] == temp_icustay_id, feature].item()
-                if temp_patient_value > avg_patient_cohort[feature].mean() * OUTLIERS_THRESHOLD:
-                    avg_patient_cohort.loc[avg_patient_cohort['icustay_id'] == temp_icustay_id, feature] = np.nan
-                    # print(f'CHECK: Removing avg value for icustay_id: {temp_icustay_id} and feature: {feature}')
-                    removed_entries += 1
-            # print(f'CHECK: Finished Outliers Check for temp_icustay_id {temp_icustay_id}.')
-        print(f'CHECK: Outliers threshold: {OUTLIERS_THRESHOLD}x higher than mean. Removed entries: {removed_entries}')
+            # Export avg_patient_cohort
+            filename_string: str = f'{project_path}exports/{use_case_name}/avg_patient_cohort.csv'
+            filename = filename_string.encode()
+            with open(filename, 'w', newline='') as output_file:
+                avg_patient_cohort.to_csv(output_file, index=False)
 
-        # Export avg_patient_cohort
-        filename_string: str = f'{project_path}exports/{use_case_name}/avg_patient_cohort.csv'
-        filename = filename_string.encode()
-        with open(filename, 'w', newline='') as output_file:
-            avg_patient_cohort.to_csv(output_file, index=False)
-
-        print(f'CHECK: avg_patient_cohort file was saved to {project_path}exports/{use_case_name}')
+            print(f'CHECK: avg_patient_cohort file was saved to {project_path}exports/{use_case_name}')
 
         return avg_patient_cohort
 

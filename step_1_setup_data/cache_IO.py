@@ -59,7 +59,7 @@ def load_data_from_cache(project_path, features_df, use_case_name, delete_existi
 
     if not os.path.isfile(cache_file_path):
         print(f'STATUS: Creating new cache for the .csv files inside load_patients_from_cache.')
-        save_csvs_into_cache(project_path, features_df, use_case_name)
+        save_csvs_into_cache(project_path=project_path, features_df=features_df, use_case_name=use_case_name)
 
     print(f'STATUS: Loading patient data from pickle cache {cache_file_path}')
     start_time = datetime.datetime.now()

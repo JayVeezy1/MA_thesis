@@ -7,8 +7,7 @@ from step_2_preprocessing.preprocessing_functions import get_preprocessed_avg_co
 from step_3_data_analysis import correlations, clustering, general_statistics, data_visualization
 from step_4_classification import classification_deeplearning, classification
 from step_5_fairness import fairness_analysis
-from frontend.app import start_dashboard_from_main
-from web_app.app import start_streamlit_frontend
+from web_app.util import start_streamlit_frontend
 
 ####### MAIN #######
 # By: Jakob Vanek, 2023, Master Thesis at Goethe University
@@ -52,7 +51,8 @@ if __name__ == '__main__':
     # Step 2) Calculate Avg, Filter, Scale, Impute & Interpolate for each patient
     # Options: dbsource filter
     complete_avg_cohort = Patient.get_avg_patient_cohort(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME,
-                                                         features_df=FEATURES_DF, selected_patients=[])  # empty=all
+                                                         features_df=FEATURES_DF, delete_existing_cache=False,
+                                                         selected_patients=[])   # empty=all
     metavision_avg_cohort = complete_avg_cohort[complete_avg_cohort['dbsource'] == 'metavision']
     carevue_avg_cohort = complete_avg_cohort[complete_avg_cohort['dbsource'] == 'carevue']
     # Options: stroke_type filter, also option: change complete_avg_cohort to metavision_avg_cohort or carevue_avg_cohort
@@ -61,10 +61,10 @@ if __name__ == '__main__':
     other_stroke_avg_cohort = complete_avg_cohort[complete_avg_cohort['stroke_type'] == 0]
     hemorrhage_avg_cohort = complete_avg_cohort[complete_avg_cohort['stroke_type'] == 1]
     # Options: scaled_cohort (recommended)
-    scaled_complete_avg_cohort = Patient.get_avg_scaled_data(complete_avg_cohort.copy(), FEATURES_DF)
-    scaled_hemorrhage_avg_cohort = Patient.get_avg_scaled_data(hemorrhage_avg_cohort.copy(), FEATURES_DF)
-    scaled_other_stroke_avg_cohort = Patient.get_avg_scaled_data(other_stroke_avg_cohort.copy(), FEATURES_DF)
-    scaled_ischemic_avg_cohort = Patient.get_avg_scaled_data(ischemic_avg_cohort.copy(), FEATURES_DF)
+    scaled_complete_avg_cohort = Patient.get_avg_scaled_data(complete_avg_cohort, FEATURES_DF)
+    scaled_hemorrhage_avg_cohort = Patient.get_avg_scaled_data(hemorrhage_avg_cohort, FEATURES_DF)
+    scaled_other_stroke_avg_cohort = Patient.get_avg_scaled_data(other_stroke_avg_cohort, FEATURES_DF)
+    scaled_ischemic_avg_cohort = Patient.get_avg_scaled_data(ischemic_avg_cohort, FEATURES_DF)
 
     # CHOOSE: Cohort Parameters
     SELECTED_COHORT = scaled_complete_avg_cohort
@@ -72,28 +72,21 @@ if __name__ == '__main__':
     SELECT_SAVE_FILES = True
     # Automated: Preprocessed Cohort
     SELECTED_COHORT_preprocessed = get_preprocessed_avg_cohort(avg_cohort=SELECTED_COHORT,
-                                                               cohort_title=SELECTED_COHORT_TITLE,
                                                                features_df=FEATURES_DF)
     SELECTED_FEATURES = list(SELECTED_COHORT_preprocessed.columns)
     # Automated: List of all cohorts_preprocessed for model comparison
     scaled_complete_cohort_preprocessed = get_preprocessed_avg_cohort(avg_cohort=scaled_complete_avg_cohort,
-                                                                      cohort_title='scaled_complete_avg_cohort',
                                                                       features_df=FEATURES_DF)
     scaled_hemorrhage_cohort_preprocessed = get_preprocessed_avg_cohort(avg_cohort=scaled_hemorrhage_avg_cohort,
-                                                                        cohort_title='scaled_hemorrhage_avg_cohort',
                                                                         features_df=FEATURES_DF)
     scaled_ischemic_cohort_preprocessed = get_preprocessed_avg_cohort(avg_cohort=scaled_ischemic_avg_cohort,
-                                                                      cohort_title='scaled_ischemic_avg_cohort',
                                                                       features_df=FEATURES_DF)
     ALL_COHORTS_WITH_TITLES: dict = {'scaled_complete_avg_cohort': scaled_complete_cohort_preprocessed,
                                      'scaled_hemorrhage_avg_cohort': scaled_hemorrhage_cohort_preprocessed,
                                      'scaled_ischemic_avg_cohort': scaled_ischemic_cohort_preprocessed}
     print('STATUS: Preprocessing finished.\n')
 
-    # todo next week: implement ASDF Dashboard
-    # Decide if use complete dataset (for predictions) or the classified_cohort?
-    # Add icustay_id to classified_cohort
-    # Get help for interpretation of Dashboard (automatic, manual, how to read those graphs?)
+    # todo next week: implement web_app frontend
 
     # TODO after: add SHAPley values to classification chapter (+ shap waterfalls, with this different importance for subgroups)
     # get shapely function from there (also use this analysis to compare clusters?) https://antonsruberts.github.io/kproto-audience/
@@ -312,7 +305,7 @@ if __name__ == '__main__':
                                           use_grid_search=USE_GRIDSEARCH,
                                           save_to_file=SELECT_SAVE_FILES)
 
-    ### Deprecated Approach: ASDF-Dashboard for visualization  https://github.com/jeschaef/ASDF-Dashboard
+    ### Deprecated: ASDF-Dashboard for visualization  https://github.com/jeschaef/ASDF-Dashboard
     # Important: Start Background Services First
     # Redis: docker run --name redis -p 6379:6379 -d redis (once created 'start' in Docker Desktop)
     # Celery (in second cmd terminal): celery -A frontend.app.celery_app worker -P solo -l info
@@ -332,11 +325,9 @@ if __name__ == '__main__':
     #                                                          verbose=True,
     #                                                          save_to_file=True)
 
-
     ### Step 6.1) Streamlit App for Visualization
     # In console: streamlit run main.py
-    app = start_streamlit_frontend(use_this_function=True)
-
+    start_streamlit_frontend(use_this_function=True)
 
     ### Automated Subgroup detection
     # Step 7.1) Calculate automated Subgroups and related fairness metrics -> Inside ASDF-Dashboard

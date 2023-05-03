@@ -51,7 +51,7 @@ def create_factorization_table(avg_cohort, features_df, cohort_title, features_t
         print(f'CHECK: factorization_table was updated in {filename_string}')
 
 
-def get_preprocessed_avg_cohort(avg_cohort, features_df, cohort_title):
+def get_preprocessed_avg_cohort(avg_cohort, features_df):
     # Features that must always be removed
     features_to_remove = features_df['feature_name'].loc[features_df['must_be_removed'] == 'yes'].to_list()
     for feature in features_to_remove:

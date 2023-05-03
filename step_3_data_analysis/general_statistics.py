@@ -94,8 +94,8 @@ def calculate_deaths_table(use_this_function: False, selected_cohort, cohort_tit
                                          selected_cohort.index), 2),
                                      round((death_360_days_counter_inside + death_360_days_counter_outside) / len(
                                          selected_cohort.index), 2)]
-    deaths_df.loc[len(deaths_df)] = ['alive', alive_counter, '-', '-', '-', '-']
-    deaths_df.loc[len(deaths_df)] = ['total', len(selected_cohort.index), '-', '-', '-', '-']
+    deaths_df.loc[len(deaths_df)] = ['alive', alive_counter, 0, 0, 0, 0]        # '-', '-', '-', '-']
+    deaths_df.loc[len(deaths_df)] = ['total', len(selected_cohort.index), 0, 0, 0, 0]       # '-', '-', '-', '-']
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
@@ -107,7 +107,7 @@ def calculate_deaths_table(use_this_function: False, selected_cohort, cohort_tit
     else:
         print(deaths_df.to_string())
 
-    return None
+    return deaths_df
 
 
 def calculate_feature_overview_table(use_this_function: False, selected_cohort, cohort_title, use_case_name,
@@ -258,7 +258,7 @@ def calculate_feature_overview_table(use_this_function: False, selected_cohort, 
             overview_df.to_csv(output_file, index=False)
             print(f'CHECK: features_overview_table was saved to {filename_string}')
     else:
-        print('CHECK: features_overview_table:')
-        print(overview_df.to_string())
+        print('CHECK: features_overview_table finished.')
+        # print(overview_df.to_string())
 
-    return None
+    return overview_df

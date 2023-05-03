@@ -68,7 +68,7 @@ def split_cohort_into_feature_types(preprocessed_cohort, features_df, preprocess
 
 def get_continuous_corr(continuous_cohort, selected_dependent_variable):
     # Correlation
-    continuous_cohort_corr = continuous_cohort.corr(method='pearson', numeric_only=False).round(2)
+    continuous_cohort_corr = continuous_cohort.corr(method='pearson').round(2)      # removed: , numeric_only=False
     death_corr = continuous_cohort_corr[
         selected_dependent_variable]  # only return correlation towards selected_dependent_variable
     death_corr.drop(selected_dependent_variable, inplace=True)
@@ -121,7 +121,7 @@ def get_categorical_corr(categorical_cohort, selected_dependent_variable):
 def get_binary_corr(binary_cohort, selected_dependent_variable):
     # Correlation
     # 0) Normal pearson with corr -> can be done for binary, but not for categorical
-    binary_corr = binary_cohort.corr(method='pearson', numeric_only=False).round(2)
+    binary_corr = binary_cohort.corr(method='pearson').round(2)         # removed: , numeric_only=False
     death_corr = binary_corr[selected_dependent_variable].round(2)
     death_corr.drop(selected_dependent_variable, inplace=True)
     death_corr = death_corr.rename('correlation')
