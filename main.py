@@ -3,6 +3,7 @@ import pandas as pd
 
 from objects.patients import Patient
 from step_1_setup_data import cache_IO
+from step_2_preprocessing import preprocessing_functions
 from step_2_preprocessing.preprocessing_functions import get_preprocessed_avg_cohort
 from step_3_data_analysis import correlations, clustering, general_statistics, data_visualization
 from step_4_classification import classification_deeplearning, classification
@@ -16,13 +17,11 @@ if __name__ == '__main__':
     PROJECT_PATH: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'  # this variable must be fitted to the users local project folder
     PROJECT_PATH_LAPTOP = 'C:/Users/vanek/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'
     # PROJECT_PATH = PROJECT_PATH_LAPTOP
-    USE_CASE_NAME: str = 'stroke_all_systems'  # stroke_patients_data       # heart_infarct_patients_data
+    USE_CASE_NAME: str = 'stroke_all_systems'
     FEATURES_DF = pd.read_excel('./supplements/FEATURE_PREPROCESSING_TABLE.xlsx')
     SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'
     ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
                                      'death_365_days']
-    # FEATURES_DF.loc[FEATURES_DF['potential_for_analysis'] == 'prediction_variable', 'feature_name'].to_list()
-
     ### Setup, MIMIC-III Export from DB, Load from Cache
     # Step 0) Setup when first time using db:
     # mimic_to_csv.setup_postgre_files()                 # setup all needed background functions and views for postgre. Warning: Sometimes this setup from Python does not work. Then you simply copy&paste each SQL Script into PostGre QueryTool and execute it.
@@ -49,41 +48,26 @@ if __name__ == '__main__':
 
     ### Preprocessing
     # Step 2) Calculate Avg, Filter, Scale, Impute & Interpolate for each patient
-    # Options: dbsource filter
-    complete_avg_cohort = Patient.get_avg_patient_cohort(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME,
-                                                         features_df=FEATURES_DF, delete_existing_cache=False,
-                                                         selected_patients=[])   # empty=all
-    metavision_avg_cohort = complete_avg_cohort[complete_avg_cohort['dbsource'] == 'metavision']
-    carevue_avg_cohort = complete_avg_cohort[complete_avg_cohort['dbsource'] == 'carevue']
-    # Options: stroke_type filter, also option: change complete_avg_cohort to metavision_avg_cohort or carevue_avg_cohort
-    # 'ischemic' = -1 | 'other_stroke' = 0 | 'hemorrhagic' = 1
-    ischemic_avg_cohort = complete_avg_cohort[complete_avg_cohort['stroke_type'] == -1]
-    other_stroke_avg_cohort = complete_avg_cohort[complete_avg_cohort['stroke_type'] == 0]
-    hemorrhage_avg_cohort = complete_avg_cohort[complete_avg_cohort['stroke_type'] == 1]
-    # Options: scaled_cohort (recommended)
-    scaled_complete_avg_cohort = Patient.get_avg_scaled_data(complete_avg_cohort, FEATURES_DF)
-    scaled_hemorrhage_avg_cohort = Patient.get_avg_scaled_data(hemorrhage_avg_cohort, FEATURES_DF)
-    scaled_other_stroke_avg_cohort = Patient.get_avg_scaled_data(other_stroke_avg_cohort, FEATURES_DF)
-    scaled_ischemic_avg_cohort = Patient.get_avg_scaled_data(ischemic_avg_cohort, FEATURES_DF)
-
-    # CHOOSE: Cohort Parameters
-    SELECTED_COHORT = scaled_complete_avg_cohort
-    SELECTED_COHORT_TITLE = 'scaled_complete_avg_cohort'
-    SELECT_SAVE_FILES = True
-    # Automated: Preprocessed Cohort
+    raw_avg_cohort = Patient.get_avg_patient_cohort(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME,
+                                                    features_df=FEATURES_DF, delete_existing_cache=True,
+                                                    selected_patients=[])   # empty=all
+    # Scaling
+    SELECTED_COHORT = Patient.get_avg_scaled_data(raw_avg_cohort, FEATURES_DF)
+    # Choose Cohort Parameters
+    ALL_DATABASES: list = ['complete', 'metavision', 'carevue']
+    ALL_STROKE_TYPES: list = ['all_stroke', 'hemorrhagic', 'ischemic', 'other_stroke']
+    SELECTED_DATABASE = 'complete'
+    SELECTED_STROKE_TYPE = 'all_stroke'
+    SELECTED_COHORT_TITLE = 'scaled_' + SELECTED_DATABASE + '_avg_cohort_' + SELECTED_STROKE_TYPE
+    SELECT_SAVE_FILES = False
     SELECTED_COHORT_preprocessed = get_preprocessed_avg_cohort(avg_cohort=SELECTED_COHORT,
-                                                               features_df=FEATURES_DF)
+                                                               features_df=FEATURES_DF,
+                                                               selected_database=SELECTED_DATABASE,
+                                                               selected_stroke_type=SELECTED_STROKE_TYPE)
     SELECTED_FEATURES = list(SELECTED_COHORT_preprocessed.columns)
+
     # Automated: List of all cohorts_preprocessed for model comparison
-    scaled_complete_cohort_preprocessed = get_preprocessed_avg_cohort(avg_cohort=scaled_complete_avg_cohort,
-                                                                      features_df=FEATURES_DF)
-    scaled_hemorrhage_cohort_preprocessed = get_preprocessed_avg_cohort(avg_cohort=scaled_hemorrhage_avg_cohort,
-                                                                        features_df=FEATURES_DF)
-    scaled_ischemic_cohort_preprocessed = get_preprocessed_avg_cohort(avg_cohort=scaled_ischemic_avg_cohort,
-                                                                      features_df=FEATURES_DF)
-    ALL_COHORTS_WITH_TITLES: dict = {'scaled_complete_avg_cohort': scaled_complete_cohort_preprocessed,
-                                     'scaled_hemorrhage_avg_cohort': scaled_hemorrhage_cohort_preprocessed,
-                                     'scaled_ischemic_avg_cohort': scaled_ischemic_cohort_preprocessed}
+    ALL_COHORTS_WITH_TITLES: dict = preprocessing_functions.get_all_cohorts(SELECTED_COHORT, FEATURES_DF, SELECTED_DATABASE)
     print('STATUS: Preprocessing finished.\n')
 
     # todo next week: implement web_app frontend

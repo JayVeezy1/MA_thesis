@@ -105,7 +105,6 @@ def get_categorical_corr(categorical_cohort, selected_dependent_variable):
     death_corr = theils_u['corr'][selected_dependent_variable].round(2)
     # death_corr.drop(selected_dependent_variable, inplace=True)          # not drop here, only in other two functions
     death_corr = death_corr.rename('correlation')
-
     # Significance: Chi-squared test on a contingency table per feature
     validity_df = pd.DataFrame()
     for feature in categorical_cohort.columns:
@@ -278,7 +277,7 @@ def plot_correlations(use_this_function: False, use_plot_heatmap: False, use_plo
         plot_pairplot(cohort_title, selected_cohort, features_df, selected_features, selected_dependent_variable,
                       use_case_name, save_to_file)
 
-    return None
+    return plt
 
 
 def plot_heatmap(cohort_title: str, selected_cohort, features_df, selected_features: list,

@@ -53,7 +53,8 @@ def create_st_button(link_text, link_url, hover_color="#e78ac3", st_col=None):
 
 
 @st.cache_data
-def get_avg_cohort_cache(project_path, use_case_name, features_df, delete_existing_cache, selected_patients=[]):
+def get_avg_cohort_cache(project_path, use_case_name, features_df, selected_database, selected_stroke_type,
+                         delete_existing_cache, selected_patients=[]):
 
     # Directly get avg_cohort file
     # TODO: has to be uploaded first in "Data Loader" by user
@@ -62,15 +63,15 @@ def get_avg_cohort_cache(project_path, use_case_name, features_df, delete_existi
                                                          features_df=features_df,
                                                          delete_existing_cache=delete_existing_cache,
                                                          selected_patients=selected_patients)    # empty=all
-    # Scaling (maybe make dependent on user?)
+    # Scaling
     scaled_avg_cohort = Patient.get_avg_scaled_data(avg_patient_cohort=raw_avg_cohort,
                                                     features_df=features_df)
 
-    # Preprocessing (maybe make dependent on user?)
-    preprocessed_avg_cohort = get_preprocessed_avg_cohort(avg_cohort=scaled_avg_cohort,
-                                                          features_df=features_df)
+    # Preprocessing
+    filtered_avg_cohort = get_preprocessed_avg_cohort(avg_cohort=scaled_avg_cohort,
+                                                      features_df=features_df,
+                                                      selected_database=selected_database,
+                                                      selected_stroke_type=selected_stroke_type)
 
-    # TODO: add filtering depending on selectors in web_app
-    filtered_avg_cohort = preprocessed_avg_cohort
 
     return filtered_avg_cohort
