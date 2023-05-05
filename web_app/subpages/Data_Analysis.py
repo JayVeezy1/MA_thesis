@@ -8,8 +8,6 @@ from web_app.util import get_avg_cohort_cache
 
 
 def data_analysis_page():
-
-
     ## Start of Page: User Input Selector
     st.markdown("<h2 style='text-align: left; color: black;'>General Data Analysis</h2>", unsafe_allow_html=True)
     col1, col2, col3, col4 = st.columns((0.25, 0.25, 0.25, 0.25))
@@ -19,7 +17,7 @@ def data_analysis_page():
     selected_database = col2.selectbox(label='Select database', options=ALL_DATABASES)
     ALL_STROKE_TYPES: list = ['all_stroke', 'ischemic', 'other_stroke', 'hemorrhagic']
     selected_stroke_type = col3.selectbox(label='Select stroke type', options=ALL_STROKE_TYPES)
-    SELECTED_COHORT_TITLE = 'scaled_' + selected_database + '_avg_cohort_' + selected_stroke_type
+    cohort_title = 'scaled_' + selected_database + '_avg_cohort_' + selected_stroke_type
 
 
     ## Get Cohort from streamlit cache function
@@ -27,24 +25,24 @@ def data_analysis_page():
     PROJECT_PATH = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'
     FEATURES_DF = pd.read_excel('./supplements/FEATURE_PREPROCESSING_TABLE.xlsx')
 
-    cached_cohort = get_avg_cohort_cache(project_path=PROJECT_PATH,
+    selected_cohort = get_avg_cohort_cache(project_path=PROJECT_PATH,
                                          use_case_name='frontend',
                                          features_df=FEATURES_DF,
                                          selected_database=selected_database,
                                          selected_stroke_type=selected_stroke_type,
                                          delete_existing_cache=False,
                                          selected_patients=[])  # empty = all
-    ALL_FEATURES = list(cached_cohort.columns)
+    ALL_FEATURES = list(selected_cohort.columns)
     default_values = [x for x in ALL_FEATURES if x not in ALL_DEPENDENT_VARIABLES]
     selected_features = col4.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
 
     ## General Statistics DF
     st.markdown("<h2 style='text-align: left; color: black;'>Features Overview Table</h2>", unsafe_allow_html=True)
     overview_table = calculate_feature_overview_table(use_this_function=True,  # True | False
-                                                      selected_cohort=cached_cohort,
+                                                      selected_cohort=selected_cohort,
                                                       features_df=FEATURES_DF,
                                                       selected_features=selected_features,
-                                                      cohort_title=SELECTED_COHORT_TITLE,
+                                                      cohort_title=cohort_title,
                                                       use_case_name='frontend',
                                                       selected_dependent_variable=selected_variable,
                                                       save_to_file=False)
@@ -59,8 +57,8 @@ def data_analysis_page():
     ## Deaths DF
     deaths_df = calculate_deaths_table(use_this_function=True,
                            use_case_name='frontend',
-                           cohort_title=SELECTED_COHORT_TITLE,
-                           selected_cohort=cached_cohort,
+                           cohort_title=cohort_title,
+                           selected_cohort=selected_cohort,
                            save_to_file=False)
     deaths_df = deaths_df.reset_index(drop=True)
     st.markdown("<h2 style='text-align: left; color: black;'>Death Cases Dataframe</h2>", unsafe_allow_html=True)
@@ -71,8 +69,8 @@ def data_analysis_page():
     correlation_plot = plot_correlations(use_this_function=True,  # True | False
                                    use_plot_heatmap=False,
                                    use_plot_pairplot=False,
-                                   cohort_title=SELECTED_COHORT_TITLE,
-                                   selected_cohort=cached_cohort,
+                                   cohort_title=cohort_title,
+                                   selected_cohort=selected_cohort,
                                    features_df=FEATURES_DF,
                                    selected_features=selected_features,
                                    selected_dependent_variable=selected_variable,
@@ -80,4 +78,7 @@ def data_analysis_page():
                                    save_to_file=False)
     col1, col2, col3 = st.columns((0.4, 0.3, 0.3))
     col1.pyplot(correlation_plot, use_container_width=True)
+
+
+    # TODO: add visualization (Pacmap or 3-feature-selection-plot) or simply inside Clustering?
 

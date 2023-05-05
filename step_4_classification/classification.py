@@ -1,11 +1,11 @@
 import datetime
 import warnings
 
+import streamlit as st
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from numpy import ndarray
-from pandas import Series
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve, make_scorer, \
     accuracy_score, recall_score, average_precision_score, PrecisionRecallDisplay
@@ -198,7 +198,7 @@ def split_classification_data(selected_cohort, cohort_title: str, features_df,
 
     return clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic
 
-
+@st.cache_data
 def get_confusion_matrix(use_this_function: False, selected_cohort, cohort_title: str,
                          features_df,
                          selected_features: list, selected_dependent_variable: str, classification_method: str,
@@ -301,7 +301,7 @@ def get_confusion_matrix(use_this_function: False, selected_cohort, cohort_title
 
     return cm_df
 
-
+@st.cache_data
 def get_classification_report(use_this_function: False, display_confusion_matrix: False, selected_cohort,
                               cohort_title: str,
                               features_df,
@@ -330,7 +330,8 @@ def get_classification_report(use_this_function: False, display_confusion_matrix
         selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
 
     y_pred = clf.predict(x_test_basic)
-    report = classification_report(y_test_basic, y_pred)
+    report_dict = classification_report(y_test_basic, y_pred, output_dict=True)
+    report = pd.DataFrame(report_dict).transpose()
     if verbose:
         print(f'\n CHECK: Classification Report for {classification_method} on {cohort_title}, {sampling_title}:')
         print(report)
@@ -340,8 +341,7 @@ def get_classification_report(use_this_function: False, display_confusion_matrix
         report_filename_string: str = f'./output/{use_case_name}/classification/REPORT_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
         report_filename = report_filename_string.encode()
         with open(report_filename, 'w', newline='') as output_file:
-            output_file.write(report)
-            output_file.close()
+            report.to_csv(output_file, index=False)
             print(f'STATUS: report was saved to {report_filename}')
 
     return report
