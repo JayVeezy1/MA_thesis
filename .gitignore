@@ -9,3 +9,6 @@ step_1_setup_data/database.ini
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Do not commit frontend data
+!/web_app/data_upload/uploaded_cohort.csv

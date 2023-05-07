@@ -3,8 +3,9 @@ from PIL import Image
 
 from web_app.subpages.Automated_Subgroups import automated_subgroups_page
 from web_app.subpages.Classification import classification_page
+from web_app.subpages.Clustering import clustering_page
 from web_app.subpages.Data_Analysis import data_analysis_page
-from web_app.subpages.Data_Loader import data_loader_page
+from web_app.subpages.Data_Upload import data_upload_page
 from web_app.subpages.Fairness_Analysis import fairness_page
 from web_app.subpages.Home import home_page
 from web_app.util import create_st_button
@@ -23,8 +24,9 @@ def create_streamlit_frontend():
     # Sidebar Page Checkboxes
     st.sidebar.title('Main Menu')
     pages = [{'title': 'Home', 'function': home_page},
-             {'title': 'Data Loader', 'function': data_loader_page},
+             {'title': 'Data Upload', 'function': data_upload_page},
              {'title': 'General Data Analysis', 'function': data_analysis_page},
+             {'title': 'Clustering', 'function': clustering_page},
              {'title': 'Classification', 'function': classification_page},
              {'title': 'Fairness Analysis', 'function': fairness_page},
              {'title': 'Automated Subgroups', 'function': automated_subgroups_page}]

@@ -1,55 +1,6 @@
 import streamlit as st
-import datetime
-import pandas as pd
 
 from PIL import Image
-
-
-def write_warning():
-    color1 = '#E75919'
-    color2 = '#EE895C'
-    color3 = '#FFFFFF'
-    text = 'Before starting the analysis, we strongly recommend to load the desired dataset in advance. You can do this in the "Data Loader" tab.'
-    st.markdown(
-        f'<p style="text-align:center;background-image: linear-gradient(to right,{color1}, {color2});color:{color3};font-size:22px;border-radius:2%;">{text}</p>',
-        unsafe_allow_html=True)
-
-
-def display_table(selected_set_name: str, selected_column):
-    info_p3 = 'The following table offers an overview of general descriptive statistics about the datasets:'
-    selected_column.markdown(info_p3)
-    # temp_ca, cache_file_name = CompleteAnalysis.get_analysis(selected_label="fake_label", selected_tool='fake_tool', selected_set=selected_set_name)
-
-    general_info = {'Hospital System': ['Number of patients', 'Number of septic patients', 'Sepsis prevalence in %',
-                                        'Number of entries', 'Number of NaNs', 'NaN prevalence in %',
-                                        'Total hours recorded', 'Average hospital stay duration (hours)']
-                    }
-
-    df_general_info = pd.DataFrame(general_info)
-
-    # Lösung1
-    # df_general_info[selected_set_name] = df_general_info[selected_set_name].astype(str)
-    # df_general_info[selected_set_name] = df_general_info[selected_set_name].str.replace('.0', ' ', regex=False)
-
-    # df_general_info = df_general_info.style.format(na_rep='MISSING')
-    # selected_column.dataframe(df_general_info)
-
-def start_loading(selected_set_list, selected_label_list, selected_column: str = None):
-    total_start_time = datetime.datetime.now()
-    print("Loading started at time:", str(datetime.datetime.now()).replace(" ", "_").replace(":", "-"))
-    for unique_set in selected_set_list:
-        if '0_Load all labels (long waiting time!)' in selected_label_list:
-            pass
-
-        for label in selected_label_list:
-            start_time = datetime.datetime.now()
-            # ca.get_analysis(selected_label=label, selected_set=unique_set, selected_tool='none')
-            difference_time = datetime.datetime.now() - start_time
-            print("Loading of", unique_set, label, "took: ", str(difference_time).replace(" ", "_").replace(":", "-"))
-    print("\nLoading finished at time:", str(datetime.datetime.now()).replace(" ", "_").replace(":", "-"))
-    total_difference_time = datetime.datetime.now() - total_start_time
-    print("Complete loading took: ", str(total_difference_time).replace(" ", "_").replace(":", "-"))
-
 
 
 def home_page():

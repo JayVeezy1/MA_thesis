@@ -1,6 +1,8 @@
 import os
 import re
 import uuid
+
+import pandas as pd
 import streamlit as st
 
 from objects.patients import Patient

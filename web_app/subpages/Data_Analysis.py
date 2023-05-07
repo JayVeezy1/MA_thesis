@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import streamlit as st
 
@@ -19,66 +21,67 @@ def data_analysis_page():
     selected_stroke_type = col3.selectbox(label='Select stroke type', options=ALL_STROKE_TYPES)
     cohort_title = 'scaled_' + selected_database + '_avg_cohort_' + selected_stroke_type
 
-
     ## Get Cohort from streamlit cache function
-    # TODO: make project path dependent on current working directory? Or some other solution to make dynamic?
-    PROJECT_PATH = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'
-    FEATURES_DF = pd.read_excel('./supplements/FEATURE_PREPROCESSING_TABLE.xlsx')
+    upload_filename = './web_app/data_upload/exports/frontend/avg_patient_cohort.csv'
+    if not os.path.isfile(upload_filename):
+        st.warning('Warning: No dataset was uploaded. Please, first upload a dataset at the "Data Upload" page.')
+    else:
+        PROJECT_PATH = './web_app/data_upload/'
+        FEATURES_DF = pd.read_excel('./supplements/FEATURE_PREPROCESSING_TABLE.xlsx')
+        selected_cohort = get_avg_cohort_cache(project_path=PROJECT_PATH,
+                                             use_case_name='frontend',
+                                             features_df=FEATURES_DF,
+                                             selected_database=selected_database,
+                                             selected_stroke_type=selected_stroke_type,
+                                             delete_existing_cache=False,
+                                             selected_patients=[])  # empty = all
+        ALL_FEATURES = list(selected_cohort.columns)
+        default_values = [x for x in ALL_FEATURES if x not in ALL_DEPENDENT_VARIABLES]
+        selected_features = col4.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
 
-    selected_cohort = get_avg_cohort_cache(project_path=PROJECT_PATH,
-                                         use_case_name='frontend',
-                                         features_df=FEATURES_DF,
-                                         selected_database=selected_database,
-                                         selected_stroke_type=selected_stroke_type,
-                                         delete_existing_cache=False,
-                                         selected_patients=[])  # empty = all
-    ALL_FEATURES = list(selected_cohort.columns)
-    default_values = [x for x in ALL_FEATURES if x not in ALL_DEPENDENT_VARIABLES]
-    selected_features = col4.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
+        ## General Statistics DF
+        st.markdown("<h2 style='text-align: left; color: black;'>Features Overview Table</h2>", unsafe_allow_html=True)
+        overview_table = calculate_feature_overview_table(use_this_function=True,  # True | False
+                                                          selected_cohort=selected_cohort,
+                                                          features_df=FEATURES_DF,
+                                                          selected_features=selected_features,
+                                                          cohort_title=cohort_title,
+                                                          use_case_name='frontend',
+                                                          selected_dependent_variable=selected_variable,
+                                                          save_to_file=False)
+        # CSS to inject markdown, this removes index column from table
+        hide_table_row_index = """ <style>
+                                   thead tr th:first-child {display:none}
+                                   tbody th {display:none}
+                                   </style> """
+        st.markdown(hide_table_row_index, unsafe_allow_html=True)
+        st.table(data=overview_table)
 
-    ## General Statistics DF
-    st.markdown("<h2 style='text-align: left; color: black;'>Features Overview Table</h2>", unsafe_allow_html=True)
-    overview_table = calculate_feature_overview_table(use_this_function=True,  # True | False
-                                                      selected_cohort=selected_cohort,
-                                                      features_df=FEATURES_DF,
-                                                      selected_features=selected_features,
-                                                      cohort_title=cohort_title,
-                                                      use_case_name='frontend',
-                                                      selected_dependent_variable=selected_variable,
-                                                      save_to_file=False)
-    # CSS to inject markdown, this removes index column from table
-    hide_table_row_index = """ <style>
-                               thead tr th:first-child {display:none}
-                               tbody th {display:none}
-                               </style> """
-    st.markdown(hide_table_row_index, unsafe_allow_html=True)
-    st.table(data=overview_table)
+        ## Deaths DF
+        deaths_df = calculate_deaths_table(use_this_function=True,
+                               use_case_name='frontend',
+                               cohort_title=cohort_title,
+                               selected_cohort=selected_cohort,
+                               save_to_file=False)
+        deaths_df = deaths_df.reset_index(drop=True)
+        st.markdown("<h2 style='text-align: left; color: black;'>Death Cases Dataframe</h2>", unsafe_allow_html=True)
+        st.dataframe(data=deaths_df.set_index(deaths_df.columns[0]), use_container_width=True)
 
-    ## Deaths DF
-    deaths_df = calculate_deaths_table(use_this_function=True,
-                           use_case_name='frontend',
-                           cohort_title=cohort_title,
-                           selected_cohort=selected_cohort,
-                           save_to_file=False)
-    deaths_df = deaths_df.reset_index(drop=True)
-    st.markdown("<h2 style='text-align: left; color: black;'>Death Cases Dataframe</h2>", unsafe_allow_html=True)
-    st.dataframe(data=deaths_df.set_index(deaths_df.columns[0]), use_container_width=True)
-
-    ## Correlation
-    st.markdown("<h2 style='text-align: left; color: black;'>Correlation</h2>", unsafe_allow_html=True)
-    correlation_plot = plot_correlations(use_this_function=True,  # True | False
-                                   use_plot_heatmap=False,
-                                   use_plot_pairplot=False,
-                                   cohort_title=cohort_title,
-                                   selected_cohort=selected_cohort,
-                                   features_df=FEATURES_DF,
-                                   selected_features=selected_features,
-                                   selected_dependent_variable=selected_variable,
-                                   use_case_name='frontend',
-                                   save_to_file=False)
-    col1, col2, col3 = st.columns((0.4, 0.3, 0.3))
-    col1.pyplot(correlation_plot, use_container_width=True)
+        ## Correlation
+        st.markdown("<h2 style='text-align: left; color: black;'>Correlation</h2>", unsafe_allow_html=True)
+        correlation_plot = plot_correlations(use_this_function=True,  # True | False
+                                       use_plot_heatmap=False,
+                                       use_plot_pairplot=False,
+                                       cohort_title=cohort_title,
+                                       selected_cohort=selected_cohort,
+                                       features_df=FEATURES_DF,
+                                       selected_features=selected_features,
+                                       selected_dependent_variable=selected_variable,
+                                       use_case_name='frontend',
+                                       save_to_file=False)
+        col1, col2, col3 = st.columns((0.4, 0.3, 0.3))
+        col1.pyplot(correlation_plot, use_container_width=True)
 
 
-    # TODO: add visualization (Pacmap or 3-feature-selection-plot) or simply inside Clustering?
+        # TODO: add visualization (Pacmap or 3-feature-selection-plot) or simply inside Clustering?
 
