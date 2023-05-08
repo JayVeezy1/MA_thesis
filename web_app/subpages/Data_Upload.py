@@ -4,7 +4,9 @@ import pandas as pd
 import streamlit as st
 from web_app.util import get_avg_cohort_cache
 from step_4_classification.classification import get_classification_report, get_confusion_matrix
-
+from step_3_data_analysis.clustering import calculate_cluster_kmeans, preprocess_for_clustering, \
+    calculate_cluster_kprot, calculate_cluster_dbscan
+from step_3_data_analysis.data_visualization import calculate_pacmap
 
 def data_upload_page():
     ## Upload Dataset
@@ -33,8 +35,15 @@ def data_upload_page():
     if st.button(label='Clear Cache'):
         # This clears all previous cached data
         get_avg_cohort_cache.clear()
+        # Classification
         get_confusion_matrix.clear()
         get_classification_report.clear()
+        # Clustering
+        calculate_cluster_kmeans.clear()
+        calculate_cluster_kprot.clear()
+        calculate_cluster_dbscan.clear()
+        preprocess_for_clustering.clear()
+        calculate_pacmap.clear()
 
 
     ## Delete Dataset

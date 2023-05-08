@@ -268,7 +268,8 @@ def plot_correlations(use_this_function: False, use_plot_heatmap: False, use_plo
         plt.savefig(
             f'./output/{use_case_name}/correlations/correlation_{cohort_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png',
             dpi=600)
-    plt.show()
+        plt.show()
+    # plt.close()
 
     if use_plot_heatmap:
         plot_heatmap(cohort_title, selected_cohort, features_df, selected_features, selected_dependent_variable,

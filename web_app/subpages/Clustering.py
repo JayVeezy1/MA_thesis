@@ -6,6 +6,8 @@ import streamlit as st
 import seaborn as sn
 from matplotlib import pyplot as plt
 
+from step_3_data_analysis.clustering import plot_sh_score, plot_k_means_on_pacmap, plot_k_prot_on_pacmap, \
+    plot_sh_score_DBSCAN, plot_DBSCAN_on_pacmap
 from web_app.util import get_avg_cohort_cache
 
 
@@ -42,16 +44,103 @@ def clustering_page():
         selected_features = col4.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
 
         ## Select Clustering Specific Parameters
+        # TODO: maybe put two Clustering methods next to each other for comparison
         col5, col6, col7, col8 = st.columns((0.25, 0.25, 0.25, 0.25))
         ALL_CLUSTERING_METHODS: list = ['kmeans', 'kprototype', 'DBSCAN']
         clustering_method = col5.selectbox(label='Select clustering method', options=ALL_CLUSTERING_METHODS)
-
-        if clustering_method == 'kmeans':
-            st.write('kmeans')
-        elif clustering_method == 'kprototype':
-            st.write('kprototype')
+        if clustering_method == 'kmeans' or clustering_method == 'kprototype':
+            selected_cluster_count = col6.number_input(label='Select cluster count k', min_value=1, max_value=20, value=2) # , format=None)
+            selected_eps = None
+            selected_min_sample = None
         elif clustering_method == 'DBSCAN':
-            st.write('DBSCAN')
+            selected_cluster_count = None
+            selected_eps = col6.number_input(label='Select epsilon', min_value=0.01, max_value=10.00, value=0.51) # , format=None)
+            selected_min_sample = col7.number_input(label='Select min_sample', min_value=1, max_value=100, value=5) # , format=None)
         else:
-            st.warning('Please select a clustering method.')
+            selected_cluster_count = None
+            selected_eps = None
+            selected_min_sample = None
 
+        ## Display Plots
+        col1, col2 = st.columns((0.5, 0.5))
+        if clustering_method == 'kmeans':
+            # SH Score
+            sh_score_plot = plot_sh_score(use_this_function=True, selected_cohort=selected_cohort,
+                                          cohort_title=cohort_title, use_case_name='frontend', features_df=FEATURES_DF,
+                                          selected_features=selected_features,
+                                          selected_dependent_variable=selected_variable,
+                                          use_encoding=True, clustering_method='kmeans', save_to_file=False)
+
+            col1.pyplot(sh_score_plot, use_container_width=True)
+            # Clustering
+            clustering_plot = plot_k_means_on_pacmap(use_this_function=True,
+                                                 display_sh_score=False,
+                                                 selected_cohort=selected_cohort,
+                                                 cohort_title=cohort_title,
+                                                 use_case_name='frontend',
+                                                 features_df=FEATURES_DF,
+                                                 selected_features=selected_features,
+                                                 selected_dependent_variable=selected_variable,
+                                                 selected_cluster_count=selected_cluster_count,
+                                                 use_encoding=True,
+                                                 save_to_file=False)
+            col2.pyplot(clustering_plot, use_container_width=True)
+
+        elif clustering_method == 'kprototype':
+            col1.write(f'Calculating the SH Score of kprototype for the first time takes about 1 minute.')
+            # SH Score
+            sh_score_plot = plot_sh_score(use_this_function=True, selected_cohort=selected_cohort,
+                                          cohort_title=cohort_title, use_case_name='frontend', features_df=FEATURES_DF,
+                                          selected_features=selected_features,
+                                          selected_dependent_variable=selected_variable,
+                                          use_encoding=False,        # not needed for kprot
+                                          clustering_method='kprot', save_to_file=False)
+
+            col1.pyplot(sh_score_plot, use_container_width=True)
+            # Clustering
+            clustering_plot = plot_k_prot_on_pacmap(use_this_function=True,
+                                                 display_sh_score=False,
+                                                 selected_cohort=selected_cohort,
+                                                 cohort_title=cohort_title,
+                                                 use_case_name='frontend',
+                                                 features_df=FEATURES_DF,
+                                                 selected_features=selected_features,
+                                                 selected_dependent_variable=selected_variable,
+                                                 selected_cluster_count=selected_cluster_count,
+                                                 use_encoding=False,        # not needed for kprot
+                                                 save_to_file=False)
+            col2.pyplot(clustering_plot, use_container_width=True)
+
+        elif clustering_method == 'DBSCAN':
+            col1.write(f'Iteratively change the DBSCAN parameters of epsilon and min_samples to optimize the clustering.')
+            # SH Score
+            sh_score_plot = plot_sh_score_DBSCAN(use_this_function=True, selected_cohort=selected_cohort,
+                                          cohort_title=cohort_title, use_case_name='frontend', features_df=FEATURES_DF,
+                                          selected_features=selected_features,
+                                          selected_dependent_variable=selected_variable,
+                                          selected_eps=selected_eps,
+                                          selected_min_sample=selected_min_sample,
+                                          use_encoding=True,
+                                          save_to_file=False)
+
+            col1.pyplot(sh_score_plot, use_container_width=True)
+            # Clustering
+            clustering_plot, dbscan_list = plot_DBSCAN_on_pacmap(use_this_function=True,
+                                                display_sh_score=False,
+                                                selected_cohort=selected_cohort,
+                                                cohort_title=cohort_title,
+                                                use_case_name='frontend',
+                                                features_df=FEATURES_DF,
+                                                selected_features=selected_features,
+                                                selected_dependent_variable=selected_variable,
+                                                selected_eps=selected_eps,
+                                                selected_min_sample=selected_min_sample,
+                                                use_encoding=True,  # not needed for kprot
+                                                save_to_file=False)
+            col2.pyplot(clustering_plot, use_container_width=True)
+
+            if len(list(set(dbscan_list))) > 20:
+                col2.warning('Warning: DBSCAN results in more than 20 clusters. Clustering might not be useful.')
+
+        else:
+            st.warning('Please select a clustering option.')

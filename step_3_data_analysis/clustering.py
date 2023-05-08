@@ -2,6 +2,7 @@ import datetime
 import math
 import warnings
 
+import streamlit as st
 import matplotlib
 import numpy as np
 import pandas as pd
@@ -14,7 +15,7 @@ from kmodes.kprototypes import KPrototypes
 from step_2_preprocessing.preprocessing_functions import get_one_hot_encoding
 from step_3_data_analysis import data_visualization
 
-
+@st.cache_data
 def preprocess_for_clustering(selected_cohort, features_df, selected_features, selected_dependent_variable,
                               use_encoding: False):
     # Removal of known features_to_remove
@@ -100,13 +101,16 @@ def plot_clusters_on_3D_pacmap(plot_title, use_case_name, pacmap_data_points, cl
     plt.legend()
 
     if save_to_file:
+        plt.show()
         plt.savefig(
             f'./output/{use_case_name}/clustering/clustering_{plot_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png',
             dpi=600)
-    plt.show()
-    plt.close()
+    # plt.close()
+
+    return plt
 
 
+@st.cache_data
 def calculate_cluster_kmeans(selected_cohort, cohort_title: str, n_clusters: int, verbose: bool = False):
     # k-means clustering: choose amount n_clusters to calculate k centroids for these clusters
     if verbose:
@@ -130,6 +134,7 @@ def calculate_cluster_kmeans(selected_cohort, cohort_title: str, n_clusters: int
     return clustering_labels_list, sh_score, inertia
 
 
+@st.cache_data
 def calculate_cluster_kprot(selected_cohort, cohort_title: str, selected_features, n_clusters: int,
                             verbose: bool = False):
     # k-prototypes clustering: calculate clusters also for categorical values
@@ -147,7 +152,10 @@ def calculate_cluster_kprot(selected_cohort, cohort_title: str, selected_feature
     categorical_index: list = []
     available_columns: list = selected_cohort.columns.to_list()
     for feature in categorical_features:
-        categorical_index.append(available_columns.index(feature))
+        try:
+            categorical_index.append(available_columns.index(feature))
+        except ValueError:  # occurs when available_columns does not contain one of the categorical features
+            pass
 
     # Calculate KProto
     kprot_obj = KPrototypes(n_clusters=n_clusters, init='Cao', random_state=0, max_iter=350)
@@ -222,10 +230,10 @@ def plot_sh_score(use_this_function: False, selected_cohort, cohort_title, use_c
         plt.savefig(f'./output/{use_case_name}/clustering/optimal_{clustering_method}_cluster_count_{cohort_title}_{current_time}.png',
                     bbox_inches='tight',
                     dpi=600)
-    plt.show()
-    plt.close()
+        plt.show()
+    # plt.close()
 
-    return None
+    return plt
 
 
 def plot_k_means_on_pacmap(use_this_function: False, display_sh_score: False, selected_cohort, cohort_title,
@@ -268,11 +276,11 @@ def plot_k_means_on_pacmap(use_this_function: False, display_sh_score: False, se
                                                                n_clusters=selected_cluster_count,
                                                                verbose=True)
     plot_title = f'k_Means_{cohort_title}'
-    plot_clusters_on_3D_pacmap(plot_title=plot_title, use_case_name=use_case_name,
+    kmeans_plot = plot_clusters_on_3D_pacmap(plot_title=plot_title, use_case_name=use_case_name,
                                pacmap_data_points=pacmap_data_points, cluster_count=selected_cluster_count,
                                sh_score=sh_score, coloring=k_means_list, save_to_file=save_to_file)
 
-    return None
+    return kmeans_plot
 
 
 def get_clusters_overview_table(original_cohort, selected_features, features_df, cohort_title):
@@ -537,7 +545,7 @@ def calculate_clusters_overview_table(use_this_function: False, selected_cohort,
 
     return None
 
-
+@st.cache_data
 def calculate_cluster_dbscan(selected_cohort, eps, min_samples, cohort_title, verbose: bool = False):
     if verbose:
         print(f'STATUS: Calculating DBSCAN on {cohort_title} for {eps} epsilon with {min_samples} min_samples.')
@@ -560,7 +568,7 @@ def calculate_cluster_dbscan(selected_cohort, eps, min_samples, cohort_title, ve
 
 
 def plot_sh_score_DBSCAN(use_this_function, selected_cohort, cohort_title, use_case_name, features_df,
-                         selected_features, selected_dependent_variable, use_encoding: False, save_to_file):
+                         selected_features, selected_dependent_variable, selected_eps, selected_min_sample, use_encoding: False, save_to_file):
     if not use_this_function:
         return None
 
@@ -571,32 +579,44 @@ def plot_sh_score_DBSCAN(use_this_function, selected_cohort, cohort_title, use_c
                                                 selected_dependent_variable,
                                                 use_encoding)
 
-    # Find best sh_score DBSCAN parameters epsilon and min_samples
-    eps_range = [0.25, 0.5, 0.75, 1]  # eps = radius around a node
-    min_samples = [5, 10, 20, 100]  # min_samples = number of neighbors to be considered central-node
-    best_sh_score = 0
-    best_eps = 0
-    best_min_sample = 0
-    best_avg_silhouettes = []
-    for min_sample in min_samples:
+    # Find best sh_score DBSCAN parameters epsilon and min_samples based on predetermined lists
+    if selected_eps is None or selected_min_sample is None:
+        eps_range = [0.25, 0.5, 0.75, 1]  # eps = radius around a node
+        min_samples = [5, 10, 20, 100]  # min_samples = number of neighbors to be considered central-node
+        best_sh_score = 0
+        best_eps = 0
+        best_min_sample = 0
+        best_avg_silhouettes = []
+        for min_sample in min_samples:
+            current_avg_silhouettes = []
+            for eps in eps_range:
+                db_scan_list, temp_sh_score = calculate_cluster_dbscan(selected_cohort, eps=eps, min_samples=min_sample,
+                                                                       cohort_title=cohort_title)
+                current_avg_silhouettes.append(temp_sh_score)
+                # look for best setting
+                if temp_sh_score > 0:
+                    if temp_sh_score > best_sh_score:
+                        best_sh_score = temp_sh_score
+                        best_eps = eps
+                        best_min_sample = min_sample
+                        best_avg_silhouettes = current_avg_silhouettes
+                else:
+                    print(f'sh score was not above 0, no good clustering for eps: {eps}, min_samples: {min_sample}')
+        # print best setting
+        print(
+            f'CHECK: Best sh score{best_sh_score} was reached with settings eps: {best_eps} and min_sample: {best_min_sample}')
+    else:
+        eps_range = [0.01, selected_eps, 2*selected_eps]
+        best_sh_score = 0
+        best_eps = 0
+        best_min_sample = 0
         current_avg_silhouettes = []
         for eps in eps_range:
-            db_scan_list, temp_sh_score = calculate_cluster_dbscan(selected_cohort, eps=eps, min_samples=min_sample,
+            db_scan_list, temp_sh_score = calculate_cluster_dbscan(selected_cohort, eps=eps, min_samples=selected_min_sample,
                                                                    cohort_title=cohort_title)
             current_avg_silhouettes.append(temp_sh_score)
-            # look for best setting
-            if temp_sh_score > 0:
-                if temp_sh_score > best_sh_score:
-                    best_sh_score = temp_sh_score
-                    best_eps = eps
-                    best_min_sample = min_sample
-                    best_avg_silhouettes = current_avg_silhouettes
-            else:
-                print(f'sh score was not above 0, no good clustering for eps: {eps}, min_samples: {min_sample}')
-
-    # print best setting
-    print(
-        f'CHECK: Best sh score{best_sh_score} was reached with settings eps: {best_eps} and min_sample: {best_min_sample}')
+        best_avg_silhouettes = current_avg_silhouettes
+        best_min_sample = selected_min_sample
 
     # Plot Silhouette Scores -> not in other function, because no SSE available
     plt.figure(dpi=100)
@@ -609,9 +629,11 @@ def plot_sh_score_DBSCAN(use_this_function, selected_cohort, cohort_title, use_c
             f'./output/{use_case_name}/clustering/silhouette_score_DBSCAN_{cohort_title}.png',
             dpi=600,
             bbox_inches='tight')
-    plt.show()
+        plt.show()
 
-    return None
+    # plt.close()
+
+    return plt
 
 
 def plot_DBSCAN_on_pacmap(use_this_function: bool, display_sh_score: False, selected_cohort,
@@ -629,6 +651,8 @@ def plot_DBSCAN_on_pacmap(use_this_function: bool, display_sh_score: False, sele
                              features_df=features_df,
                              selected_features=selected_features,
                              selected_dependent_variable=selected_dependent_variable,
+                             selected_eps=selected_eps,     # alternative: input 'None' for eps and min_sample
+                             selected_min_sample=selected_min_sample,
                              use_encoding=use_encoding,
                              save_to_file=save_to_file)
 
@@ -650,11 +674,11 @@ def plot_DBSCAN_on_pacmap(use_this_function: bool, display_sh_score: False, sele
                                                      min_samples=selected_min_sample,
                                                      cohort_title=cohort_title)
     plot_title = f'DBSCAN_{cohort_title}_eps_{selected_eps}_min_sample_{selected_min_sample}'
-    plot_clusters_on_3D_pacmap(plot_title=plot_title, use_case_name=use_case_name,
+    dbscan_plot = plot_clusters_on_3D_pacmap(plot_title=plot_title, use_case_name=use_case_name,
                                pacmap_data_points=pacmap_data_points, cluster_count=len(set(dbscan_list)),
                                sh_score=sh_score, coloring=dbscan_list, save_to_file=save_to_file)
 
-    return None
+    return dbscan_plot, dbscan_list
 
 
 def plot_k_prot_on_pacmap(use_this_function, display_sh_score, selected_cohort, cohort_title, use_case_name,
@@ -696,8 +720,8 @@ def plot_k_prot_on_pacmap(use_this_function, display_sh_score, selected_cohort, 
                                                              n_clusters=selected_cluster_count,
                                                              verbose=True)
     plot_title = f'k_prototypes_{cohort_title}_{selected_cluster_count}_clusters'
-    plot_clusters_on_3D_pacmap(plot_title=plot_title, use_case_name=use_case_name,
+    kprot_plot = plot_clusters_on_3D_pacmap(plot_title=plot_title, use_case_name=use_case_name,
                                pacmap_data_points=pacmap_data_points, cluster_count=selected_cluster_count,
                                sh_score=sh_score, coloring=k_prot_list, save_to_file=save_to_file)
 
-    return None
+    return kprot_plot

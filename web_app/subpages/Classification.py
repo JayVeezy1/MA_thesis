@@ -54,10 +54,14 @@ def classification_page():
             use_grid_search = False
 
         ## CM and Report
-        st.markdown("<h2 style='text-align: left; color: black;'>Confusion Matrix and Classification Report</h2>", unsafe_allow_html=True)
-        col1, col2 = st.columns((0.5, 0.5))
+        col1, col2, col3 = st.columns((0.3, 0.1, 0.4))
+        col1.markdown("<h2 style='text-align: left; color: black;'>Confusion Matrix</h2>", unsafe_allow_html=True)
+        col3.markdown("<h2 style='text-align: left; color: black;'>Classification Report</h2>", unsafe_allow_html=True)
 
-        # TODO: check if DeepLearning cached correctly and maybe add warning "takes time", also maybe make deeplearning parameters user input?
+        if classification_method == 'deeplearning_sequential':
+            st.write(f'Calculating the classification with a deeplearning model for the first time takes about 1-2 minutes.')
+
+        # TODO: check if DeepLearning cached correctly and also maybe make deeplearning parameters as user input?
         # TODO: maybe put two classification methods next to each other for comparison
         cm_df = get_confusion_matrix(use_this_function=True,  # True | False
                                       classification_method=classification_method,
@@ -124,4 +128,7 @@ def classification_page():
                                                           save_to_file=False)
 
         col1.pyplot(fig1, use_container_width=True)
-        col2.dataframe(classification_report)
+        col3.dataframe(classification_report)
+        accuracy = round(classification_report.loc['accuracy', 'recall'], 2)
+        recall = round(classification_report.loc['1.0', 'recall'], 2)
+        col3.write(f'**Key metrics: Accuracy={accuracy}  |  Recall={recall}**')

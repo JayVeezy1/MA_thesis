@@ -1,6 +1,7 @@
 import datetime
 import matplotlib
 import pacmap
+import streamlit as st
 from matplotlib import pyplot as plt
 
 from step_2_preprocessing.preprocessing_functions import get_one_hot_encoding
@@ -48,7 +49,7 @@ def preprocess_for_pacmap(selected_cohort, features_df, selected_features, selec
 
     return selected_cohort.to_numpy()
 
-
+@st.cache_data
 def calculate_pacmap(selected_cohort, cohort_title, features_df, selected_features, selected_dependent_variable, use_encoding: False):
     # Returns: pacmap_data_points = data points, and death_list = markings
 

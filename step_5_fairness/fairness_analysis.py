@@ -1,5 +1,6 @@
 import datetime
 
+import streamlit as st
 import pandas as pd
 from aif360.datasets import StandardDataset
 from aif360.metrics import ClassificationMetric
@@ -68,6 +69,7 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
     return None
 
 
+@st.cache_data
 def get_fairness_report(use_this_function: False, selected_cohort,
                         cohort_title: str,
                         features_df,
@@ -169,10 +171,13 @@ def get_fairness_report(use_this_function: False, selected_cohort,
                            # 'differential_fairness_bias_amplification': [differential_fairness_bias_amplification],
                            'Generalized Entropy Index': [generalized_entropy_index, entropy_expected, entropy_def]
                            })
+    report = report.transpose()
+    report.index.names = ['Metrics']
+    report.rename(columns={0: attributes_string, 1: 'Optimum', 2: 'Information'}, inplace=True)
 
     if verbose:
         print(f'\n CHECK: Fairness Report for {classification_method} on {cohort_title}, {sampling_title}:')
-        print(report.transpose().to_string())
+        print(report.to_string())
 
     if plot_performance_metrics:
         temp_df = x_test_basic[selected_protected_attributes]
@@ -195,10 +200,7 @@ def get_fairness_report(use_this_function: False, selected_cohort,
         report_filename = report_filename_string.encode()
         # code to export a df
         with open(report_filename, 'w', newline='') as output_file:
-            report_export = report.transpose()
-            report_export.index.names = ['Metrics']
-            report_export.rename(columns={0: attributes_string, 1: 'Optimum', 2: 'Information'}, inplace=True)
-            report_export.to_csv(output_file, index=True)  # keep index here for metrics titles
+            report.to_csv(output_file, index=True)  # keep index here for metrics titles
             print(f'STATUS: fairness_report was saved to {report_filename}')
 
     return report
