@@ -74,16 +74,24 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
                     f'WARNING: SMOTE can not be implemented for {cohort_title} because not enough death-cases for train-test-split. '
                     f'At least 5 cases needed. '
                     f'RandomOversampling is implemented instead.')
-            ros = RandomOverSampler(random_state=1321)
-            x_res, y_res = ros.fit_resample(basic_x_train, basic_y_train)
-            new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(x_res, y_res,
-                                                                                test_size=0.2,
-                                                                                random_state=1321)
-            x_train_final = new_x_train
-            y_train_final = new_y_train
-            x_test_final = new_x_test
-            y_test_final = new_y_test
-            sampling_title = 'random_oversampling'
+            try:
+                ros = RandomOverSampler(random_state=1321)
+                x_res, y_res = ros.fit_resample(basic_x_train, basic_y_train)
+                new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(x_res, y_res,
+                                                                                    test_size=0.2,
+                                                                                    random_state=1321)
+                x_train_final = new_x_train
+                y_train_final = new_y_train
+                x_test_final = new_x_test
+                y_test_final = new_y_test
+                sampling_title = 'random_oversampling'
+            except ValueError as e:
+                print('WARNING: ValueError occurred. No sampling possible.', e)
+                x_train_final = basic_x_train
+                y_train_final = basic_y_train
+                x_test_final = basic_x_test
+                y_test_final = basic_y_test
+                sampling_title = 'no_sampling'
         else:
             # checking for categorical features with only columns with 1 or 0 (and 0.5 for stroke_type)
             # because this is already after one-hot encoding. Column names are not in FEATURES_PREPROCESSING table
@@ -386,10 +394,18 @@ def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, 
         auc_prc_score = 0
     else:
         # ROC = receiver operating characteristic, AUROC = area under the ROC curve
-        auc_score = round(roc_auc_score(y_test_basic, y_pred), 3)
+        try:
+            auc_score = round(roc_auc_score(y_test_basic, y_pred), 3)
+        except ValueError as e:
+            print('Warning: ValueError. auc_score was set to 0. ', e)
+            auc_score = 0
         # average precision score = https://scikit-learn.org/stable/modules/generated/sklearn.metrics.average_precision_score.html
         # displays relation between precision to recall
-        auc_prc_score = round(average_precision_score(y_test_basic, y_pred), 3)
+        try:
+            auc_prc_score = round(average_precision_score(y_test_basic, y_pred), 3)
+        except ValueError as e:
+            print('Warning: ValueError. auc_prc_score was set to 0. ', e)
+            auc_prc_score = 0
     # print(f'CHECK: {classification_method}: AUROC = %.3f' % auc_score)
     print(f'CHECK: {classification_method}: average_precision_score = %.3f' % auc_prc_score)
 

@@ -20,8 +20,7 @@ if __name__ == '__main__':
     USE_CASE_NAME: str = 'stroke_all_systems'
     FEATURES_DF = pd.read_excel('./supplements/FEATURE_PREPROCESSING_TABLE.xlsx')
     SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'
-    ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
-                                     'death_365_days']
+    ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp'] # , 'death_3_days', 'death_30_days', 'death_180_days', 'death_365_days']
     ### Setup, MIMIC-III Export from DB, Load from Cache
     # Step 0) Setup when first time using db:
     # mimic_to_csv.setup_postgre_files()                 # setup all needed background functions and views for postgre. Warning: Sometimes this setup from Python does not work. Then you simply copy&paste each SQL Script into PostGre QueryTool and execute it.
@@ -59,7 +58,7 @@ if __name__ == '__main__':
     SELECTED_DATABASE = 'complete'
     SELECTED_STROKE_TYPE = 'all_stroke'
     SELECTED_COHORT_TITLE = 'scaled_' + SELECTED_DATABASE + '_avg_cohort_' + SELECTED_STROKE_TYPE
-    SELECT_SAVE_FILES = False
+    SELECT_SAVE_FILES = True
     SELECTED_COHORT_preprocessed = get_preprocessed_avg_cohort(avg_cohort=SELECTED_COHORT,
                                                                features_df=FEATURES_DF,
                                                                selected_database=SELECTED_DATABASE,
@@ -70,12 +69,12 @@ if __name__ == '__main__':
     ALL_COHORTS_WITH_TITLES: dict = preprocessing_functions.get_all_cohorts(SELECTED_COHORT, FEATURES_DF, SELECTED_DATABASE)
     print('STATUS: Preprocessing finished.\n')
 
-    # todo next week: implement web_app frontend
+    # TODO: add automated subgroup clustering with entropy, based on that get performance and fairness metrics per cluster, add to frontend
 
     # TODO after: add SHAPley values to classification chapter (+ shap waterfalls, with this different importance for subgroups)
     # get shapely function from there (also use this analysis to compare clusters?) https://antonsruberts.github.io/kproto-audience/
 
-    # todo after: check Wiese Paper for their fairness measures
+    # todo after: add fairness-feature selection to web_app frontend
     # todo after: include the fairness package? https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md Also in general the AI Responsible package useful as a dashboard?
     # todo after: update + interpret fairness chapter in overleaf
 
@@ -188,8 +187,7 @@ if __name__ == '__main__':
     SELECTED_CLASSIFICATION_METHOD = 'XGBoost'  # options: RandomForest | XGBoost || NOT deeplearning_sequential -> use function get_classification_report_deeplearning()
     USE_GRIDSEARCH = True
     SELECTED_SAMPLING_METHOD = 'oversampling'  # options: no_sampling | oversampling | undersampling   -> estimation: oversampling > no_sampling > undersampling (very bad results)
-    ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost',
-                                        'deeplearning_sequential']
+    ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'XGBoost'] # , 'RandomForest_with_gridsearch', 'XGBoost', 'deeplearning_sequential']
     # Classification Report
     report = classification.get_classification_report(use_this_function=False,  # True | False
                                                       display_confusion_matrix=True,  # option for CM
@@ -260,7 +258,7 @@ if __name__ == '__main__':
 
     # Input: selected_cohort and its ideal kmeans cluster-count
     # Output: table of prediction quality per cluster, rows = different model configs (per classification_method and dependent_variable)
-    classification.compare_classification_models_on_clusters(use_this_function=False,  # True | False
+    classification.compare_classification_models_on_clusters(use_this_function=True,  # True | False
                                                              use_case_name=USE_CASE_NAME,
                                                              features_df=FEATURES_DF,
                                                              selected_features=SELECTED_FEATURES,
@@ -289,6 +287,15 @@ if __name__ == '__main__':
                                           use_grid_search=USE_GRIDSEARCH,
                                           save_to_file=SELECT_SAVE_FILES)
 
+    ### Automated Subgroup detection
+    # Step 6.1) Calculate automated Subgroups and related fairness metrics -> Inside ASDF-Dashboard
+    # TODO: get distance matrix for SLINK algorithm, cluster patients with SLINK -> what parameters needed? Or automated?
+    # also display clusters with: scipy.cluster.hierarchy.fcluster(Z,5,'maxclust')
+    # TODO: get clusters with features and their value distribution in a table (already available at clusters?)
+    # TODO: calculate the entropy value of each feature per cluster (build the formula with log), decide if ranking or threshold (?)
+    # TODO: use subgroups as selector to calculate fairness measures
+    # TODO: display the table and the fairness depending on the subgroup as its own page in frontend
+
     ### Deprecated: ASDF-Dashboard for visualization  https://github.com/jeschaef/ASDF-Dashboard
     # Important: Start Background Services First
     # Redis: docker run --name redis -p 6379:6379 -d redis (once created 'start' in Docker Desktop)
@@ -309,12 +316,8 @@ if __name__ == '__main__':
     #                                                          verbose=True,
     #                                                          save_to_file=True)
 
-    ### Step 6.1) Streamlit App for Visualization
-    # In console: streamlit run main.py
-    start_streamlit_frontend(use_this_function=True)
-
-    ### Automated Subgroup detection
-    # Step 7.1) Calculate automated Subgroups and related fairness metrics -> Inside ASDF-Dashboard
+    ### Step 7.1) Streamlit App for Visualization
+    start_streamlit_frontend(use_this_function=False)
 
     print(f'\nSTATUS: Analysis finished for {len(SELECTED_FEATURES)} selected_features.')
     time_diff = datetime.now() - starting_time
