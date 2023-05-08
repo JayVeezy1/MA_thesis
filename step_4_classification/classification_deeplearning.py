@@ -1,6 +1,7 @@
 import datetime
 import warnings
 
+import streamlit as st
 import numpy
 import numpy as np
 import pandas as pd
@@ -212,6 +213,7 @@ def plot_DL_confusion_matrix(cm, cohort_title, classification_method, sampling_t
 
 
 # get DL from raw data
+@st.cache_data
 def get_DL_confusion_matrix(selected_cohort, cohort_title, features_df, selected_features, selected_dependent_variable,
                             classification_method, sampling_method, use_case_name, save_to_file, verbose):
     # get_classification_basics
@@ -260,6 +262,7 @@ def get_sequential_model(x_train_final, y_train_final):
     return model, history
 
 
+@st.cache_data
 def get_classification_report_deeplearning(use_this_function, sampling_method, selected_cohort, cohort_title,
                                            use_case_name, features_df,
                                            selected_features, selected_dependent_variable, verbose,
@@ -283,7 +286,8 @@ def get_classification_report_deeplearning(use_this_function, sampling_method, s
                            batch_size=128).round()  # round() needed to get from sigmoid probability to class value 0 or 1
 
     # Get complete classification_report
-    report = classification_report(y_true=y_test_basic, y_pred=y_pred)
+    report_dict = classification_report(y_true=y_test_basic, y_pred=y_pred, output_dict=True)
+    report = pd.DataFrame(report_dict).transpose()
 
     # Get recall value
     recall_object = tensorflow.keras.metrics.Recall()
@@ -302,8 +306,7 @@ def get_classification_report_deeplearning(use_this_function, sampling_method, s
         report_filename_string: str = f'./output/{use_case_name}/classification_deeplearning/REPORT_deeplearning_{cohort_title}_{sampling_title}_{current_time}.csv'
         report_filename = report_filename_string.encode()
         with open(report_filename, 'w', newline='') as output_file:
-            output_file.write(report)
-            output_file.close()
+            report.to_csv(output_file, index=False)
             print(f'STATUS: deeplearning classification report was saved to {report_filename}')
 
         # Save model configurations plot

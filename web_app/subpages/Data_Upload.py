@@ -4,9 +4,12 @@ import pandas as pd
 import streamlit as st
 from web_app.util import get_avg_cohort_cache
 from step_4_classification.classification import get_classification_report, get_confusion_matrix
+from step_4_classification.classification_deeplearning import get_classification_report_deeplearning, \
+    get_DL_confusion_matrix
 from step_3_data_analysis.clustering import calculate_cluster_kmeans, preprocess_for_clustering, \
     calculate_cluster_kprot, calculate_cluster_dbscan
 from step_3_data_analysis.data_visualization import calculate_pacmap
+from step_5_fairness.fairness_analysis import get_fairness_report
 
 def data_upload_page():
     ## Upload Dataset
@@ -38,6 +41,10 @@ def data_upload_page():
         # Classification
         get_confusion_matrix.clear()
         get_classification_report.clear()
+        get_classification_report_deeplearning.clear()
+        get_DL_confusion_matrix.clear()
+        get_fairness_report.clear()
+
         # Clustering
         calculate_cluster_kmeans.clear()
         calculate_cluster_kprot.clear()

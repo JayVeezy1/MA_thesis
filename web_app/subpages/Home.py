@@ -36,13 +36,16 @@ def home_page():
                 'Medical Center, Boston, between 2001 and 2012. It comprises over 58.000 hospital admissions of over 45.000 individual, '
                 'deidentified patients who stayed in critical care units. A multitude of features was measured per patient on an hourly basis.'
                 'The selected use case for the master thesis is mortality prediction of general stroke, combining hemorrhagic and ischemic cases. '
-                'Essential preprocessing steps and filtering were conducted in the backend which led to approximately 2400 individual icu-stays. '
+                'Essential preprocessing steps and filtering were conducted in the backend which led to approximately 2600 individual icu-stays. '
                 'Average data is used for the analysis, but timeseries data is available for further research.')
 
     # How to use this Dashboard
     st.markdown("<h2 style='text-align: left; color: black;'>How to use the Dashboard</h2>", unsafe_allow_html=True)
     st.markdown('This dashboard can be used to interactively recreate the results of the thesis. '
-                'Within the section "Data Loader" a user can choose different underlying filtering steps. '
-                'Once the analysis is conducted, the results can be found in the respective subpages. The graphics are cached, which greatly enhances display time. ')
+                'Within the section "Data Upload" a user has to upload a "avg_patient_cohort.csv" file. '
+                'This cohort can be created with the python function "get_avg_patient_cohort()" once the Mimic III dataset is loaded into python. '
+                'The results of the analysis can be found in the respective subpages. '
+                'Depending on the use case, the calculation of the plots can can take up to 2 minutes. '
+                'Afterwards these calculations are cached, which greatly enhances display time. ')
 
     ### End of page ###

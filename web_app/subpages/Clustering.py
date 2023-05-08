@@ -14,7 +14,7 @@ from web_app.util import get_avg_cohort_cache
 def clustering_page():
     ## Start of Page: User Input Selector
     st.markdown("<h2 style='text-align: left; color: black;'>Clustering</h2>", unsafe_allow_html=True)
-    col1, col2, col3, col4 = st.columns((0.25, 0.25, 0.25, 0.25))
+    col1, col2, col3 = st.columns((0.25, 0.25, 0.25))
     ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
                                      'death_365_days']
     selected_variable = col1.selectbox(label='Select dependent variable', options=ALL_DEPENDENT_VARIABLES)
@@ -41,7 +41,7 @@ def clustering_page():
                                                selected_patients=[])  # empty = all
         ALL_FEATURES = list(selected_cohort.columns)
         default_values = [x for x in ALL_FEATURES if x not in ALL_DEPENDENT_VARIABLES]
-        selected_features = col4.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
+        selected_features = st.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
 
         ## Select Clustering Specific Parameters
         # TODO: maybe put two Clustering methods next to each other for comparison
@@ -60,9 +60,13 @@ def clustering_page():
             selected_cluster_count = None
             selected_eps = None
             selected_min_sample = None
+        st.markdown('___')
 
         ## Display Plots
         col1, col2 = st.columns((0.5, 0.5))
+        col1.markdown("<h2 style='text-align: left; color: black;'>Silhouette Coefficient</h2>", unsafe_allow_html=True)
+        col2.markdown("<h2 style='text-align: left; color: black;'>Cluster Visualization</h2>", unsafe_allow_html=True)
+
         if clustering_method == 'kmeans':
             # SH Score
             sh_score_plot = plot_sh_score(use_this_function=True, selected_cohort=selected_cohort,
@@ -87,7 +91,7 @@ def clustering_page():
             col2.pyplot(clustering_plot, use_container_width=True)
 
         elif clustering_method == 'kprototype':
-            col1.write(f'Calculating the SH Score of kprototype for the first time takes about 1 minute.')
+            col1.write(f'Calculating the silhouette scores of kprototype for the first time can take up to 1 minute.')
             # SH Score
             sh_score_plot = plot_sh_score(use_this_function=True, selected_cohort=selected_cohort,
                                           cohort_title=cohort_title, use_case_name='frontend', features_df=FEATURES_DF,

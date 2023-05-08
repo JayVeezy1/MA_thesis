@@ -3,14 +3,14 @@ import os
 import pandas as pd
 import streamlit as st
 
-from step_5_fairness.fairness_analysis import get_fairness_report
+from step_5_fairness.fairness_analysis import get_fairness_report, create_performance_metrics_plot
 from web_app.util import get_avg_cohort_cache
 
 
 def fairness_page():
     ## Start of Page: User Input Selector
     st.markdown("<h2 style='text-align: left; color: black;'>Fairness Analysis</h2>", unsafe_allow_html=True)
-    col1, col2, col3, col4 = st.columns((0.25, 0.25, 0.25, 0.25))
+    col1, col2, col3 = st.columns((0.25, 0.25, 0.25))
     ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
                                      'death_365_days']
     selected_variable = col1.selectbox(label='Select dependent variable', options=ALL_DEPENDENT_VARIABLES)
@@ -37,7 +37,7 @@ def fairness_page():
                                                selected_patients=[])  # empty = all
         ALL_FEATURES = list(selected_cohort.columns)
         default_values = [x for x in ALL_FEATURES if x not in ALL_DEPENDENT_VARIABLES]
-        selected_features = col4.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
+        selected_features = st.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
 
         ## Select Classification Specific Parameters
         col5, col6, col7, col8 = st.columns((0.25, 0.25, 0.25, 0.25))
@@ -50,25 +50,28 @@ def fairness_page():
             use_grid_search = True
         else:
             use_grid_search = False
-
-        ## Fairness Report
-        fairness_report = get_fairness_report(use_this_function=True,
-                                              selected_cohort=selected_cohort,
-                                              cohort_title=cohort_title,
-                                              features_df=FEATURES_DF,
-                                              selected_features=selected_features,
-                                              selected_dependent_variable=selected_variable,
-                                              classification_method=classification_method,
-                                              sampling_method=sampling_method,
-                                              use_case_name='frontend',
-                                              save_to_file=False,
-                                              plot_performance_metrics=False,
-                                              use_grid_search=use_grid_search,
-                                              verbose=False)
+        st.markdown('___')
 
 
-        ## Performance Metrics Plot
+        ## Fairness Report and Performance Metrics Plot
+        fairness_report, metrics_plot = get_fairness_report(use_this_function=True,
+                                                  selected_cohort=selected_cohort,
+                                                  cohort_title=cohort_title,
+                                                  features_df=FEATURES_DF,
+                                                  selected_features=selected_features,
+                                                  selected_dependent_variable=selected_variable,
+                                                  classification_method=classification_method,
+                                                  sampling_method=sampling_method,
+                                                  use_case_name='frontend',
+                                                  save_to_file=False,
+                                                  plot_performance_metrics=True,
+                                                  use_grid_search=use_grid_search,
+                                                  verbose=False)
+
 
         col1, col2 = st.columns((0.5, 0.5))
+        col1.markdown("<h2 style='text-align: left; color: black;'>Fairness Report</h2>", unsafe_allow_html=True)
         col1.dataframe(fairness_report)
 
+        col2.markdown("<h2 style='text-align: left; color: black;'>Subgroups Comparison</h2>", unsafe_allow_html=True)
+        col2.pyplot(metrics_plot)

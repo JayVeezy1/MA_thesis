@@ -9,6 +9,7 @@ from matplotlib import pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score, roc_auc_score, recall_score
 
 from step_4_classification.classification import split_classification_data
+from step_4_classification.classification_deeplearning import get_sequential_model, split_classification_data_DL
 
 
 # TODO: here use the microsoft fairness package for visualization?
@@ -35,9 +36,11 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
                                                    figsize=[12, 8],
                                                    title=f'Metrics per Subgroup on {attributes_string}')
 
+    performance_metrics_plot = figure_object[0][0].figure
+
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%H_%M_%S")  # removed %d%m%Y_ from date
-        figure_object[0][0].figure.savefig(
+        performance_metrics_plot.savefig(
             f'./output/{use_case_name}/classification/PLOT_FAIRNESS_{attributes_string}_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png',
             dpi=600)
 
@@ -58,7 +61,9 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
         print(metric_frame.overall)
         print('CHECK: Metrics by group:')
         print(metric_frame.by_group)
-        plt.show()
+        # plt.show()
+
+    # plt.close()
 
     # todo future research: Extensions for Fairness Metrics
     # Extension 1: Check if 7.2.1 makes sense to plot ROC curve for groups https://afraenkel.github.io/fairness-book/content/07-score-functions.html
@@ -66,7 +71,7 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
     # This would be useful for threshold optimization, but can I even change threshold anywhere?
     # https://github.com/Trusted-AI/AIF360/blob/master/examples/tutorial_medical_expenditure.ipynb follow this
 
-    return None
+    return performance_metrics_plot
 
 
 @st.cache_data
@@ -81,9 +86,19 @@ def get_fairness_report(use_this_function: False, selected_cohort,
         return None
 
     # 0) get_classification_basics
-    clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
-        selected_cohort, cohort_title, features_df, selected_features,
-        selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
+    if classification_method == 'deeplearning_sequential':
+        x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data_DL(
+            selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=features_df,
+            selected_features=selected_features,
+            selected_dependent_variable=selected_dependent_variable,
+            sampling_method=sampling_method, verbose=verbose)
+        model, history = get_sequential_model(x_train_final=x_train_final, y_train_final=y_train_final)
+
+    else:
+
+        clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
+            selected_cohort, cohort_title, features_df, selected_features,
+            selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
 
     # 1) select unprivileged_groups and their respective values
     # IMPORTANT: adjust selected_privileged_classes depending on selected_protected_attributes
@@ -103,7 +118,11 @@ def get_fairness_report(use_this_function: False, selected_cohort,
 
     # create dataset_pred
     dataset_pred = dataset.copy()
-    predicted_labels = clf.predict(x_test_basic)
+    if classification_method == 'deeplearning_sequential':
+        predicted_labels = model.predict(x=x_test_basic, batch_size=128).round()
+        # round() needed to get from sigmoid probability to class value 0 or 1
+    else:
+        predicted_labels = clf.predict(x_test_basic)
     dataset_pred.labels = predicted_labels
 
     # derive privileged groups for all protected_attribute_names
@@ -184,7 +203,7 @@ def get_fairness_report(use_this_function: False, selected_cohort,
         # check where all selected columns contain a 1
         all_ones_array = temp_df.apply(lambda x: all(x == 1), axis=1).astype(int)
         # temp_df['new_checking_column'] = all_ones_array.astype(int)
-        create_performance_metrics_plot(y_pred=predicted_labels,
+        performance_metrics_plot = create_performance_metrics_plot(y_pred=predicted_labels,
                                         y_true=y_test_basic,
                                         selected_attribute_array=all_ones_array,
                                         use_case_name=use_case_name,
@@ -193,6 +212,8 @@ def get_fairness_report(use_this_function: False, selected_cohort,
                                         cohort_title=cohort_title,
                                         sampling_title=sampling_title,
                                         save_to_file=save_to_file)
+    else:
+        performance_metrics_plot = None
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%H_%M_%S")  # removed %d%m%Y_ from date
@@ -203,4 +224,4 @@ def get_fairness_report(use_this_function: False, selected_cohort,
             report.to_csv(output_file, index=True)  # keep index here for metrics titles
             print(f'STATUS: fairness_report was saved to {report_filename}')
 
-    return report
+    return report, performance_metrics_plot

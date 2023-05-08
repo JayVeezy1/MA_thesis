@@ -12,7 +12,7 @@ from web_app.util import get_avg_cohort_cache
 def data_analysis_page():
     ## Start of Page: User Input Selector
     st.markdown("<h2 style='text-align: left; color: black;'>General Data Analysis</h2>", unsafe_allow_html=True)
-    col1, col2, col3, col4 = st.columns((0.25, 0.25, 0.25, 0.25))
+    col1, col2, col3 = st.columns((0.25, 0.25, 0.25))
     ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days', 'death_365_days']
     selected_variable = col1.selectbox(label='Select dependent variable', options=ALL_DEPENDENT_VARIABLES)
     ALL_DATABASES: list = ['complete', 'metavision', 'carevue']
@@ -37,7 +37,8 @@ def data_analysis_page():
                                              selected_patients=[])  # empty = all
         ALL_FEATURES = list(selected_cohort.columns)
         default_values = [x for x in ALL_FEATURES if x not in ALL_DEPENDENT_VARIABLES]
-        selected_features = col4.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
+        selected_features = st.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
+        st.markdown('___')
 
         ## General Statistics DF
         st.markdown("<h2 style='text-align: left; color: black;'>Features Overview Table</h2>", unsafe_allow_html=True)

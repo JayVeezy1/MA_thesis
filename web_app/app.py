@@ -34,7 +34,7 @@ def create_streamlit_frontend():
     menu['function']()
 
     # Add Spaces Before Links
-    for i in range(0, 26):
+    for i in range(0, 25):
         st.sidebar.markdown(' ')
     st.sidebar.markdown('---')
 
