@@ -733,7 +733,7 @@ def plot_k_prot_on_pacmap(use_this_function, display_sh_score, selected_cohort, 
 
 def plot_SLINK_on_pacmap(use_this_function, display_sh_score, selected_cohort, cohort_title, use_case_name,
                          features_df, selected_features, selected_dependent_variable,
-                         use_encoding, show_dendrogram, save_to_file):
+                         use_encoding, show_dendrogram, separation_criterion, threshold, save_to_file):
     if not use_this_function:
         return None
 
@@ -770,16 +770,8 @@ def plot_SLINK_on_pacmap(use_this_function, display_sh_score, selected_cohort, c
     dendrogram_dict = dendrogram(slink_z, orientation='right')      # dendrogram can be used to check ideal threshold t for fcluster()
 
     # Derive optimal cluster-split threshold t
-    # TODO: build optimization loop function to find ideal t
-    # TODO: make these parameters selectable for web-user
-    separation_criterion = 'distance'
-    threshold = 1.42
+    # todo long term: build optimization loop function to find ideal t
     clusters_list = fcluster(Z=slink_z, t=threshold, criterion=separation_criterion)    # fcluster=flat clusters, criterion=how to separate clusters, t=threshold for clusters
-    # todo: maybe better use different fcluster? maybe 'maxcluster'? -> read the docs!
-
-    # with criterion='inconsistent': t = 1.1547 results in only 1 cluster, 1.15469 results in 57 clusters
-    # with 'distance': t = 1.4 result = 41 clusters, sh_score = 0.27
-    # with t= 1.42 result = 29 clusters, sh_score = 0.16
 
      # Get sh_score
     cluster_count = len(set(clusters_list))
@@ -802,4 +794,4 @@ def plot_SLINK_on_pacmap(use_this_function, display_sh_score, selected_cohort, c
                                pacmap_data_points=pacmap_data_points, cluster_count=cluster_count,
                                sh_score=sh_score, coloring=clusters_list, save_to_file=save_to_file)
 
-    return slink_plot
+    return slink_plot, clusters_list, slink_z

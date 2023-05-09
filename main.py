@@ -183,7 +183,9 @@ if __name__ == '__main__':
                                      save_to_file=SELECT_SAVE_FILES)
 
     # SLINK
-    clustering.plot_SLINK_on_pacmap(use_this_function=True,
+    SELECTED_CRITERION = 'distance'     # options: inconsistent | maxclust | monocrit
+    SELECTED_THRESHOLD = 1.41
+    clustering.plot_SLINK_on_pacmap(use_this_function=False,
                                     display_sh_score=False,
                                     selected_cohort=SELECTED_COHORT_preprocessed,
                                     cohort_title=SELECTED_COHORT_TITLE,
@@ -193,8 +195,9 @@ if __name__ == '__main__':
                                     selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                     use_encoding=False,
                                     show_dendrogram=False,
+                                    separation_criterion=SELECTED_CRITERION,
+                                    threshold=SELECTED_THRESHOLD,
                                     save_to_file=SELECT_SAVE_FILES)
-
 
     ### Machine Learning Predictions
     # Step 4.1) Classification: (RandomForest, XGBoost, ...)
@@ -330,7 +333,7 @@ if __name__ == '__main__':
     #                                                          save_to_file=True)
 
     ### Step 7.1) Streamlit App for Visualization
-    start_streamlit_frontend(use_this_function=False)
+    start_streamlit_frontend(use_this_function=True)
 
     print(f'\nSTATUS: Analysis finished for {len(SELECTED_FEATURES)} selected_features.')
     time_diff = datetime.now() - starting_time
