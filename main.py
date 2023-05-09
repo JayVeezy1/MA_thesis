@@ -182,6 +182,20 @@ if __name__ == '__main__':
                                      use_encoding=True,
                                      save_to_file=SELECT_SAVE_FILES)
 
+    # SLINK
+    clustering.plot_SLINK_on_pacmap(use_this_function=True,
+                                    display_sh_score=False,
+                                    selected_cohort=SELECTED_COHORT_preprocessed,
+                                    cohort_title=SELECTED_COHORT_TITLE,
+                                    use_case_name=USE_CASE_NAME,
+                                    features_df=FEATURES_DF,
+                                    selected_features=SELECTED_FEATURES,
+                                    selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                    use_encoding=False,
+                                    show_dendrogram=False,
+                                    save_to_file=SELECT_SAVE_FILES)
+
+
     ### Machine Learning Predictions
     # Step 4.1) Classification: (RandomForest, XGBoost, ...)
     SELECTED_CLASSIFICATION_METHOD = 'XGBoost'  # options: RandomForest | XGBoost || NOT deeplearning_sequential -> use function get_classification_report_deeplearning()
@@ -258,7 +272,7 @@ if __name__ == '__main__':
 
     # Input: selected_cohort and its ideal kmeans cluster-count
     # Output: table of prediction quality per cluster, rows = different model configs (per classification_method and dependent_variable)
-    classification.compare_classification_models_on_clusters(use_this_function=True,  # True | False
+    classification.compare_classification_models_on_clusters(use_this_function=False,  # True | False
                                                              use_case_name=USE_CASE_NAME,
                                                              features_df=FEATURES_DF,
                                                              selected_features=SELECTED_FEATURES,
@@ -289,8 +303,7 @@ if __name__ == '__main__':
 
     ### Automated Subgroup detection
     # Step 6.1) Calculate automated Subgroups and related fairness metrics -> Inside ASDF-Dashboard
-    # TODO: get distance matrix for SLINK algorithm, cluster patients with SLINK -> what parameters needed? Or automated?
-    # also display clusters with: scipy.cluster.hierarchy.fcluster(Z,5,'maxclust')
+    # TODO: cluster patients with SLINK -> what parameters needed? Or automated?
     # TODO: get clusters with features and their value distribution in a table (already available at clusters?)
     # TODO: calculate the entropy value of each feature per cluster (build the formula with log), decide if ranking or threshold (?)
     # TODO: use subgroups as selector to calculate fairness measures

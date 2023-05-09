@@ -11,6 +11,8 @@ from numpy import sort
 from sklearn.cluster import KMeans, DBSCAN
 from sklearn.metrics import silhouette_score
 from kmodes.kprototypes import KPrototypes
+from scipy.cluster.hierarchy import linkage, dendrogram, fcluster, ward
+from scipy.spatial.distance import pdist
 
 from step_2_preprocessing.preprocessing_functions import get_one_hot_encoding
 from step_3_data_analysis import data_visualization
@@ -80,9 +82,11 @@ def get_ids_for_cluster(avg_patient_cohort, cohort_title, features_df, selected_
 
 def plot_clusters_on_3D_pacmap(plot_title, use_case_name, pacmap_data_points, cluster_count, sh_score, coloring,
                                save_to_file):
-    if cluster_count > 15:
-        cluster_count = 15
-    color_map = cm.get_cmap('brg', cluster_count)  # old: tab20c
+    if cluster_count > 15 or cluster_count is None:
+        color_count = 15
+    else:
+        color_count = cluster_count
+    color_map = cm.get_cmap('brg', color_count)  # old: tab20c
 
     fig = plt.figure()
     fig.tight_layout(h_pad=2, w_pad=2)
@@ -101,10 +105,10 @@ def plot_clusters_on_3D_pacmap(plot_title, use_case_name, pacmap_data_points, cl
     plt.legend()
 
     if save_to_file:
-        plt.show()
         plt.savefig(
-            f'./output/{use_case_name}/clustering/clustering_{plot_title}_{datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")}.png',
+            f'./output/{use_case_name}/clustering/clustering_{plot_title}_{datetime.datetime.now().strftime("%H_%M_%S")}.png',
             dpi=600)
+        plt.show()
     # plt.close()
 
     return plt
@@ -725,3 +729,77 @@ def plot_k_prot_on_pacmap(use_this_function, display_sh_score, selected_cohort, 
                                sh_score=sh_score, coloring=k_prot_list, save_to_file=save_to_file)
 
     return kprot_plot
+
+
+def plot_SLINK_on_pacmap(use_this_function, display_sh_score, selected_cohort, cohort_title, use_case_name,
+                         features_df, selected_features, selected_dependent_variable,
+                         use_encoding, show_dendrogram, save_to_file):
+    if not use_this_function:
+        return None
+
+    # TODO: add sh_score plot
+    # if display_sh_score:
+    #     # check optimal cluster count with sh_score and distortion (SSE) - can be bad if too many features selected
+    #     plot_sh_score(use_this_function=True,  # True | False
+    #                   selected_cohort=selected_cohort,
+    #                   cohort_title=cohort_title,
+    #                   use_case_name=use_case_name,
+    #                   features_df=features_df,
+    #                   selected_features=selected_features,
+    #                   selected_dependent_variable=selected_dependent_variable,
+    #                   use_encoding=use_encoding,
+    #                   clustering_method='kprot',
+    #                   save_to_file=save_to_file)
+
+    # PacMap needed for visualization
+    pacmap_data_points, death_list = data_visualization.calculate_pacmap(selected_cohort=selected_cohort,
+                                                                         cohort_title=cohort_title,
+                                                                         features_df=features_df,
+                                                                         selected_features=selected_features,
+                                                                         selected_dependent_variable=selected_dependent_variable,
+                                                                         use_encoding=use_encoding)
+
+    # Clean up df
+    selected_cohort_preprocessed = preprocess_for_clustering(selected_cohort, features_df, selected_features,
+                                                             selected_dependent_variable,
+                                                             use_encoding=True)     # todo check: use one_hot_encoding for SLINK?
+
+    # Calculate distance matrix and s-linkage dendrogram
+    cdm = pdist(selected_cohort_preprocessed)         # calculate distances to a condensed distance matrix (CDM)
+    slink_z = linkage(cdm, method='single')
+    dendrogram_dict = dendrogram(slink_z, orientation='right')      # dendrogram can be used to check ideal threshold t for fcluster()
+
+    # Derive optimal cluster-split threshold t
+    # TODO: build optimization loop function to find ideal t
+    # TODO: make these parameters selectable for web-user
+    separation_criterion = 'distance'
+    threshold = 1.42
+    clusters_list = fcluster(Z=slink_z, t=threshold, criterion=separation_criterion)    # fcluster=flat clusters, criterion=how to separate clusters, t=threshold for clusters
+    # todo: maybe better use different fcluster? maybe 'maxcluster'? -> read the docs!
+
+    # with criterion='inconsistent': t = 1.1547 results in only 1 cluster, 1.15469 results in 57 clusters
+    # with 'distance': t = 1.4 result = 41 clusters, sh_score = 0.27
+    # with t= 1.42 result = 29 clusters, sh_score = 0.16
+
+     # Get sh_score
+    cluster_count = len(set(clusters_list))
+    try:
+        sh_score = round(silhouette_score(X=selected_cohort_preprocessed.to_numpy(), labels=clusters_list, metric='euclidean', random_state=0), 2)
+    except ValueError as e:
+        print('Warning: ValueError because only one label. sh_score is set to 0.', e)
+        sh_score = 0
+
+    # Plotting
+    plot_title = f'SLINK_{cohort_title}_{separation_criterion}_t_{threshold}'
+    if show_dendrogram and save_to_file:
+        plt.savefig(
+            f'./output/{use_case_name}/clustering/dendrogram_{plot_title}_{datetime.datetime.now().strftime("%H_%M_%S")}.png',
+            dpi=600)
+        plt.show()
+        # plt.close()
+
+    slink_plot = plot_clusters_on_3D_pacmap(plot_title=plot_title, use_case_name=use_case_name,
+                               pacmap_data_points=pacmap_data_points, cluster_count=cluster_count,
+                               sh_score=sh_score, coloring=clusters_list, save_to_file=save_to_file)
+
+    return slink_plot
