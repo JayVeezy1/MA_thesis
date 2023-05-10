@@ -37,6 +37,10 @@ def fairness_page():
                                                selected_patients=[])  # empty = all
         ALL_FEATURES = list(selected_cohort.columns)
         default_values = [x for x in ALL_FEATURES if x not in ALL_DEPENDENT_VARIABLES]
+        default_values.insert(0, selected_variable)
+        default_values.remove('age')            # remove these because too many categorical variables
+        default_values.remove('gender')
+        default_values.remove('stroke_type')
         selected_features = st.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
 
         ## Select Classification Specific Parameters

@@ -200,6 +200,10 @@ def clustering_page():
                                                selected_patients=[])  # empty = all
         ALL_FEATURES = list(selected_cohort.columns)
         default_values = [x for x in ALL_FEATURES if x not in ALL_DEPENDENT_VARIABLES]
+        default_values.insert(0, selected_variable)
+        default_values.remove('age')  # remove these because too many categorical variables
+        default_values.remove('gender')
+        default_values.remove('stroke_type')
         selected_features = st.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
 
         ## Select Clustering Specific Parameters
@@ -209,15 +213,15 @@ def clustering_page():
         clustering_method = col5.selectbox(label='Select clustering method', options=ALL_CLUSTERING_METHODS)
         ALL_CRITERIA: list = ['maxclust', 'distance', 'monocrit', 'inconsistent']
         if clustering_method == 'kmeans' or clustering_method == 'kprototype':
-            selected_cluster_count = col6.number_input(label='Select cluster count k', min_value=1, max_value=20, value=2) # , format=None)
+            selected_cluster_count = col6.number_input(label='Select cluster count k', min_value=1, max_value=50, value=3)
             selected_eps = None
             selected_min_sample = None
             selected_criterion = None
             selected_threshold = None
         elif clustering_method == 'DBSCAN':
             selected_cluster_count = None
-            selected_eps = col6.number_input(label='Select epsilon', min_value=0.01, max_value=10.00, value=0.51) # , format=None)
-            selected_min_sample = col7.number_input(label='Select min_sample', min_value=1, max_value=100, value=5) # , format=None)
+            selected_eps = col6.number_input(label='Select epsilon', min_value=0.01, max_value=10.00, value=0.51)
+            selected_min_sample = col7.number_input(label='Select min_sample', min_value=1, max_value=100, value=5)
             selected_criterion = None
             selected_threshold = None
         elif clustering_method == 'SLINK':

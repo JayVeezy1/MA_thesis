@@ -359,8 +359,8 @@ def plot_k_means_on_pacmap(use_this_function: False, display_sh_score: False, se
 def get_clusters_overview_table(original_cohort, selected_features, features_df, cohort_title):
     # creates the base for the base features_overview_table -> Variables | Classification(bins) | Count(complete_set)
 
-    current_overview_table = pd.DataFrame({'Variables': 'total_count',
-                                                      'Classification': 'icustay_ids',
+    current_overview_table = pd.DataFrame({'Features': 'total_count',
+                                                      'Values': 'icustay_ids',
                                                       'complete_set': [original_cohort['icustay_id'].count()],
                                                       })
 
@@ -392,8 +392,8 @@ def get_clusters_overview_table(original_cohort, selected_features, features_df,
                             temp_index, 'unfactorized_value']  # simply use first available unfactorized_value
                         appearance_name = appearance_name.iloc[0] + '_GROUP'
 
-                    temp_df = pd.DataFrame({'Variables': [feature],
-                                                       'Classification': [appearance_name],
+                    temp_df = pd.DataFrame({'Features': [feature],
+                                                       'Values': [appearance_name],
                                                        'complete_set': [original_cohort[feature][
                                                                             original_cohort[
                                                                                 feature] == appearance].count()],
@@ -401,8 +401,8 @@ def get_clusters_overview_table(original_cohort, selected_features, features_df,
                     current_overview_table = pd.concat([current_overview_table, temp_df], ignore_index=True)
             else:
                 for appearance in sort(pd.unique(original_cohort[feature])):
-                    temp_df = pd.DataFrame({'Variables': [feature],
-                                                       'Classification': [appearance],
+                    temp_df = pd.DataFrame({'Features': [feature],
+                                                       'Values': [appearance],
                                                        'complete_set': [original_cohort[feature][
                                                                             original_cohort[
                                                                                 feature] == appearance].count()],
@@ -438,16 +438,16 @@ def get_clusters_overview_table(original_cohort, selected_features, features_df,
                 binning_counts: list = feature_appearances_df['counts'].to_list()
 
                 for i in range(0, len(binning_intervals)):
-                    temp_df = pd.DataFrame({'Variables': [feature],
-                                                       'Classification': [str(binning_intervals[i])],
+                    temp_df = pd.DataFrame({'Features': [feature],
+                                                       'Values': [str(binning_intervals[i])],
                                                        'complete_set': [binning_counts[i]],
                                                        })
                     current_overview_table = pd.concat([current_overview_table, temp_df], ignore_index=True)
 
             except ValueError as e:  # this happens if for the selected cohort (a small cluster) all patients have NaN
                 print(f'WARNING: Column {feature} probably is all-NaN or only one entry. Error-Message: {e}')
-                temp_df = pd.DataFrame({'Variables': [feature],
-                                                   'Classification': ['All Entries NaN'],
+                temp_df = pd.DataFrame({'Features': [feature],
+                                                   'Values': ['All Entries NaN'],
                                                    'complete_set': [0],
                                                    })
                 current_overview_table = pd.concat([current_overview_table, temp_df], ignore_index=True)
@@ -460,8 +460,8 @@ def get_overview_for_cluster(cluster_cohort, selected_features, features_df, cur
     # Adds new columns to the features_overview_table for each cluster
 
     # total_count row
-    current_overview_table.loc[(current_overview_table['Variables'] == 'total_count') & (
-            current_overview_table['Classification'] == 'icustay_ids'), f'cluster_{selected_cluster_number}'] = \
+    current_overview_table.loc[(current_overview_table['Features'] == 'total_count') & (
+            current_overview_table['Values'] == 'icustay_ids'), f'cluster_{selected_cluster_number}'] = \
         cluster_cohort['icustay_id'].count()
 
     # get features_to_factorize
@@ -492,15 +492,15 @@ def get_overview_for_cluster(cluster_cohort, selected_features, features_df, cur
                         appearance_name = temp_fact_df.loc[temp_index, 'unfactorized_value']    # simply use first available unfactorized_value
                         appearance_name = appearance_name.iloc[0] + '_GROUP'
 
-                    current_overview_table.loc[(current_overview_table['Variables'] == feature) & (
+                    current_overview_table.loc[(current_overview_table['Features'] == feature) & (
                             current_overview_table[
-                                'Classification'] == appearance_name), f'cluster_{selected_cluster_number}'] = [
+                                'Values'] == appearance_name), f'cluster_{selected_cluster_number}'] = [
                         (cluster_cohort[feature][cluster_cohort[feature] == appearance].count())]
             else:
                 for appearance in sort(pd.unique(cluster_cohort[feature])):
-                    current_overview_table.loc[(current_overview_table['Variables'] == feature) & (
+                    current_overview_table.loc[(current_overview_table['Features'] == feature) & (
                             current_overview_table[
-                                'Classification'] == appearance), f'cluster_{selected_cluster_number}'] = [
+                                'Values'] == appearance), f'cluster_{selected_cluster_number}'] = [
                         (cluster_cohort[feature][cluster_cohort[feature] == appearance].count())]
 
         # binning needed for vital signs, etc.
@@ -534,14 +534,14 @@ def get_overview_for_cluster(cluster_cohort, selected_features, features_df, cur
                 binning_counts: list = feature_appearances_df['counts'].to_list()
 
                 for i in range(0, len(binning_intervals)):
-                    current_overview_table.loc[(current_overview_table['Variables'] == feature) & (
-                            current_overview_table['Classification'] == str(
+                    current_overview_table.loc[(current_overview_table['Features'] == feature) & (
+                            current_overview_table['Values'] == str(
                         binning_intervals[i])), f'cluster_{selected_cluster_number}'] = binning_counts[i]
 
             except ValueError as e:  # this happens if for the selected cohort (a small cluster) all patients have NaN
                 print(f'WARNING: Column {feature} probably is all-NaN or only one entry. Error-Message: {e}')
                 current_overview_table.loc[
-                    (current_overview_table['Variables'] == feature), f'cluster_{selected_cluster_number}'] = 0
+                    (current_overview_table['Features'] == feature), f'cluster_{selected_cluster_number}'] = 0
 
     # Cleanup of NaN
     current_overview_table.loc[

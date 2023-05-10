@@ -385,7 +385,11 @@ def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, 
 
     # Calculate predictions for x_test
     y_pred = clf.predict_proba(x_test_basic)  # Prediction probabilities (= estimated values of prediction)
-    y_pred = y_pred[:, 1]  # Only the probabilities for positive outcome are kept
+    try:
+        y_pred = y_pred[:, 1]  # Only the probabilities for positive outcome are kept
+    except IndexError as e:
+        print('Warning: IndexError occurred. y_pred is set as [].', e)
+        y_pred = []
 
     # Get auc_score and auc_prc_score
     if y_test_final.sum() == 0:

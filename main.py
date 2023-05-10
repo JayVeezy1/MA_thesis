@@ -43,13 +43,14 @@ if __name__ == '__main__':
     # select_relevant_features.export_final_dataset(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME)
 
     # Step 1.3) Load all .csv files as a 'Patient' Object, use Pickle for Cache
+    DELETE_CACHE = False
     cache_IO.load_data_from_cache(project_path=PROJECT_PATH, features_df=FEATURES_DF, use_case_name=USE_CASE_NAME,
-                                  delete_existing_cache=False)
+                                  delete_existing_cache=DELETE_CACHE)
 
     ### Preprocessing
     # Step 2) Calculate Avg, Filter, Scale, Impute & Interpolate for each patient
     raw_avg_cohort = Patient.get_avg_patient_cohort(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME,
-                                                    features_df=FEATURES_DF, delete_existing_cache=True,
+                                                    features_df=FEATURES_DF, delete_existing_cache=DELETE_CACHE,
                                                     selected_patients=[])   # empty=all
     # Scaling
     SELECTED_COHORT = Patient.get_avg_scaled_data(raw_avg_cohort, FEATURES_DF)

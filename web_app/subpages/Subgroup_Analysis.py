@@ -38,6 +38,10 @@ def subgroup_analysis_page():
                                                selected_patients=[])  # empty = all
         ALL_FEATURES = list(selected_cohort.columns)
         default_values = [x for x in ALL_FEATURES if x not in ALL_DEPENDENT_VARIABLES]
+        default_values.insert(0, selected_variable)
+        default_values.remove('age')            # remove these because too many categorical variables
+        default_values.remove('gender')
+        default_values.remove('stroke_type')
         selected_features = st.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
 
         ## Select Clustering Specific Parameters
@@ -47,7 +51,7 @@ def subgroup_analysis_page():
         ALL_CRITERIA: list = ['maxclust', 'distance', 'monocrit', 'inconsistent']
         if clustering_method == 'kmeans' or clustering_method == 'kprototype':
             selected_cluster_count = col6.number_input(label='Select cluster count k', min_value=1, max_value=20,
-                                                       value=2)  # , format=None)
+                                                       value=3)  # , format=None)
             selected_eps = None
             selected_min_sample = None
             selected_criterion = None
@@ -88,7 +92,14 @@ def subgroup_analysis_page():
                                                                        selected_k_means_count=selected_cluster_count,
                                                                        use_encoding=True,
                                                                        save_to_file=False)
-            st.dataframe(clusters_overview_table, use_container_width=True)
+            # hide_dataframe_row_index = """
+            #             <style>
+            #             .row_heading.level0 {display:none}
+            #             .blank {display:none}
+            #             </style>
+            #             """
+            # st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
+            st.dataframe(clusters_overview_table.set_index(clusters_overview_table.columns[0]), use_container_width=True)
             add_download_button(position=None, dataframe=clusters_overview_table, title='clusters_overview_table', cohort_title=cohort_title)
             st.markdown('___')
 

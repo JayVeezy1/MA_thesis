@@ -121,7 +121,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
 
     current_settings = pd.DataFrame([{'dependent_variable': dependent_variable,
                                       'classification_method': classification_method,
-                                      'cluster': 'total_model',
+                                      'cluster': 'complete_set',
                                       'auc_score': total_auc_score,
                                       'auc_prc_score': auc_prc_score,
                                       'accuracy': get_accuracy(total_cm_df),
@@ -171,6 +171,13 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                           }])
         classification_clusters_overview = pd.concat([classification_clusters_overview, current_settings],
                                                      ignore_index=True)
+
+    # cleanup + transpose
+    clusters_list = classification_clusters_overview.loc[:, 'cluster'].values.tolist()
+    classification_clusters_overview = classification_clusters_overview.transpose()
+    classification_clusters_overview.columns = clusters_list
+    classification_clusters_overview.index.name = 'metrics'
+    classification_clusters_overview.drop(labels=['dependent_variable', 'classification_method', 'cluster'], inplace=True)
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%H_%M_%S")
