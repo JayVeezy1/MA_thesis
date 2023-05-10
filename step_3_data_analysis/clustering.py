@@ -115,6 +115,30 @@ def plot_clusters_on_3D_pacmap(plot_title, use_case_name, pacmap_data_points, cl
 
 
 @st.cache_data
+def calculate_cluster_SLINK(selected_cohort_preprocessed, cohort_title: str, separation_criterion, threshold, verbose: bool = False):
+    if verbose:
+        print(f'STATUS: Calculating SLINK on {cohort_title} for criterion {separation_criterion} with threshold {threshold}')
+
+    # Calculate distance matrix and s-linkage dendrogram
+    cdm = pdist(selected_cohort_preprocessed)  # calculate distances to a condensed distance matrix (CDM)
+    slink_z = linkage(cdm, method='single')
+
+    # Get clusters for selected threshold t
+    clusters_list = fcluster(Z=slink_z, t=threshold, criterion=separation_criterion)  # fcluster=flat clusters, criterion=how to separate clusters, t=threshold for clusters
+
+    # Get sh_score
+    try:
+        sh_score = round(
+            silhouette_score(X=selected_cohort_preprocessed.to_numpy(), labels=clusters_list, metric='euclidean',
+                             random_state=0), 2)
+    except ValueError as e:
+        print('Warning: ValueError because only one label. sh_score is set to 0.', e)
+        sh_score = 0
+
+    return clusters_list, sh_score, slink_z
+
+
+@st.cache_data
 def calculate_cluster_kmeans(selected_cohort, cohort_title: str, n_clusters: int, verbose: bool = False):
     # k-means clustering: choose amount n_clusters to calculate k centroids for these clusters
     if verbose:
@@ -234,6 +258,51 @@ def plot_sh_score(use_this_function: False, selected_cohort, cohort_title, use_c
         plt.savefig(f'./output/{use_case_name}/clustering/optimal_{clustering_method}_cluster_count_{cohort_title}_{current_time}.png',
                     bbox_inches='tight',
                     dpi=600)
+        plt.show()
+    # plt.close()
+
+    return plt
+
+
+def plot_sh_score_SLINK(use_this_function: False, selected_cohort, cohort_title, use_case_name, features_df,
+                        selected_features, selected_dependent_variable, separation_criterion, threshold,
+                        use_encoding: False, save_to_file: bool = False):
+    if not use_this_function:
+        return None
+
+    # This function displays the Silhouette Score curve. With this an optimal cluster count for k-means can be selected.
+    clustering_method = 'SLINK'
+    print(f'STATUS: Calculating Silhouette Scores for {clustering_method}.')
+    # Get cleaned avg_np
+    selected_cohort_preprocessed = preprocess_for_clustering(selected_cohort=selected_cohort,
+                                                features_df=features_df,
+                                                selected_features=selected_features,
+                                                use_encoding=use_encoding,
+                                                selected_dependent_variable=selected_dependent_variable)
+
+    # Find best k-means cluster option depending on sh_score -> check plot manually
+    krange = list(range(0, int(round(threshold, 0)) * 2))
+    avg_silhouettes = []
+
+    for t in krange:
+        clusters_list, sh_score, slink_z = calculate_cluster_SLINK(selected_cohort_preprocessed=selected_cohort_preprocessed,
+                                                                  cohort_title=cohort_title,
+                                                                  separation_criterion=separation_criterion,
+                                                                  threshold=t,
+                                                                   verbose=False)  # here clusters are calculated
+        avg_silhouettes.append(sh_score)  # silhouette score should be maximal
+
+    # Plot Silhouette Scores -> not in other function, because no SSE available
+    plt.figure(dpi=100)
+    plt.title(f'Silhouette Scores, SLINK on {cohort_title}, criterion: {separation_criterion} t: {threshold}', wrap=True)
+    plt.plot(krange, avg_silhouettes)  # for DBSCAN use eps_range instead of krange
+    plt.xlabel("$t$")
+    plt.ylabel("Average Silhouettes Score")
+    if save_to_file:
+        plt.savefig(
+            f'./output/{use_case_name}/clustering/silhouette_score_SLINK_{cohort_title}.png',
+            dpi=600,
+            bbox_inches='tight')
         plt.show()
     # plt.close()
 
@@ -730,26 +799,24 @@ def plot_k_prot_on_pacmap(use_this_function, display_sh_score, selected_cohort, 
 
     return kprot_plot
 
-
+@st.cache_data
 def plot_SLINK_on_pacmap(use_this_function, display_sh_score, selected_cohort, cohort_title, use_case_name,
                          features_df, selected_features, selected_dependent_variable,
                          use_encoding, show_dendrogram, separation_criterion, threshold, save_to_file):
     if not use_this_function:
         return None
 
-    # TODO: add sh_score plot
-    # if display_sh_score:
-    #     # check optimal cluster count with sh_score and distortion (SSE) - can be bad if too many features selected
-    #     plot_sh_score(use_this_function=True,  # True | False
-    #                   selected_cohort=selected_cohort,
-    #                   cohort_title=cohort_title,
-    #                   use_case_name=use_case_name,
-    #                   features_df=features_df,
-    #                   selected_features=selected_features,
-    #                   selected_dependent_variable=selected_dependent_variable,
-    #                   use_encoding=use_encoding,
-    #                   clustering_method='kprot',
-    #                   save_to_file=save_to_file)
+    if display_sh_score:
+        # check optimal cluster count with sh_score and distortion (SSE) - can be bad if too many features selected
+        plot_sh_score_SLINK(use_this_function=True,  # True | False
+                            selected_cohort=selected_cohort,
+                            cohort_title=cohort_title,
+                            use_case_name=use_case_name,
+                            features_df=features_df,
+                            selected_features=selected_features,
+                            selected_dependent_variable=selected_dependent_variable,
+                            use_encoding=use_encoding,
+                            save_to_file=save_to_file)
 
     # PacMap needed for visualization
     pacmap_data_points, death_list = data_visualization.calculate_pacmap(selected_cohort=selected_cohort,
@@ -762,24 +829,13 @@ def plot_SLINK_on_pacmap(use_this_function, display_sh_score, selected_cohort, c
     # Clean up df
     selected_cohort_preprocessed = preprocess_for_clustering(selected_cohort, features_df, selected_features,
                                                              selected_dependent_variable,
-                                                             use_encoding=True)     # todo check: use one_hot_encoding for SLINK?
-
-    # Calculate distance matrix and s-linkage dendrogram
-    cdm = pdist(selected_cohort_preprocessed)         # calculate distances to a condensed distance matrix (CDM)
-    slink_z = linkage(cdm, method='single')
-    dendrogram_dict = dendrogram(slink_z, orientation='right')      # dendrogram can be used to check ideal threshold t for fcluster()
-
-    # Derive optimal cluster-split threshold t
-    # todo long term: build optimization loop function to find ideal t
-    clusters_list = fcluster(Z=slink_z, t=threshold, criterion=separation_criterion)    # fcluster=flat clusters, criterion=how to separate clusters, t=threshold for clusters
-
-     # Get sh_score
+                                                             use_encoding=True)
+    clusters_list, sh_score, slink_z = calculate_cluster_SLINK(selected_cohort_preprocessed=selected_cohort_preprocessed,
+                                                               cohort_title=cohort_title,
+                                                               separation_criterion=separation_criterion,
+                                                               threshold=threshold,
+                                                               verbose=False)
     cluster_count = len(set(clusters_list))
-    try:
-        sh_score = round(silhouette_score(X=selected_cohort_preprocessed.to_numpy(), labels=clusters_list, metric='euclidean', random_state=0), 2)
-    except ValueError as e:
-        print('Warning: ValueError because only one label. sh_score is set to 0.', e)
-        sh_score = 0
 
     # Plotting
     plot_title = f'SLINK_{cohort_title}_{separation_criterion}_t_{threshold}'
@@ -791,7 +847,7 @@ def plot_SLINK_on_pacmap(use_this_function, display_sh_score, selected_cohort, c
         # plt.close()
 
     slink_plot = plot_clusters_on_3D_pacmap(plot_title=plot_title, use_case_name=use_case_name,
-                               pacmap_data_points=pacmap_data_points, cluster_count=cluster_count,
-                               sh_score=sh_score, coloring=clusters_list, save_to_file=save_to_file)
+                                            pacmap_data_points=pacmap_data_points, cluster_count=cluster_count,
+                                            sh_score=sh_score, coloring=clusters_list, save_to_file=save_to_file)
 
-    return slink_plot, clusters_list, slink_z
+    return selected_cohort_preprocessed, clusters_list, slink_z, sh_score, pacmap_data_points

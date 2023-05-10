@@ -333,7 +333,7 @@ if __name__ == '__main__':
     #                                                          save_to_file=True)
 
     ### Step 7.1) Streamlit App for Visualization
-    start_streamlit_frontend(use_this_function=True)
+    start_streamlit_frontend(use_this_function=False)
 
     print(f'\nSTATUS: Analysis finished for {len(SELECTED_FEATURES)} selected_features.')
     time_diff = datetime.now() - starting_time
