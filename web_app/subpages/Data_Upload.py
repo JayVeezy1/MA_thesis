@@ -74,6 +74,7 @@ def data_upload_page():
         # Subgroups
         calculate_clusters_overview_table.clear()
         compare_classification_models_on_clusters.clear()
+
     st.markdown('___')
 
 

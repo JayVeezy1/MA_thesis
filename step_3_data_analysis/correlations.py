@@ -276,7 +276,9 @@ def plot_correlations(use_this_function: False, use_plot_heatmap: False, use_plo
                      use_case_name, save_to_file)
     if use_plot_pairplot:
         plot_pairplot(cohort_title, selected_cohort, features_df, selected_features, selected_dependent_variable,
-                      use_case_name, save_to_file)
+                      selected_patients=100,
+                      use_case_name=use_case_name,
+                      save_to_file=save_to_file)
 
     return plt
 
@@ -332,7 +334,7 @@ def plot_heatmap(cohort_title: str, selected_cohort, features_df, selected_featu
 
 
 def plot_pairplot(cohort_title: str, selected_cohort, features_df, selected_features: list,
-                  selected_dependent_variable: str, use_case_name: str,
+                  selected_dependent_variable: str, use_case_name: str, selected_patients: int,
                   save_to_file: bool = False):
     ## 0) Preprocessing
     preprocessed_cohort, preprocessed_features = preprocess_for_correlation(
@@ -362,11 +364,12 @@ def plot_pairplot(cohort_title: str, selected_cohort, features_df, selected_feat
 
     # Get selected_labels_df
     selected_labels_df = preprocessed_cohort.filter(preprocessed_features, axis=1)
-    avg_df_small = selected_labels_df.iloc[:100]  # scatter plot with only 100 patients
+    avg_df_small = selected_labels_df.iloc[:selected_patients]  # scatter plot with only 100 patients
 
     # Pairplot of selected_features
     sns.set_style('darkgrid')
     pairplot = sns.pairplot(avg_df_small, corner=True, kind='scatter', diag_kind='hist')
+    sns.set_style('white')
 
     if save_to_file:
         plt.savefig(
@@ -374,4 +377,4 @@ def plot_pairplot(cohort_title: str, selected_cohort, features_df, selected_feat
             dpi=600)
     plt.show()
 
-    return None
+    return pairplot.figure

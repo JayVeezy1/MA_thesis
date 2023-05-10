@@ -122,7 +122,7 @@ def calculate_feature_overview_table(use_this_function: False, selected_cohort, 
                                                                 selected_dependent_variable=selected_dependent_variable)
 
     # create overview_df
-    data = {'Variables': ['total_count'], 'Classification': ['icustay_ids'], 'Count': [len(selected_cohort.index)],
+    data = {'Features': ['total_count'], 'Values': ['icustay_ids'], 'Count': [len(selected_cohort.index)],
             'NaN_Count': ['0'], f'Correlation_to_{selected_dependent_variable}': ['-'], 'p_value': ['-']}
     overview_df = pd.DataFrame(data)
 
@@ -157,8 +157,8 @@ def calculate_feature_overview_table(use_this_function: False, selected_cohort, 
 
                     temp_corr_value = correlation_validity_df.loc[feature, 'correlation'].item()
                     temp_p_value = correlation_validity_df.loc[feature, 'p_value'].item()
-                    temp_df = pd.DataFrame({'Variables': [feature],
-                                            'Classification': [appearance_name],
+                    temp_df = pd.DataFrame({'Features': [feature],
+                                            'Values': [appearance_name],
                                             'Count': [selected_cohort[feature][
                                                           selected_cohort[feature] == appearance].count()],
                                             'NaN_Count': Patient.get_NAN_for_feature_in_cohort(selected_cohort,
@@ -170,8 +170,8 @@ def calculate_feature_overview_table(use_this_function: False, selected_cohort, 
                 for appearance in sort(pd.unique(selected_cohort[feature])):
                     temp_corr_value = correlation_validity_df.loc[feature, 'correlation'].item()
                     temp_p_value = correlation_validity_df.loc[feature, 'p_value'].item()
-                    temp_df = pd.DataFrame({'Variables': [feature],
-                                            'Classification': [appearance],
+                    temp_df = pd.DataFrame({'Features': [feature],
+                                            'Values': [appearance],
                                             'Count': [selected_cohort[feature][
                                                           selected_cohort[
                                                               feature] == appearance].count()],
@@ -217,8 +217,8 @@ def calculate_feature_overview_table(use_this_function: False, selected_cohort, 
                 for i in range(0, len(binning_intervals)):
                     temp_corr_value = correlation_validity_df.loc[feature, 'correlation'].item()
                     temp_p_value = correlation_validity_df.loc[feature, 'p_value'].item()
-                    temp_df = pd.DataFrame({'Variables': [feature],
-                                            'Classification': [str(binning_intervals[i])],
+                    temp_df = pd.DataFrame({'Features': [feature],
+                                            'Values': [str(binning_intervals[i])],
                                             'Count': [binning_counts[i]],
                                             'NaN_Count': temp_nan,
                                             f'Correlation_to_{selected_dependent_variable}': [temp_corr_value],
@@ -229,8 +229,8 @@ def calculate_feature_overview_table(use_this_function: False, selected_cohort, 
                 # print(f'WARNING: Column {feature} probably is all-NaN or only one entry. Error-Message: {e}')
                 temp_corr_value = correlation_validity_df.loc[feature, 'correlation'].item()
                 temp_p_value = correlation_validity_df.loc[feature, 'p_value'].item()
-                temp_df = pd.DataFrame({'Variables': [feature],
-                                        'Classification': ['All Entries NaN'],
+                temp_df = pd.DataFrame({'Features': [feature],
+                                        'Values': ['All Entries NaN'],
                                         'Count': [0],
                                         'NaN_Count': len(selected_cohort),
                                         f'Correlation_to_{selected_dependent_variable}': [temp_corr_value],
@@ -242,8 +242,8 @@ def calculate_feature_overview_table(use_this_function: False, selected_cohort, 
             pass
         # other cases, this contains 'unclear' and 'not_for_classification'
         else:
-            temp_df = pd.DataFrame({'Variables': [feature],
-                                    'Classification': [f'no category for: {feature}'],
+            temp_df = pd.DataFrame({'Features': [feature],
+                                    'Values': [f'no category for: {feature}'],
                                     'Count': '-',
                                     'NaN_Count': '-',
                                     f'Correlation_to_{selected_dependent_variable}': ['-'],

@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from step_1_setup_data.cache_IO import load_data_from_cache
-from step_3_data_analysis.correlations import plot_correlations
+from step_3_data_analysis.correlations import plot_correlations, plot_pairplot
 from step_3_data_analysis.general_statistics import calculate_deaths_table, calculate_feature_overview_table
 from web_app.util import get_avg_cohort_cache, add_download_button
 
@@ -39,13 +39,12 @@ def data_analysis_page():
         default_values = [x for x in ALL_FEATURES if x not in ALL_DEPENDENT_VARIABLES]
         default_values.insert(0, selected_variable)
         default_values.remove('age')  # remove these because too many categorical variables
-        default_values.remove('gender')
         default_values.remove('stroke_type')
         selected_features = st.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
         st.markdown('___')
 
         ## General Statistics DF
-        st.markdown("<h2 style='text-align: left; color: black;'>Features Overview Table</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: left; color: black;'>Features Overview</h2>", unsafe_allow_html=True)
         overview_table = calculate_feature_overview_table(use_this_function=True,  # True | False
                                                           selected_cohort=selected_cohort,
                                                           features_df=FEATURES_DF,
@@ -54,13 +53,14 @@ def data_analysis_page():
                                                           use_case_name='frontend',
                                                           selected_dependent_variable=selected_variable,
                                                           save_to_file=False)
-        # CSS to inject markdown, this removes index column from table
-        hide_table_row_index = """ <style>
-                                   thead tr th:first-child {display:none}
-                                   tbody th {display:none}
-                                   </style> """
-        st.markdown(hide_table_row_index, unsafe_allow_html=True)
-        st.table(data=overview_table)
+        # # CSS to inject markdown, this removes index column from table
+        # hide_table_row_index = """ <style>
+        #                            thead tr th:first-child {display:none}
+        #                            tbody th {display:none}
+        #                            </style> """
+        # st.markdown(hide_table_row_index, unsafe_allow_html=True)
+        # st.table(data=overview_table)
+        st.dataframe(data=overview_table.set_index(overview_table.columns[0]), use_container_width=True)
         add_download_button(position=None, dataframe=overview_table, title='overview_table', cohort_title=cohort_title)
         st.markdown('___')
 
@@ -71,13 +71,12 @@ def data_analysis_page():
                                selected_cohort=selected_cohort,
                                save_to_file=False)
         deaths_df = deaths_df.reset_index(drop=True)
-        st.markdown("<h2 style='text-align: left; color: black;'>Death Cases Dataframe</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: left; color: black;'>Mortality Overview</h2>", unsafe_allow_html=True)
         st.dataframe(data=deaths_df.set_index(deaths_df.columns[0]), use_container_width=True)
         add_download_button(position=None, dataframe=deaths_df, title='deaths_df', cohort_title=cohort_title)
         st.markdown('___')
 
         ## Correlation
-        st.markdown("<h2 style='text-align: left; color: black;'>Correlation</h2>", unsafe_allow_html=True)
         correlation_plot = plot_correlations(use_this_function=True,  # True | False
                                        use_plot_heatmap=False,
                                        use_plot_pairplot=False,
@@ -88,10 +87,21 @@ def data_analysis_page():
                                        selected_dependent_variable=selected_variable,
                                        use_case_name='frontend',
                                        save_to_file=False)
-        col1, col2, col3 = st.columns((0.4, 0.3, 0.3))
+        col1, col2, col3 = st.columns((0.6, 0.1, 0.4))
+        col1.markdown("<h2 style='text-align: left; color: black;'>Correlation</h2>", unsafe_allow_html=True)
         col1.pyplot(correlation_plot, use_container_width=True)
 
+        ## Pairplot of 2 Features
+        col3.markdown("<h2 style='text-align: left; color: black;'>Feature Distribution</h2>", unsafe_allow_html=True)
+        selected_features_pairplot = col3.multiselect(label='Select features', options=ALL_FEATURES, default=[selected_variable, 'oasis'], max_selections=3)
+        pairplot = plot_pairplot(cohort_title=cohort_title,
+                      selected_cohort=selected_cohort,
+                      features_df=FEATURES_DF,
+                      selected_features=selected_features_pairplot,
+                      selected_dependent_variable=selected_variable,
+                      selected_patients=100,
+                      use_case_name='frontend',
+                      save_to_file=False)
+        col3.pyplot(pairplot, use_container_width=True)
+
         st.markdown('___')
-
-        # TODO: add visualization (Pacmap or 3-feature-selection-plot) or simply inside Clustering?
-
