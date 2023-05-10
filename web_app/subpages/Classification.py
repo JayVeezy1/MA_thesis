@@ -9,12 +9,12 @@ from matplotlib import pyplot as plt
 from step_4_classification.classification import get_classification_report, get_confusion_matrix
 from step_4_classification.classification_deeplearning import get_classification_report_deeplearning, \
     get_DL_confusion_matrix
-from web_app.util import get_avg_cohort_cache
+from web_app.util import get_avg_cohort_cache, add_download_button
 
 
 def classification_page():
     ## Start of Page: User Input Selector
-    st.markdown("<h2 style='text-align: left; color: black;'>Features Overview Table</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: left; color: black;'>Classification</h1>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns((0.25, 0.25, 0.25))
     ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
                                      'death_365_days']
@@ -156,6 +156,10 @@ def classification_page():
                                                           verbose=False,
                                                           save_to_file=False)
         col3.dataframe(classification_report)
+        add_download_button(position=col3, dataframe=classification_report, title='classification_report', cohort_title=cohort_title)
         accuracy = round(classification_report.loc['accuracy', 'recall'], 2)
         recall = round(classification_report.loc['1.0', 'recall'], 2)
-        col3.write(f'**Key metrics: Accuracy={accuracy}  |  Recall={recall}**')
+        precision = round(classification_report.loc['1.0', 'precision'], 2)
+
+        col3.write(f'**Key metrics: Accuracy={accuracy}  |  Recall={recall}  |  Precision={precision}**')
+        st.markdown('___')

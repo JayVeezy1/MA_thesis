@@ -278,14 +278,14 @@ if __name__ == '__main__':
                                           use_grid_search=USE_GRIDSEARCH,
                                           save_to_file=SELECT_SAVE_FILES)
 
-    ### Automated Subgroup detection
+    ### Subgroup Analysis
     # Step 6.1) Calculate automated Subgroups and related fairness metrics -> Inside ASDF-Dashboard
     # TODO: calculate the entropy value of each feature per cluster (build the formula with log), decide if ranking or threshold (?)
     # TODO: add a clustering visualization plot (pacmap) above or next to the table in frontend -> much more helpful for analysis
     # TODO: use subgroups as selector to calculate fairness measures
     # TODO: display the table and the fairness depending on the subgroup as its own page in frontend
 
-    # Cluster/Subgroup Comparison (currently only for manually selected_cluster_count -> only kmeans/kprot)
+    # Cluster Comparison/Subgroup Detection
     subgroup_analysis.calculate_clusters_overview_table(use_this_function=False,  # True | False
                                                         selected_cohort=SELECTED_COHORT_preprocessed,
                                                         cohort_title=SELECTED_COHORT_TITLE,
@@ -297,8 +297,7 @@ if __name__ == '__main__':
                                                         use_encoding=True,
                                                         save_to_file=SELECT_SAVE_FILES)
 
-    # Input: selected_cohort and its ideal kmeans cluster-count | Output: table of prediction quality per cluster
-    # rows = different model configs (per classification_method and dependent_variable)
+    # Classification Comparison over Clusters (Fairness Pre-Check)
     subgroup_analysis.compare_classification_models_on_clusters(use_this_function=False,  # True | False
                                                                 use_case_name=USE_CASE_NAME,
                                                                 features_df=FEATURES_DF,

@@ -16,7 +16,7 @@ from step_6_subgroup_analysis.subgroup_analysis import calculate_clusters_overvi
 
 def data_upload_page():
     ## Upload Dataset
-    st.markdown("<h2 style='text-align: left; color: black;'>Data Upload</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: left; color: black;'>Data Upload</h1>", unsafe_allow_html=True)
     st.markdown("Please upload Your dataset here. It should be a .csv file of the average patient cohort, where each row is an individual patient with an icustay_id as key. "
                 "The dataset is saved in the data_upload folder in the project files. There can always only be one dataset in usage. "
                 "Important: Be careful not to commit the uploaded avg_patient_cohort.csv into a public repository or share it in any way, as the MIMIC-III data is protected. "
@@ -33,12 +33,26 @@ def data_upload_page():
         upload_filename = upload_filename_string.encode()
         with open(upload_filename, 'w', newline='') as output_file:
             file_df.to_csv(output_file, index=False)
+    st.markdown('___')
+
+    ## Delete Dataset
+    st.markdown("<h2 style='text-align: left; color: black;'>Delete Dataset</h2>", unsafe_allow_html=True)
+    col1, col2 = st.columns((0.1, 0.1))
+    col1.markdown('You can delete the previously uploaded dataset (the avg_patient_cohort.csv file) here.')
+    if col2.button(label='Delete Uploaded File'):
+        file_path = './web_app/data_upload/exports/frontend/avg_patient_cohort.csv'
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+            st.markdown('File was successfully deleted.')
+        else:
+            st.markdown(f'No file exists in {file_path}')
+    st.markdown('___')
 
     ## Clear Cache
     st.markdown("<h2 style='text-align: left; color: black;'>Clear Cache</h2>", unsafe_allow_html=True)
-    st.markdown("Streamlit cacheing enables extremely fast display of tables and plots. Be certain to clear the cache when using a new dataset.")
-
-    if st.button(label='Clear Cache'):
+    col1, col2 = st.columns((0.1, 0.1))
+    col1.markdown("Streamlit cacheing enables extremely fast display of tables and plots. Be certain to clear the cache when using a new dataset.")
+    if col2.button(label='Clear Cache'):
         # This clears all previous cached data
         get_avg_cohort_cache.clear()
         # Classification
@@ -60,14 +74,6 @@ def data_upload_page():
         # Subgroups
         calculate_clusters_overview_table.clear()
         compare_classification_models_on_clusters.clear()
+    st.markdown('___')
 
-    ## Delete Dataset
-    st.markdown("<h2 style='text-align: left; color: black;'>Delete Patient Cohort File</h2>", unsafe_allow_html=True)
-    st.markdown('You can delete the previously uploaded avg_patient_cohort.csv file here.')
-    if st.button(label='Delete Uploaded File'):
-        file_path = './web_app/data_upload/exports/frontend/avg_patient_cohort.csv'
-        if os.path.isfile(file_path):
-            os.remove(file_path)
-            st.markdown('File was successfully deleted.')
-        else:
-            st.markdown(f'No file exists in {file_path}')
+

@@ -4,12 +4,12 @@ import pandas as pd
 import streamlit as st
 
 from step_5_fairness.fairness_analysis import get_fairness_report, create_performance_metrics_plot
-from web_app.util import get_avg_cohort_cache
+from web_app.util import get_avg_cohort_cache, add_download_button
 
 
 def fairness_page():
     ## Start of Page: User Input Selector
-    st.markdown("<h2 style='text-align: left; color: black;'>Fairness Analysis</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: left; color: black;'>Fairness Analysis</h1>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns((0.25, 0.25, 0.25))
     ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
                                      'death_365_days']
@@ -72,6 +72,9 @@ def fairness_page():
         col1, col2 = st.columns((0.5, 0.5))
         col1.markdown("<h2 style='text-align: left; color: black;'>Fairness Report</h2>", unsafe_allow_html=True)
         col1.dataframe(fairness_report)
+        add_download_button(position=col1, dataframe=fairness_report,
+                            title='fairness_report', cohort_title=cohort_title)
 
         col2.markdown("<h2 style='text-align: left; color: black;'>Subgroups Comparison</h2>", unsafe_allow_html=True)
         col2.pyplot(metrics_plot)
+        st.markdown('___')

@@ -77,3 +77,14 @@ def get_avg_cohort_cache(project_path, use_case_name, features_df, selected_data
 
 
     return filtered_avg_cohort
+
+
+def add_download_button(position, dataframe, title, cohort_title):
+    csv_table = dataframe.to_csv(index=False).encode('utf-8')
+    if position is None:
+        col1, col2 = st.columns((0.9, 0.11))
+        col2.download_button(label="Download the table", data=csv_table,
+                             file_name=f'{cohort_title}_{title}.csv', mime="text/csv") # , key='download-csv')
+    else:
+        position.download_button(label="Download the table", data=csv_table,
+                             file_name=f'{cohort_title}_{title}.csv', mime="text/csv")  # , key='download-csv')

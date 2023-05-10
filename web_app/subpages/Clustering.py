@@ -172,7 +172,7 @@ def my_plot_dendrogram(icoords, dcoords, ivl, p, n, mh, orientation, no_labels, 
 
 def clustering_page():
     ## Start of Page: User Input Selector
-    st.markdown("<h2 style='text-align: left; color: black;'>Clustering</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: left; color: black;'>Clustering</h1>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns((0.25, 0.25, 0.25))
     ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
                                      'death_365_days']
@@ -225,7 +225,7 @@ def clustering_page():
             selected_eps = None
             selected_min_sample = None
             selected_criterion = col6.selectbox(label='Select separation criterion', options=ALL_CRITERIA)
-            selected_threshold = col7.number_input(label='Select threshold t', min_value=0.01, max_value=100.00, value=1.00) # , format=None)
+            selected_threshold = col7.number_input(label='Select threshold t', min_value=0.01, max_value=100.00, value=5.00, step=1.00)
         else:
             selected_cluster_count = None
             selected_eps = None
@@ -381,3 +381,5 @@ def clustering_page():
 
         else:
             st.warning('Please select a clustering option.')
+
+    st.markdown('___')

@@ -6,12 +6,12 @@ import streamlit as st
 from step_1_setup_data.cache_IO import load_data_from_cache
 from step_3_data_analysis.correlations import plot_correlations
 from step_3_data_analysis.general_statistics import calculate_deaths_table, calculate_feature_overview_table
-from web_app.util import get_avg_cohort_cache
+from web_app.util import get_avg_cohort_cache, add_download_button
 
 
 def data_analysis_page():
     ## Start of Page: User Input Selector
-    st.markdown("<h2 style='text-align: left; color: black;'>General Data Analysis</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: left; color: black;'>General Data Analysis</h1>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns((0.25, 0.25, 0.25))
     ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days', 'death_365_days']
     selected_variable = col1.selectbox(label='Select dependent variable', options=ALL_DEPENDENT_VARIABLES)
@@ -57,6 +57,8 @@ def data_analysis_page():
                                    </style> """
         st.markdown(hide_table_row_index, unsafe_allow_html=True)
         st.table(data=overview_table)
+        add_download_button(position=None, dataframe=overview_table, title='overview_table', cohort_title=cohort_title)
+        st.markdown('___')
 
         ## Deaths DF
         deaths_df = calculate_deaths_table(use_this_function=True,
@@ -67,6 +69,8 @@ def data_analysis_page():
         deaths_df = deaths_df.reset_index(drop=True)
         st.markdown("<h2 style='text-align: left; color: black;'>Death Cases Dataframe</h2>", unsafe_allow_html=True)
         st.dataframe(data=deaths_df.set_index(deaths_df.columns[0]), use_container_width=True)
+        add_download_button(position=None, dataframe=deaths_df, title='deaths_df', cohort_title=cohort_title)
+        st.markdown('___')
 
         ## Correlation
         st.markdown("<h2 style='text-align: left; color: black;'>Correlation</h2>", unsafe_allow_html=True)
@@ -83,6 +87,7 @@ def data_analysis_page():
         col1, col2, col3 = st.columns((0.4, 0.3, 0.3))
         col1.pyplot(correlation_plot, use_container_width=True)
 
+        st.markdown('___')
 
         # TODO: add visualization (Pacmap or 3-feature-selection-plot) or simply inside Clustering?
 

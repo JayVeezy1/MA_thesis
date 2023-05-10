@@ -5,12 +5,12 @@ import streamlit as st
 
 from step_6_subgroup_analysis.subgroup_analysis import calculate_clusters_overview_table, \
     compare_classification_models_on_clusters
-from web_app.util import get_avg_cohort_cache
+from web_app.util import get_avg_cohort_cache, add_download_button
 
 
 def subgroup_analysis_page():
     ## Start of Page: User Input Selector
-    st.markdown("<h2 style='text-align: left; color: black;'>Subgroups Analysis</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: left; color: black;'>Subgroups Analysis</h1>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns((0.25, 0.25, 0.25))
     ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
                                      'death_365_days']
@@ -89,12 +89,13 @@ def subgroup_analysis_page():
                                                                        use_encoding=True,
                                                                        save_to_file=False)
             st.dataframe(clusters_overview_table, use_container_width=True)
+            add_download_button(position=None, dataframe=clusters_overview_table, title='clusters_overview_table', cohort_title=cohort_title)
             st.markdown('___')
 
 
             ## Select Classification Specific Parameters
             st.markdown("<h2 style='text-align: left; color: black;'>Classification Metrics per Cluster</h2>", unsafe_allow_html=True)
-            st.write('The comparison of prediction metrics across clusters can be an indicator for fairness analysis.')
+            st.write('The comparison of prediction metrics across clusters can be an indicator for a subsequent fairness analysis.')
             col5, col6, col7, col8 = st.columns((0.25, 0.25, 0.25, 0.25))
             ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost',
                                                 'deeplearning_sequential']
@@ -106,7 +107,7 @@ def subgroup_analysis_page():
                 use_grid_search = True
             else:
                 use_grid_search = False
-            st.markdown('___')
+            # st.markdown('___')
 
             # Plot Classification per Cluster Table
             classification_overview_table = compare_classification_models_on_clusters(use_this_function=True,
@@ -125,7 +126,10 @@ def subgroup_analysis_page():
                                                                                       use_encoding=True,
                                                                                       save_to_file=False)
             st.dataframe(classification_overview_table, use_container_width=True)
+            add_download_button(position=None, dataframe=classification_overview_table, title='classification_overview_table', cohort_title=cohort_title)
+            st.markdown('___')
 
         else:
             st.warning('Clusters overview tables only available for clustering methods with preselected cluster count (kmeans and kprototype).')
+            st.markdown('___')
 
