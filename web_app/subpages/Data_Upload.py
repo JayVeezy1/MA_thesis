@@ -10,6 +10,9 @@ from step_3_data_analysis.clustering import calculate_cluster_kmeans, preprocess
     calculate_cluster_kprot, calculate_cluster_dbscan, calculate_cluster_SLINK, plot_SLINK_on_pacmap
 from step_3_data_analysis.data_visualization import calculate_pacmap
 from step_5_fairness.fairness_analysis import get_fairness_report
+from step_6_subgroup_analysis.subgroup_analysis import calculate_clusters_overview_table, \
+    compare_classification_models_on_clusters
+
 
 def data_upload_page():
     ## Upload Dataset
@@ -53,6 +56,10 @@ def data_upload_page():
         calculate_pacmap.clear()
         calculate_cluster_SLINK.clear()
         plot_SLINK_on_pacmap.clear()
+
+        # Subgroups
+        calculate_clusters_overview_table.clear()
+        compare_classification_models_on_clusters.clear()
 
     ## Delete Dataset
     st.markdown("<h2 style='text-align: left; color: black;'>Delete Patient Cohort File</h2>", unsafe_allow_html=True)

@@ -8,6 +8,7 @@ from step_2_preprocessing.preprocessing_functions import get_preprocessed_avg_co
 from step_3_data_analysis import correlations, clustering, general_statistics, data_visualization
 from step_4_classification import classification_deeplearning, classification
 from step_5_fairness import fairness_analysis
+from step_6_subgroup_analysis import subgroup_analysis
 from web_app.util import start_streamlit_frontend
 
 ####### MAIN #######
@@ -154,18 +155,6 @@ if __name__ == '__main__':
                                      use_encoding=False,  # not needed for kPrototypes
                                      save_to_file=SELECT_SAVE_FILES)
 
-    # kmeans: Cluster Comparison (only for manually selected_cluster_count -> only kmeans/kprot)
-    clusters_overview_table = clustering.calculate_clusters_overview_table(use_this_function=False,  # True | False
-                                                                           selected_cohort=SELECTED_COHORT_preprocessed,
-                                                                           cohort_title=SELECTED_COHORT_TITLE,
-                                                                           use_case_name=USE_CASE_NAME,
-                                                                           features_df=FEATURES_DF,
-                                                                           selected_features=SELECTED_FEATURES,
-                                                                           selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                                                           selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
-                                                                           use_encoding=True,
-                                                                           save_to_file=SELECT_SAVE_FILES)
-
     # DBSCAN
     SELECTED_EPS = 0.7  # manually checking silhouette score shows optimal epsilon-min_sample-combination
     SELECTED_MIN_SAMPLE = 5
@@ -273,21 +262,6 @@ if __name__ == '__main__':
                                                            all_dependent_variables=ALL_DEPENDENT_VARIABLES,
                                                            save_to_file=SELECT_SAVE_FILES)
 
-    # Input: selected_cohort and its ideal kmeans cluster-count
-    # Output: table of prediction quality per cluster, rows = different model configs (per classification_method and dependent_variable)
-    classification.compare_classification_models_on_clusters(use_this_function=False,  # True | False
-                                                             use_case_name=USE_CASE_NAME,
-                                                             features_df=FEATURES_DF,
-                                                             selected_features=SELECTED_FEATURES,
-                                                             selected_cohort=SELECTED_COHORT_preprocessed,
-                                                             all_classification_methods=ALL_CLASSIFICATION_METHODS,
-                                                             all_dependent_variables=ALL_DEPENDENT_VARIABLES,
-                                                             selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
-                                                             use_grid_search=True,
-                                                             check_sh_score=True,
-                                                             use_encoding=True,
-                                                             save_to_file=SELECT_SAVE_FILES)
-
     ### Fairness Metrics
     # Step 5.1) Calculate Fairness for manual Subgroups
     fairness_analysis.get_fairness_report(use_this_function=False,  # True | False
@@ -306,18 +280,50 @@ if __name__ == '__main__':
 
     ### Automated Subgroup detection
     # Step 6.1) Calculate automated Subgroups and related fairness metrics -> Inside ASDF-Dashboard
-    # TODO: cluster patients with SLINK -> what parameters needed? Or automated?
-    # TODO: get clusters with features and their value distribution in a table (already available at clusters?)
     # TODO: calculate the entropy value of each feature per cluster (build the formula with log), decide if ranking or threshold (?)
+    # TODO: add a clustering visualization plot (pacmap) above or next to the table in frontend -> much more helpful for analysis
     # TODO: use subgroups as selector to calculate fairness measures
     # TODO: display the table and the fairness depending on the subgroup as its own page in frontend
+
+    # Cluster/Subgroup Comparison (currently only for manually selected_cluster_count -> only kmeans/kprot)
+    subgroup_analysis.calculate_clusters_overview_table(use_this_function=False,  # True | False
+                                                        selected_cohort=SELECTED_COHORT_preprocessed,
+                                                        cohort_title=SELECTED_COHORT_TITLE,
+                                                        use_case_name=USE_CASE_NAME,
+                                                        features_df=FEATURES_DF,
+                                                        selected_features=SELECTED_FEATURES,
+                                                        selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                        selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
+                                                        use_encoding=True,
+                                                        save_to_file=SELECT_SAVE_FILES)
+
+    # Input: selected_cohort and its ideal kmeans cluster-count | Output: table of prediction quality per cluster
+    # rows = different model configs (per classification_method and dependent_variable)
+    subgroup_analysis.compare_classification_models_on_clusters(use_this_function=False,  # True | False
+                                                                use_case_name=USE_CASE_NAME,
+                                                                features_df=FEATURES_DF,
+                                                                selected_features=SELECTED_FEATURES,
+                                                                selected_cohort=SELECTED_COHORT_preprocessed,
+                                                                cohort_title=SELECTED_COHORT_TITLE,
+                                                                classification_method=SELECTED_CLASSIFICATION_METHOD,
+                                                                sampling_method=SELECTED_SAMPLING_METHOD,
+                                                                dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                                clustering_method='kmeans',
+                                                                selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
+                                                                use_grid_search=True,
+                                                                check_sh_score=True,
+                                                                use_encoding=True,
+                                                                save_to_file=SELECT_SAVE_FILES)
+
+    ### Step 7.1) Streamlit App for Visualization
+    start_streamlit_frontend(use_this_function=True)
 
     ### Deprecated: ASDF-Dashboard for visualization  https://github.com/jeschaef/ASDF-Dashboard
     # Important: Start Background Services First
     # Redis: docker run --name redis -p 6379:6379 -d redis (once created 'start' in Docker Desktop)
     # Celery (in second cmd terminal): celery -A frontend.app.celery_app worker -P solo -l info
     # app = start_dashboard_from_main(use_this_function=True)
-    # Needed for upload: use following to create dataset for original fairness visualizations of the ASDF-Dashboard
+    # Needed for upload: use following function to create dataset for original fairness visualizations of the ASDF-Dashboard
     # cohort_classified = classification.get_cohort_classified(use_this_function=False,  # True | False
     #                                                          project_path=PROJECT_PATH,  # to save where avg_cohort is
     #                                                          classification_method=SELECTED_CLASSIFICATION_METHOD,
@@ -331,9 +337,6 @@ if __name__ == '__main__':
     #                                                          use_grid_search=USE_GRIDSEARCH,
     #                                                          verbose=True,
     #                                                          save_to_file=True)
-
-    ### Step 7.1) Streamlit App for Visualization
-    start_streamlit_frontend(use_this_function=False)
 
     print(f'\nSTATUS: Analysis finished for {len(SELECTED_FEATURES)} selected_features.')
     time_diff = datetime.now() - starting_time

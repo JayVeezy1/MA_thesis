@@ -1,7 +1,7 @@
 import streamlit as st
 from PIL import Image
 
-from web_app.subpages.Automated_Subgroups import automated_subgroups_page
+from web_app.subpages.Subgroup_Analysis import subgroup_analysis_page
 from web_app.subpages.Classification import classification_page
 from web_app.subpages.Clustering import clustering_page
 from web_app.subpages.Data_Analysis import data_analysis_page
@@ -29,7 +29,7 @@ def create_streamlit_frontend():
              {'title': 'Clustering', 'function': clustering_page},
              {'title': 'Classification', 'function': classification_page},
              {'title': 'Fairness Analysis', 'function': fairness_page},
-             {'title': 'Automated Subgroups', 'function': automated_subgroups_page}]
+             {'title': 'Subgroup Analysis', 'function': subgroup_analysis_page}]
     menu = st.sidebar.radio(label='Select Page', options=pages, format_func=lambda page: page['title'], label_visibility='collapsed')
     menu['function']()
 

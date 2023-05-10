@@ -572,52 +572,6 @@ def get_kmeans_clusters(original_cohort, features_df, selected_features, selecte
     return kmeans_clusters
 
 
-def calculate_clusters_overview_table(use_this_function: False, selected_cohort, cohort_title, use_case_name,
-                                      features_df, selected_features, selected_dependent_variable,
-                                      selected_k_means_count, use_encoding: False, save_to_file: False):
-    # currently this function is only usable for manually selected cluster_count -> kmeans but not DBSCAN
-    if not use_this_function:
-        return None
-
-    # step 1: get counts for complete dataset -> based on general_statistics.calculate_feature_overview_table
-    clusters_overview_table = get_clusters_overview_table(original_cohort=selected_cohort,
-                                                          selected_features=selected_features,
-                                                          features_df=features_df,
-                                                          cohort_title=cohort_title)
-
-    # step 2: get all clusters as df in a list
-    kmeans_clusters: list = get_kmeans_clusters(
-        original_cohort=selected_cohort,
-        features_df=features_df,
-        selected_features=selected_features,
-        selected_dependent_variable=selected_dependent_variable,
-        selected_k_means_count=selected_k_means_count,
-        use_encoding=use_encoding,
-        verbose=True)
-
-    for i, cluster in enumerate(kmeans_clusters):
-        # step 3: get count of occurrences per bin for this cluster
-        clusters_overview_table = get_overview_for_cluster(cluster_cohort=cluster,
-                                                                      original_cohort=selected_cohort,
-                                                                      selected_features=selected_features,
-                                                                      features_df=features_df,
-                                                                      current_overview_table=clusters_overview_table,
-                                                                      selected_cluster_number=i,
-                                                                      cohort_title=cohort_title)
-
-    if save_to_file:
-        current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
-        filename_string: str = f'./output/{use_case_name}/clustering/clusters_overview_table_{cohort_title}_{current_time}.csv'
-        filename = filename_string.encode()
-        with open(filename, 'w', newline='') as output_file:
-            clusters_overview_table.to_csv(output_file, index=False)
-            print(f'STATUS: clusters_overview_table was saved to {filename_string}')
-    else:
-        print('CHECK: clusters_overview_table:')
-        print(clusters_overview_table)
-
-    return None
-
 @st.cache_data
 def calculate_cluster_dbscan(selected_cohort, eps, min_samples, cohort_title, verbose: bool = False):
     if verbose:
