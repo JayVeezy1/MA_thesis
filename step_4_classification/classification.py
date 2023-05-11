@@ -103,16 +103,23 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
             smote = SMOTENC(categorical_features=categorical_features_positions,
                             sampling_strategy='auto', random_state=1321, k_neighbors=5)
             # smote = SMOTE(random_state=1321)        # this was the old SMOTE version for only numerical features
-
-            smote_x_resampled, smote_y_resampled = smote.fit_resample(basic_x_train, basic_y_train)
-            new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(smote_x_resampled, smote_y_resampled,
-                                                                                test_size=0.2,
-                                                                                random_state=1321)
-            x_train_final = new_x_train
-            y_train_final = new_y_train
-            x_test_final = new_x_test
-            y_test_final = new_y_test
-            sampling_title = 'oversampling_smote'
+            try:
+                smote_x_resampled, smote_y_resampled = smote.fit_resample(basic_x_train, basic_y_train)
+                new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(smote_x_resampled, smote_y_resampled,
+                                                                                    test_size=0.2,
+                                                                                    random_state=1321)
+                x_train_final = new_x_train
+                y_train_final = new_y_train
+                x_test_final = new_x_test
+                y_test_final = new_y_test
+                sampling_title = 'oversampling_smote'
+            except ValueError as e:
+                print('WARNING: ValueError occurred. No sampling possible.', e)
+                x_train_final = basic_x_train
+                y_train_final = basic_y_train
+                x_test_final = basic_x_test
+                y_test_final = basic_y_test
+                sampling_title = 'no_sampling'
 
     elif sampling_method == 'undersampling':  # Undersampling: NearMiss
         # Undersampling: NearMiss
@@ -419,19 +426,30 @@ def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, 
         print('WARNING: No death cases in y_test_final. Calculation of roc_curve not possible.')
         warnings.filterwarnings(action='ignore',
                                 message='No positive samples in y_true, true positive value should be meaningless')  # UndefinedMetricWarning:
-        clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, y_pred)
+        try:
+            clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, y_pred)
+        except ValueError as e:
+            print('Warning: Value Error occurred. clf_fpr and clf_tpr are set to 0. ', e)
+            clf_fpr, clf_tpr, _ = (0, 0, 0)
     else:
-        clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, y_pred)
-        plt.plot(clf_fpr, clf_tpr, label=f'{classification_method} (AUROC = {auc_score})')  # marker='.',
+        try:
+            clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, y_pred)
+            plt.plot(clf_fpr, clf_tpr, label=f'{classification_method} (AUROC = {auc_score})')  # marker='.',
+        except ValueError as e:
+            print('Warning: Value Error occurred. clf_fpr and clf_tpr are set to 0. ', e)
+            clf_fpr, clf_tpr, _ = (0, 0, 0)
 
     # Add a random predictor line to plot
     random_probs = [0 for _ in range(len(y_test_basic))]
     if y_test_basic.sum() == 0:
         pass
     else:
-        random_auc = roc_auc_score(y_test_basic, random_probs)
-        random_fpr, random_tpr, _ = roc_curve(y_test_basic, random_probs)
-        plt.plot(random_fpr, random_tpr, linestyle='--', label=f'Random prediction (AUROC = {random_auc})')
+        try:
+            random_auc = roc_auc_score(y_test_basic, random_probs)
+            random_fpr, random_tpr, _ = roc_curve(y_test_basic, random_probs)
+            plt.plot(random_fpr, random_tpr, linestyle='--', label=f'Random prediction (AUROC = {random_auc})')
+        except ValueError as e:
+            print('Warning: Value Error occurred. random_auc not plotted. ', e)
 
     # Plot Settings
     plt.title(f"{classification_method} for {cohort_title} AUROC: {auc_score}, {sampling_title}", wrap=True)
@@ -448,19 +466,22 @@ def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, 
     # plt.close()
 
     # Plot AUPRC Curve
-    display = PrecisionRecallDisplay.from_predictions(y_test_basic, y_pred,
-                                                      name=f'{classification_method} (AUPRC = {auc_prc_score})')
-    _ = display.ax_.set_title(f'{classification_method} (AUPRC = {auc_prc_score})')
-    plt.title(f"{classification_method} for {cohort_title} AUPRC: {auc_prc_score}, {sampling_title}", wrap=True)
-    if save_to_file:
-        current_time = datetime.datetime.now().strftime("%H_%M_%S")
-        auprc_filename = f'./output/{use_case_name}/classification/AUPRC_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png'
-        plt.savefig(auprc_filename, dpi=600)
-        print(f'STATUS: AUPRC was saved to {auprc_filename}')
-    if show_plot:
-        plt.show()
-    # plt.close()
-    # do not close plt, this throws RunTimeError because TKinter not thread safe https://stackoverflow.com/questions/14694408/runtimeerror-main-thread-is-not-in-main-loop#14695007
+    try:
+        display = PrecisionRecallDisplay.from_predictions(y_test_basic, y_pred,
+                                                          name=f'{classification_method} (AUPRC = {auc_prc_score})')
+        _ = display.ax_.set_title(f'{classification_method} (AUPRC = {auc_prc_score})')
+        plt.title(f"{classification_method} for {cohort_title} AUPRC: {auc_prc_score}, {sampling_title}", wrap=True)
+        if save_to_file:
+            current_time = datetime.datetime.now().strftime("%H_%M_%S")
+            auprc_filename = f'./output/{use_case_name}/classification/AUPRC_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png'
+            plt.savefig(auprc_filename, dpi=600)
+            print(f'STATUS: AUPRC was saved to {auprc_filename}')
+        if show_plot:
+            plt.show()
+        # plt.close()
+        # do not close plt, this throws RunTimeError because TKinter not thread safe https://stackoverflow.com/questions/14694408/runtimeerror-main-thread-is-not-in-main-loop#14695007
+    except ValueError as e:
+        print('Warning: Plotting of PrecisionRecall not possible. ValueError: ', e)
 
     return auc_score, auc_prc_score
 

@@ -472,35 +472,6 @@ def get_refactorized_appearances(cluster_cohort, feature, factorization_df):
     return appearances
 
 
-def get_value_influence(factorization_df, features_to_factorize, cluster_cohort, feature, current_appearance_name, appearances_names_complete):
-    counts = []
-    current_count = 0
-    temp_fact_df = factorization_df.loc[factorization_df['feature'] == feature]
-
-    for appearance_name in appearances_names_complete:
-        if feature in features_to_factorize:
-            temp_index = temp_fact_df['unfactorized_value'] == appearance_name
-            try:
-                appearance_raw = temp_fact_df.loc[temp_index, 'factorized_value'].item()
-            except ValueError as e:
-                appearance_list = temp_fact_df.loc[temp_index, 'factorized_value'].to_list()  # simply use first available unfactorized_value
-                appearance_raw = appearance_list[0]
-        else:
-            appearance_raw = appearance_name
-        count = cluster_cohort[feature][cluster_cohort[feature] == appearance_raw].count()
-        counts.append(count)
-        if appearance_name == current_appearance_name:
-            current_count = count
-    total_count = sum(counts)
-
-    if current_count < 1:
-        value_influence = 0
-    else:
-        value_influence = ((current_count / total_count) * math.log2(current_count / total_count))
-
-    return round(value_influence, 2)
-
-
 def get_feature_entropy(current_overview_table, feature, column_name, appearances_raw):
     entropy = 1
 
@@ -550,29 +521,50 @@ def get_overview_for_cluster(cluster_cohort, selected_features, features_df, cur
                 appearances_raw = sort(pd.unique(cluster_cohort[feature]))
                 appearances_names = sort(pd.unique(cluster_cohort[feature]))
 
+            temp_fact_df = factorization_df.loc[factorization_df['feature'] == feature]
 
             # TODO: Need to change this here! Have to iterate through all available appearances_names_complete, then do count and value_influence for each
-            for i in range(0, len(appearances_raw)):      # not ideal to use indexing in two lists, but name and old, raw value are needed here
-                    # Get Count for this appearance
-                    current_overview_table.loc[(current_overview_table['Features'] == feature) & (
-                            current_overview_table[
-                                'Values'] == appearances_names[i]), f'cluster_{selected_cluster_number}_count'] = [
-                        (cluster_cohort[feature][cluster_cohort[feature] == appearances_raw[i]].count())]
-                    # Get Influence Value for this Appearance (normalized percentage)
-                    current_overview_table.loc[(current_overview_table['Features'] == feature) & (
-                            current_overview_table[
-                                'Values'] == appearances_names[i]), f'cluster_{selected_cluster_number}_value_influence'] = \
-                        get_value_influence(factorization_df=factorization_df,
-                                            features_to_factorize=features_to_refactorize,
-                                            cluster_cohort=cluster_cohort,
-                                            feature=feature,
-                                            current_appearance_name=appearances_names[i],
-                                            appearances_names_complete=appearances_names_complete)
+            # Get count per appearance
+            for appearance_name in appearances_names_complete:
+                # get appearance_raw value
+                if feature in features_to_refactorize:
+                    temp_index = temp_fact_df['unfactorized_value'] == appearance_name
+                    try:
+                        appearance_raw = temp_fact_df.loc[temp_index, 'factorized_value'].item()
+                    except ValueError as e:
+                        appearance_list = temp_fact_df.loc[
+                            temp_index, 'factorized_value'].to_list()  # simply use first available unfactorized_value
+                        appearance_raw = appearance_list[0]
+                else:
+                    appearance_raw = appearance_name
 
-            # Fill Value Influence in the cluster column that are null with default value -1
-            # TODO: does not work
-            # current_overview_table.loc[(current_overview_table[f'cluster_{selected_cluster_number}_value_influence'].isnull()),     # (current_overview_table['Features'] == feature) &
-              #                         f'cluster_{selected_cluster_number}_value_influence'] = -1
+                # Get Count for this appearance
+                current_overview_table.loc[(current_overview_table['Features'] == feature) & ( current_overview_table['Values'] == appearance_name), f'cluster_{selected_cluster_number}_count'] = \
+                        [(cluster_cohort[feature][cluster_cohort[feature] == appearance_raw].count())]
+
+            # Get Influence Value per appearance (normalized percentage)
+            feature_count = cluster_cohort[feature].count()
+            for appearance_name in appearances_names_complete:
+                # get appearance_raw value
+                if feature in features_to_refactorize:
+                    temp_index = temp_fact_df['unfactorized_value'] == appearance_name
+                    try:
+                        appearance_raw = temp_fact_df.loc[temp_index, 'factorized_value'].item()
+                    except ValueError as e:
+                        appearance_list = temp_fact_df.loc[temp_index, 'factorized_value'].to_list()  # simply use first available unfactorized_value
+                        appearance_raw = appearance_list[0]
+                else:
+                    appearance_raw = appearance_name
+
+                appearance_count = cluster_cohort[feature][cluster_cohort[feature] == appearance_raw].count()
+                if appearance_count < 1:
+                    value_influence = 0
+                else:
+                    value_influence = ((appearance_count / feature_count) * math.log2(appearance_count / feature_count))
+
+                current_overview_table.loc[(current_overview_table['Features'] == feature) & (
+                        current_overview_table['Values'] == appearance_name),
+                        f'cluster_{selected_cluster_number}_value_influence'] = round(value_influence, 2)
 
             # Get Feature Entropy (normalized sum of influence values)
             current_overview_table.loc[(current_overview_table['Features'] == feature), f'cluster_{selected_cluster_number}_entropy'] = \

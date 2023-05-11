@@ -315,6 +315,11 @@ if __name__ == '__main__':
 
     ### Step 7.1) Streamlit App for Visualization
     start_streamlit_frontend(use_this_function=True)
+    # TODO next: add a feature-importance table. if death_in_hosp entropy < 0.5 then check for features with entropy < THRESHOLD (maybe: AND feature in 'protected/sensitive_features')
+    # return cluster, feature with its entropy and values with occurrence_count -> display cluster with its dominant values -> relevant (!) subgroup detection
+    # maybe after/below this display a pacmap with the clusters, circle the relevant/interesting clusters in red
+    # still missing: fairness analysis based on clusters (not just the models-comparison-overview table)
+
 
     ### Deprecated: ASDF-Dashboard for visualization  https://github.com/jeschaef/ASDF-Dashboard
     # Important: Start Background Services First
