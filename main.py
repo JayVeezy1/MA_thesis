@@ -28,25 +28,23 @@ if __name__ == '__main__':
     # mimic_to_csv.create_table_all_diagnoses()          # create a necessary table 'all_diagnoses' where for each admission all available diagnoses are saved in the new field 'all_icd_codes' (takes approx. 2 hours)
     # mimic_to_csv.create_supplement_dictionaries()      # create supplementary dictionary files
     # mimic_to_csv.load_comorbidities_into_db()          # create the necessary table 'comorbidity_codes' where the icd9_codes that are used to find important comorbidities are loaded into the DB
-
     # Step 1.1) Export the raw patient data for the specified use_case (icd_list) into .csv files, all available features will be exported
     # metavision stroke use-case has 1232 patients, each takes approx. 30 seconds -> 500 Minutes, 8,5 hours
     # complete stroke cases has 2655 -> 1300 minutes, 20 hours
-    # Run this function only once for the patient-export. Afterwards use .csvs
+    # Run this function only once for the patient-export. Afterward use .csvs
     # mimic_to_csv.export_patients_to_csv(project_path=PROJECT_PATH,
     #                                   use_case_icd_list=selection_icd9_codes.selected_stroke_codes,            # stroke case = icd9_00_stroke_selected
     #                                  use_case_itemids=[],
     #                                 use_case_name=USE_CASE_NAME)
-
     # Step 1.2) Filter final patient.csvs for relevant features and export as 'final_dataset'
     # transform raw.csvs into filtered, final .csvs, also transform carevue feature-names into metavision names
     # select_relevant_features.export_final_dataset(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME)
 
     # Step 1.3) Load all .csv files as a 'Patient' Object, use Pickle for Cache
     DELETE_CACHE = False
+    SELECT_SAVE_FILES = False
     cache_IO.load_data_from_cache(project_path=PROJECT_PATH, features_df=FEATURES_DF, use_case_name=USE_CASE_NAME,
                                   delete_existing_cache=DELETE_CACHE)
-
     ### Preprocessing
     # Step 2) Calculate Avg, Filter, Scale, Impute & Interpolate for each patient
     raw_avg_cohort = Patient.get_avg_patient_cohort(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME,
@@ -60,7 +58,6 @@ if __name__ == '__main__':
     SELECTED_DATABASE = 'complete'
     SELECTED_STROKE_TYPE = 'all_stroke'
     SELECTED_COHORT_TITLE = 'scaled_' + SELECTED_DATABASE + '_avg_cohort_' + SELECTED_STROKE_TYPE
-    SELECT_SAVE_FILES = True
     SELECTED_COHORT_preprocessed = get_preprocessed_avg_cohort(avg_cohort=SELECTED_COHORT,
                                                                features_df=FEATURES_DF,
                                                                selected_database=SELECTED_DATABASE,
@@ -129,7 +126,7 @@ if __name__ == '__main__':
 
     # Step 3.4) Clustering (kmeans, kprototype, DBSCAN, ...)
     # KMEANS
-    SELECTED_KMEANS_CLUSTERS_COUNT = 6  # manually checking silhouette score shows optimal cluster count (higher is better)
+    SELECTED_KMEANS_CLUSTERS_COUNT = 5  # manually checking silhouette score shows optimal cluster count (higher is better)
     clustering.plot_k_means_on_pacmap(use_this_function=False,  # True | False
                                       display_sh_score=False,  # option for sh_score
                                       selected_cohort=SELECTED_COHORT_preprocessed,
@@ -143,7 +140,7 @@ if __name__ == '__main__':
                                       save_to_file=SELECT_SAVE_FILES)
 
     # KPrototypes
-    SELECTED_KPROTO_CLUSTERS_COUNT = 6
+    SELECTED_KPROTO_CLUSTERS_COUNT = 5
     clustering.plot_k_prot_on_pacmap(use_this_function=False,  # True | False
                                      display_sh_score=False,  # option for sh_score
                                      selected_cohort=SELECTED_COHORT_preprocessed,
@@ -287,7 +284,7 @@ if __name__ == '__main__':
     # TODO: display the table and the fairness depending on the subgroup as its own page in frontend
 
     # Cluster Comparison/Subgroup Detection
-    subgroup_analysis.calculate_clusters_overview_table(use_this_function=False,  # True | False
+    subgroup_analysis.calculate_clusters_overview_table(use_this_function=True,  # True | False
                                                         selected_cohort=SELECTED_COHORT_preprocessed,
                                                         cohort_title=SELECTED_COHORT_TITLE,
                                                         use_case_name=USE_CASE_NAME,
@@ -295,6 +292,7 @@ if __name__ == '__main__':
                                                         selected_features=SELECTED_FEATURES,
                                                         selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                                         selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
+                                                        show_value_influences=True,
                                                         use_encoding=True,
                                                         save_to_file=SELECT_SAVE_FILES)
 

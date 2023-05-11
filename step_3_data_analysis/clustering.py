@@ -360,9 +360,9 @@ def get_clusters_overview_table(original_cohort, selected_features, features_df,
     # creates the base for the base features_overview_table -> Variables | Classification(bins) | Count(complete_set)
 
     current_overview_table = pd.DataFrame({'Features': 'total_count',
-                                                      'Values': 'icustay_ids',
-                                                      'complete_set': [original_cohort['icustay_id'].count()],
-                                                      })
+                                          'Values': 'icustay_ids',
+                                          'complete_set_count': [original_cohort['icustay_id'].count()],
+                                          })
 
     # get features_to_factorize
     factorization_df = pd.read_excel(f'./supplements/FACTORIZATION_TABLE.xlsx')
@@ -393,20 +393,17 @@ def get_clusters_overview_table(original_cohort, selected_features, features_df,
                         appearance_name = appearance_name.iloc[0] + '_GROUP'
 
                     temp_df = pd.DataFrame({'Features': [feature],
-                                                       'Values': [appearance_name],
-                                                       'complete_set': [original_cohort[feature][
-                                                                            original_cohort[
-                                                                                feature] == appearance].count()],
-                                                       })
+                                           'Values': [appearance_name],
+                                           'complete_set_count': [original_cohort[feature][original_cohort[feature] == appearance].count()],
+                                           })
                     current_overview_table = pd.concat([current_overview_table, temp_df], ignore_index=True)
             else:
                 for appearance in sort(pd.unique(original_cohort[feature])):
                     temp_df = pd.DataFrame({'Features': [feature],
-                                                       'Values': [appearance],
-                                                       'complete_set': [original_cohort[feature][
-                                                                            original_cohort[
-                                                                                feature] == appearance].count()],
-                                                       })
+                                           'Values': [appearance],
+                                           'complete_set_count': [original_cohort[feature][original_cohort[
+                                                                    feature] == appearance].count()],
+                                           })
                     current_overview_table = pd.concat([current_overview_table, temp_df], ignore_index=True)
         # binning needed for vital signs, etc.
         elif features_df['needs_binning'][features_df['feature_name'] == feature].item() == 'True':
@@ -439,30 +436,99 @@ def get_clusters_overview_table(original_cohort, selected_features, features_df,
 
                 for i in range(0, len(binning_intervals)):
                     temp_df = pd.DataFrame({'Features': [feature],
-                                                       'Values': [str(binning_intervals[i])],
-                                                       'complete_set': [binning_counts[i]],
-                                                       })
+                                           'Values': [str(binning_intervals[i])],
+                                           'complete_set_count': [binning_counts[i]],
+                                           })
                     current_overview_table = pd.concat([current_overview_table, temp_df], ignore_index=True)
 
             except ValueError as e:  # this happens if for the selected cohort (a small cluster) all patients have NaN
                 print(f'WARNING: Column {feature} probably is all-NaN or only one entry. Error-Message: {e}')
                 temp_df = pd.DataFrame({'Features': [feature],
-                                                   'Values': ['All Entries NaN'],
-                                                   'complete_set': [0],
-                                                   })
+                                       'Values': ['All Entries NaN'],
+                                       'complete_set_count': [0],
+                                       })
                 current_overview_table = pd.concat([current_overview_table, temp_df], ignore_index=True)
 
     return current_overview_table
 
 
+def get_refactorized_appearances(cluster_cohort, feature, factorization_df):
+    appearances = []
+    for appearance in sort(pd.unique(cluster_cohort[feature])):
+        if math.isnan(appearance):
+            break
+        # Get unfactorized_value (name)
+        temp_fact_df = factorization_df.loc[factorization_df['feature'] == feature]
+        temp_index = temp_fact_df['factorized_value'] == appearance
+        try:
+            appearance_name = temp_fact_df.loc[temp_index, 'unfactorized_value'].item()
+        except ValueError as e:
+            # print(f'CHECK: multiple unfactorized_values for feature {feature}.')
+            appearance_name = temp_fact_df.loc[
+                temp_index, 'unfactorized_value']  # simply use first available unfactorized_value
+            appearance_name = appearance_name.iloc[0] + '_GROUP'
+        appearances.append(appearance_name)
+
+    return appearances
+
+
+def get_value_influence(factorization_df, features_to_factorize, cluster_cohort, feature, current_appearance_name, appearances_names_complete):
+    counts = []
+    current_count = 0
+    temp_fact_df = factorization_df.loc[factorization_df['feature'] == feature]
+
+    for appearance_name in appearances_names_complete:
+        if feature in features_to_factorize:
+            temp_index = temp_fact_df['unfactorized_value'] == appearance_name
+            try:
+                appearance_raw = temp_fact_df.loc[temp_index, 'factorized_value'].item()
+            except ValueError as e:
+                appearance_list = temp_fact_df.loc[temp_index, 'factorized_value'].to_list()  # simply use first available unfactorized_value
+                appearance_raw = appearance_list[0]
+        else:
+            appearance_raw = appearance_name
+        count = cluster_cohort[feature][cluster_cohort[feature] == appearance_raw].count()
+        counts.append(count)
+        if appearance_name == current_appearance_name:
+            current_count = count
+    total_count = sum(counts)
+
+    if current_count < 1:
+        value_influence = 0
+    else:
+        value_influence = ((current_count / total_count) * math.log2(current_count / total_count))
+
+    return round(value_influence, 2)
+
+
+def get_feature_entropy(current_overview_table, feature, column_name, appearances_raw):
+    entropy = 1
+
+    try:  # this normalization shifts entropy between 0 and 1
+        normalization_factor = (-1 / math.log2(len(appearances_raw)))  # count of possible values for this attribute
+    except ZeroDivisionError as e:
+        print(f'Warning: ZeroDivisionError occurred. Only one feature appearance exists for {feature}. Normalization and entropy is set to 0.', e)
+        normalization_factor = 0
+
+    influence_values = current_overview_table.loc[current_overview_table['Features'] == feature, column_name].to_list()
+    entropy = normalization_factor * sum(influence_values)
+
+    return round(entropy, 2)
+
+
 def get_overview_for_cluster(cluster_cohort, selected_features, features_df, current_overview_table,
-                             original_cohort, selected_cluster_number, cohort_title):
+                             original_cohort, selected_cluster_number, show_value_influences):
     # Adds new columns to the features_overview_table for each cluster
 
     # total_count row
     current_overview_table.loc[(current_overview_table['Features'] == 'total_count') & (
-            current_overview_table['Values'] == 'icustay_ids'), f'cluster_{selected_cluster_number}'] = \
+            current_overview_table['Values'] == 'icustay_ids'), f'cluster_{selected_cluster_number}_count'] = \
         cluster_cohort['icustay_id'].count()
+    # initialisation of entropy columns
+    current_overview_table.loc[(current_overview_table['Features'] == 'total_count') & (
+            current_overview_table['Values'] == 'icustay_ids'), f'cluster_{selected_cluster_number}_value_influence'] = 1
+    current_overview_table.loc[(current_overview_table['Features'] == 'total_count') & (
+            current_overview_table['Values'] == 'icustay_ids'), f'cluster_{selected_cluster_number}_entropy'] = 0
 
     # get features_to_factorize
     factorization_df = pd.read_excel(f'./supplements/FACTORIZATION_TABLE.xlsx')
@@ -473,35 +539,47 @@ def get_overview_for_cluster(cluster_cohort, selected_features, features_df, cur
                                x not in features_to_remove]  # drop features_to_remove from factorization
 
     for feature in selected_features:
+        appearances_names_complete = current_overview_table.loc[current_overview_table['Features'] == feature, 'Values'].to_list()
         # normal case, no binning needed
-        if features_df['needs_binning'][features_df[
-                                            'feature_name'] == feature].item() == 'False':
-
-            # use unfactorized name from supplements factorization_table
+        if features_df['needs_binning'][features_df['feature_name'] == feature].item() == 'False':
+            # use refactorized name from supplements factorization_table
             if feature in features_to_refactorize:
-                for appearance in sort(pd.unique(cluster_cohort[feature])):
-
-                    if math.isnan(appearance):
-                        break
-                    temp_fact_df = factorization_df.loc[factorization_df['feature'] == feature]
-                    temp_index = temp_fact_df['factorized_value'] == appearance
-                    try:
-                        appearance_name = temp_fact_df.loc[temp_index, 'unfactorized_value'].item()
-                    except ValueError as e:
-                        # print(f'CHECK: multiple unfactorized_values for feature {feature}.')
-                        appearance_name = temp_fact_df.loc[temp_index, 'unfactorized_value']    # simply use first available unfactorized_value
-                        appearance_name = appearance_name.iloc[0] + '_GROUP'
-
-                    current_overview_table.loc[(current_overview_table['Features'] == feature) & (
-                            current_overview_table[
-                                'Values'] == appearance_name), f'cluster_{selected_cluster_number}'] = [
-                        (cluster_cohort[feature][cluster_cohort[feature] == appearance].count())]
+                appearances_raw = sort(pd.unique(cluster_cohort[feature]))
+                appearances_names = get_refactorized_appearances(cluster_cohort, feature, factorization_df)
             else:
-                for appearance in sort(pd.unique(cluster_cohort[feature])):
+                appearances_raw = sort(pd.unique(cluster_cohort[feature]))
+                appearances_names = sort(pd.unique(cluster_cohort[feature]))
+
+
+            # TODO: Need to change this here! Have to iterate through all available appearances_names_complete, then do count and value_influence for each
+            for i in range(0, len(appearances_raw)):      # not ideal to use indexing in two lists, but name and old, raw value are needed here
+                    # Get Count for this appearance
                     current_overview_table.loc[(current_overview_table['Features'] == feature) & (
                             current_overview_table[
-                                'Values'] == appearance), f'cluster_{selected_cluster_number}'] = [
-                        (cluster_cohort[feature][cluster_cohort[feature] == appearance].count())]
+                                'Values'] == appearances_names[i]), f'cluster_{selected_cluster_number}_count'] = [
+                        (cluster_cohort[feature][cluster_cohort[feature] == appearances_raw[i]].count())]
+                    # Get Influence Value for this Appearance (normalized percentage)
+                    current_overview_table.loc[(current_overview_table['Features'] == feature) & (
+                            current_overview_table[
+                                'Values'] == appearances_names[i]), f'cluster_{selected_cluster_number}_value_influence'] = \
+                        get_value_influence(factorization_df=factorization_df,
+                                            features_to_factorize=features_to_refactorize,
+                                            cluster_cohort=cluster_cohort,
+                                            feature=feature,
+                                            current_appearance_name=appearances_names[i],
+                                            appearances_names_complete=appearances_names_complete)
+
+            # Fill Value Influence in the cluster column that are null with default value -1
+            # TODO: does not work
+            # current_overview_table.loc[(current_overview_table[f'cluster_{selected_cluster_number}_value_influence'].isnull()),     # (current_overview_table['Features'] == feature) &
+              #                         f'cluster_{selected_cluster_number}_value_influence'] = -1
+
+            # Get Feature Entropy (normalized sum of influence values)
+            current_overview_table.loc[(current_overview_table['Features'] == feature), f'cluster_{selected_cluster_number}_entropy'] = \
+                get_feature_entropy(current_overview_table=current_overview_table,
+                                    feature=feature,
+                                    column_name=f'cluster_{selected_cluster_number}_value_influence',
+                                    appearances_raw=appearances_raw)
 
         # binning needed for vital signs, etc.
         elif features_df['needs_binning'][features_df['feature_name'] == feature].item() == 'True':
@@ -527,25 +605,40 @@ def get_overview_for_cluster(cluster_cohort, selected_features, features_df, cur
                                                                                             feature_max])
                 feature_appearances_df = pd.DataFrame()
                 feature_appearances_df['intervals'] = feature_appearances_series.keys()
-                feature_appearances_df['counts'] = feature_appearances_series.values
                 feature_appearances_df['interval_starts'] = feature_appearances_df['intervals'].map(lambda x: x.left)
-                feature_appearances_df = feature_appearances_df.sort_values(by='interval_starts')
+                feature_appearances_df['counts'] = feature_appearances_series.values
+
+                # todo: Get Entropy for these bins
+                feature_appearances_df['entropies'] = ['todo' for x in feature_appearances_series]
+
                 binning_intervals: list = feature_appearances_df['intervals'].to_list()
+                feature_appearances_df = feature_appearances_df.sort_values(by='interval_starts')
                 binning_counts: list = feature_appearances_df['counts'].to_list()
+                binning_entropies: list = feature_appearances_df['entropies'].to_list()
 
                 for i in range(0, len(binning_intervals)):
+                    # Get Count for this bin
                     current_overview_table.loc[(current_overview_table['Features'] == feature) & (
                             current_overview_table['Values'] == str(
-                        binning_intervals[i])), f'cluster_{selected_cluster_number}'] = binning_counts[i]
+                        binning_intervals[i])), f'cluster_{selected_cluster_number}_count'] = binning_counts[i]
 
+                    # Get Entropy for this bin
+                    # current_overview_table.loc[(current_overview_table['Features'] == feature) & (
+                    #         current_overview_table['Values'] == str(
+                    #     binning_intervals[i])), f'cluster_{selected_cluster_number}_entropy'] = binning_entropies[i]
+#
             except ValueError as e:  # this happens if for the selected cohort (a small cluster) all patients have NaN
                 print(f'WARNING: Column {feature} probably is all-NaN or only one entry. Error-Message: {e}')
                 current_overview_table.loc[
-                    (current_overview_table['Features'] == feature), f'cluster_{selected_cluster_number}'] = 0
+                    (current_overview_table['Features'] == feature), f'cluster_{selected_cluster_number}_count'] = 0
 
     # Cleanup of NaN
     current_overview_table.loc[
-        current_overview_table[f'cluster_{selected_cluster_number}'].isnull(), f'cluster_{selected_cluster_number}'] = 0
+        current_overview_table[f'cluster_{selected_cluster_number}_count'].isnull(), f'cluster_{selected_cluster_number}_count'] = 0
+
+    if not show_value_influences:
+        # current_overview_table.drop(columns.appendix == 'value_influence')
+        current_overview_table.drop(list(current_overview_table.filter(regex='_value_influence')), axis=1, inplace=True)
 
     return current_overview_table
 

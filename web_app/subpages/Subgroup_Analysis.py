@@ -81,6 +81,7 @@ def subgroup_analysis_page():
         if clustering_method == 'kmeans' or clustering_method == 'kprototype':
             st.markdown("<h2 style='text-align: left; color: black;'>Features per Cluster</h2>", unsafe_allow_html=True)
             st.write('The distribution of feature values can be used for subgroup detection.')
+            selected_show_influences = st.checkbox('Show Value Influences in Features Table.')
             clusters_overview_table = calculate_clusters_overview_table(use_this_function=True,
                                                                        selected_cohort=selected_cohort,
                                                                        cohort_title=cohort_title,
@@ -89,6 +90,7 @@ def subgroup_analysis_page():
                                                                        selected_features=selected_features,
                                                                        selected_dependent_variable=selected_variable,
                                                                        selected_k_means_count=selected_cluster_count,
+                                                                       show_value_influences=selected_show_influences,
                                                                        use_encoding=True,
                                                                        save_to_file=False)
             # hide_dataframe_row_index = """

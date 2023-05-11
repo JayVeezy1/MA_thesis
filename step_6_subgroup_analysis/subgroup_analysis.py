@@ -11,17 +11,19 @@ from step_4_classification.classification import get_auc_score, get_confusion_ma
 @st.cache_data
 def calculate_clusters_overview_table(use_this_function: False, selected_cohort, cohort_title, use_case_name,
                                       features_df, selected_features, selected_dependent_variable,
-                                      selected_k_means_count, use_encoding: False, save_to_file: False):
+                                      selected_k_means_count, show_value_influences, use_encoding: False, save_to_file: False):
     # currently this function is only usable for manually selected cluster_count -> kmeans but not DBSCAN
     if not use_this_function:
         return None
 
+    print('STATUS: Starting with subgroup analysis, cluster comparison.')
     # step 1: get counts for complete dataset -> based on general_statistics.calculate_feature_overview_table
     clusters_overview_table = get_clusters_overview_table(original_cohort=selected_cohort,
                                                           selected_features=selected_features,
                                                           features_df=features_df,
                                                           cohort_title=cohort_title)
 
+    # TODO: make selectable for other clustering methods
     # step 2: get all clusters as df in a list
     kmeans_clusters: list = get_kmeans_clusters(
         original_cohort=selected_cohort,
@@ -35,12 +37,12 @@ def calculate_clusters_overview_table(use_this_function: False, selected_cohort,
     for i, cluster in enumerate(kmeans_clusters):
         # step 3: get count of occurrences per bin for this cluster
         clusters_overview_table = get_overview_for_cluster(cluster_cohort=cluster,
-                                                                      original_cohort=selected_cohort,
-                                                                      selected_features=selected_features,
-                                                                      features_df=features_df,
-                                                                      current_overview_table=clusters_overview_table,
-                                                                      selected_cluster_number=i,
-                                                                      cohort_title=cohort_title)
+                                                           original_cohort=selected_cohort,
+                                                           selected_features=selected_features,
+                                                           features_df=features_df,
+                                                           current_overview_table=clusters_overview_table,
+                                                           selected_cluster_number=i,
+                                                           show_value_influences=show_value_influences)
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
@@ -51,7 +53,7 @@ def calculate_clusters_overview_table(use_this_function: False, selected_cohort,
             print(f'STATUS: clusters_overview_table was saved to {filename_string}')
     else:
         print('CHECK: clusters_overview_table:')
-        # print(clusters_overview_table)
+        print(clusters_overview_table)
 
     return clusters_overview_table
 
