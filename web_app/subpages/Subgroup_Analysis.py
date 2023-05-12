@@ -3,8 +3,8 @@ import os
 import pandas as pd
 import streamlit as st
 
-from step_6_subgroup_analysis.subgroup_analysis import calculate_clusters_overview_table, \
-    compare_classification_models_on_clusters
+from step_3_data_analysis.clustering import plot_k_means_on_pacmap
+from step_6_subgroup_analysis.subgroup_analysis import compare_classification_models_on_clusters, derive_subgroups, calculate_feature_influence_table
 from web_app.util import get_avg_cohort_cache, add_download_button
 
 
@@ -45,7 +45,7 @@ def subgroup_analysis_page():
 
         ## Select Clustering Specific Parameters
         col5, col6, col7, col8 = st.columns((0.25, 0.25, 0.25, 0.25))
-        ALL_CLUSTERING_METHODS: list = ['kmeans', 'kprototype', 'DBSCAN', 'SLINK']
+        ALL_CLUSTERING_METHODS: list = ['kmeans']       # todo future research: add ['kprototype', 'DBSCAN', 'SLINK']
         clustering_method = col5.selectbox(label='Select clustering method', options=ALL_CLUSTERING_METHODS)
         ALL_CRITERIA: list = ['maxclust', 'distance', 'monocrit', 'inconsistent']
         if clustering_method == 'kmeans' or clustering_method == 'kprototype':
@@ -78,30 +78,67 @@ def subgroup_analysis_page():
             selected_threshold = None
         st.markdown('___')
 
-        if clustering_method == 'kmeans' or clustering_method == 'kprototype':
+        if clustering_method == 'kmeans':
+            # Cluster Comparison for subgroups_overview
+            col1, col2 = st.columns((0.5, 0.5))
+            col1.markdown("<h2 style='text-align: left; color: black;'>Cluster Entropy Overview</h2>", unsafe_allow_html=True)
+            col1.write('Clusters with low entropy can be indicators for subgroup detection.')
+            subgroups_overview = derive_subgroups(use_this_function=True,     # True | False
+                                                  selected_cohort=selected_cohort,
+                                                  cohort_title=cohort_title,
+                                                  use_case_name='frontend',
+                                                  features_df=FEATURES_DF,
+                                                  selected_features=selected_features,
+                                                  selected_dependent_variable=selected_variable,
+                                                  selected_k_means_count=selected_cluster_count,
+                                                  use_encoding=True,
+                                                  save_to_file=False)
+            col1.dataframe(subgroups_overview.set_index(subgroups_overview.columns[0]), use_container_width=True)
+
+            # Clustering
+            clustering_plot = plot_k_means_on_pacmap(use_this_function=True,
+                                                     display_sh_score=False,
+                                                     selected_cohort=selected_cohort,
+                                                     cohort_title=cohort_title,
+                                                     use_case_name='frontend',
+                                                     features_df=FEATURES_DF,
+                                                     selected_features=selected_features,
+                                                     selected_dependent_variable=selected_variable,
+                                                     selected_cluster_count=selected_cluster_count,
+                                                     use_encoding=True,
+                                                     save_to_file=False)
+            col2.pyplot(clustering_plot, use_container_width=True)
+            st.markdown('___')
+
+            # Feature Influence Table with selected Cluster
             st.markdown("<h2 style='text-align: left; color: black;'>Features per Cluster</h2>", unsafe_allow_html=True)
-            st.write('The distribution of feature values can be used for subgroup detection.')
-            selected_show_influences = st.checkbox('Show Value Influences in Features Table.')
-            clusters_overview_table = calculate_clusters_overview_table(use_this_function=True,
-                                                                       selected_cohort=selected_cohort,
-                                                                       cohort_title=cohort_title,
-                                                                       use_case_name='frontend',
-                                                                       features_df=FEATURES_DF,
-                                                                       selected_features=selected_features,
-                                                                       selected_dependent_variable=selected_variable,
-                                                                       selected_k_means_count=selected_cluster_count,
-                                                                       show_value_influences=selected_show_influences,
-                                                                       use_encoding=True,
-                                                                       save_to_file=False)
-            # hide_dataframe_row_index = """
-            #             <style>
-            #             .row_heading.level0 {display:none}
-            #             .blank {display:none}
-            #             </style>
-            #             """
-            # st.markdown(hide_dataframe_row_index, unsafe_allow_html=True)
-            st.dataframe(clusters_overview_table.set_index(clusters_overview_table.columns[0]), use_container_width=True)
-            add_download_button(position=None, dataframe=clusters_overview_table, title='clusters_overview_table', cohort_title=cohort_title)
+            ALL_FEATURES = list(selected_cohort.columns)
+            selected_features_for_table = st.multiselect(label='Select features for relevance', options=ALL_FEATURES, default=selected_features)
+            st.write('Important: The entropy of features that are selected for the table below, but not used in the clustering above, '
+                     'do not count into the average entropy of the cluster in the table above.')
+
+            CLUSTER_OPTIONS = list(range(0, selected_cluster_count))
+            CLUSTER_OPTIONS.insert(0, 'all')
+            col1, col2, col3 = st.columns((0.25, 0.25, 0.50))
+            selected_cluster = col1.selectbox(label='Select classification method', options=CLUSTER_OPTIONS)
+            col2.write('')
+            col2.write('')
+            col2.write('')
+            selected_show_influences = col2.checkbox('Show Value Influences in Features Table.')
+            feature_influence_df = calculate_feature_influence_table(use_this_function=True,
+                                                                     selected_cohort=selected_cohort,
+                                                                     cohort_title=cohort_title,
+                                                                     use_case_name='frontend',
+                                                                     features_df=FEATURES_DF,
+                                                                     selected_features=selected_features_for_table,
+                                                                     selected_dependent_variable=selected_variable,
+                                                                     selected_k_means_count=selected_cluster_count,
+                                                                     show_value_influences=selected_show_influences,
+                                                                     selected_cluster=selected_cluster,
+                                                                     use_encoding=True,
+                                                                     save_to_file=False)
+            st.dataframe(feature_influence_df.set_index(feature_influence_df.columns[0]), use_container_width=True)
+            add_download_button(position=None, dataframe=feature_influence_df, title='clusters_overview_table', cohort_title=cohort_title)
             st.markdown('___')
 
 

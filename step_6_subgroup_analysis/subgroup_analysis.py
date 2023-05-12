@@ -2,23 +2,24 @@ import datetime
 
 import pandas as pd
 import streamlit as st
+from numpy import mean
 
-from step_3_data_analysis.clustering import get_clusters_overview_table, get_kmeans_clusters, get_overview_for_cluster, \
+from step_3_data_analysis.clustering import get_feature_influence_table, get_kmeans_clusters, get_feature_influence_for_cluster, \
     plot_sh_score
 from step_4_classification.classification import get_auc_score, get_confusion_matrix, get_accuracy, get_recall, get_precision
 
 
 @st.cache_data
-def calculate_clusters_overview_table(use_this_function: False, selected_cohort, cohort_title, use_case_name,
+def calculate_feature_influence_table(use_this_function: False, selected_cohort, cohort_title, use_case_name,
                                       features_df, selected_features, selected_dependent_variable,
-                                      selected_k_means_count, show_value_influences, use_encoding: False, save_to_file: False):
+                                      selected_k_means_count, selected_cluster, show_value_influences, use_encoding: False, save_to_file: False):
     # currently this function is only usable for manually selected cluster_count -> kmeans but not DBSCAN
     if not use_this_function:
         return None
 
     print('STATUS: Starting with subgroup analysis, cluster comparison.')
     # step 1: get counts for complete dataset -> based on general_statistics.calculate_feature_overview_table
-    clusters_overview_table = get_clusters_overview_table(original_cohort=selected_cohort,
+    feature_influence_table = get_feature_influence_table(original_cohort=selected_cohort,
                                                           selected_features=selected_features,
                                                           features_df=features_df,
                                                           cohort_title=cohort_title)
@@ -36,26 +37,39 @@ def calculate_clusters_overview_table(use_this_function: False, selected_cohort,
 
     for i, cluster in enumerate(kmeans_clusters):
         # step 3: get count of occurrences per bin for this cluster
-        clusters_overview_table = get_overview_for_cluster(cluster_cohort=cluster,
+        feature_influence_table = get_feature_influence_for_cluster(cluster_cohort=cluster,
                                                            original_cohort=selected_cohort,
                                                            selected_features=selected_features,
                                                            features_df=features_df,
-                                                           current_overview_table=clusters_overview_table,
+                                                           current_overview_table=feature_influence_table,
                                                            selected_cluster_number=i,
                                                            show_value_influences=show_value_influences)
 
+    if selected_cluster == 'all':
+        feature_influence_table = feature_influence_table
+    else:
+        filtered_columns = ['Features', 'Values', 'complete_set_count']
+
+        all_columns = feature_influence_table.columns.values.tolist()
+        selected_cluster_columns = []
+        for column in all_columns:
+            if column.startswith(f'cluster_{selected_cluster}'):
+                selected_cluster_columns.append(column)
+        filtered_columns.extend(selected_cluster_columns)
+        feature_influence_table = feature_influence_table.loc[:, filtered_columns]
+
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
-        filename_string: str = f'./output/{use_case_name}/subgroup_analysis/clusters_overview_table_{cohort_title}_{current_time}.csv'
+        filename_string: str = f'./output/{use_case_name}/subgroup_analysis/feature_influence_table_{cohort_title}_{current_time}.csv'
         filename = filename_string.encode()
         with open(filename, 'w', newline='') as output_file:
-            clusters_overview_table.to_csv(output_file, index=False)
-            print(f'STATUS: clusters_overview_table was saved to {filename_string}')
+            feature_influence_table.to_csv(output_file, index=False)
+            print(f'STATUS: feature_influence_table was saved to {filename_string}')
     else:
-        print('CHECK: clusters_overview_table:')
-        print(clusters_overview_table)
+        print('CHECK: feature_influence_table:')
+        # print(feature_influence_table)
 
-    return clusters_overview_table
+    return feature_influence_table
 
 
 @st.cache_data
@@ -193,3 +207,69 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
         # print(classification_clusters_overview)
 
     return classification_clusters_overview
+
+@st.cache_data
+def derive_subgroups(use_this_function, selected_cohort, cohort_title, use_case_name, features_df, selected_features,
+                     selected_dependent_variable, selected_k_means_count, use_encoding,
+                     save_to_file):
+    # Filters the clusters_overview df to display the most influential features per cluster
+    if not use_this_function:
+        return None
+
+    complete_feature_influence = calculate_feature_influence_table(use_this_function=True,
+                                                                   selected_cohort=selected_cohort,
+                                                                   cohort_title=cohort_title,
+                                                                   use_case_name=use_case_name,
+                                                                   features_df=features_df,
+                                                                   selected_features=selected_features,
+                                                                   selected_dependent_variable=selected_dependent_variable,
+                                                                   selected_k_means_count=selected_k_means_count,
+                                                                   selected_cluster='all',
+                                                                   show_value_influences=False,
+                                                                   use_encoding=use_encoding,
+                                                                   save_to_file=False)
+
+    # Get entropy per cluster
+    clusters_entropy_columns = complete_feature_influence.iloc[:, complete_feature_influence.columns.str.endswith('_entropy')]
+    clusters_avg_entropy = []
+    for entropy_column in clusters_entropy_columns:
+        clusters_avg_entropy.append(complete_feature_influence[entropy_column].mean())
+
+    clusters_count_columns = complete_feature_influence.iloc[:, complete_feature_influence.columns.str.endswith('_count')]
+    death_counts = []
+    for count_column in clusters_count_columns:
+        temp_count = complete_feature_influence.loc[
+            (complete_feature_influence.loc[:, 'Features'] == selected_dependent_variable) &
+            (complete_feature_influence.loc[:, 'Values'] == 1.0), count_column].item()
+        death_counts.append(temp_count)
+
+    # Initialize subgroups_overview df with total values
+    total_count = complete_feature_influence.loc[complete_feature_influence.loc[:, 'Features']=='total_count', 'complete_set_count'].item()
+    total_average_entropy = mean(clusters_avg_entropy)
+    subgroups_overview = pd.DataFrame({'Clusters': 'complete_set',
+                                       'Count': [total_count],
+                                       f'{selected_dependent_variable}_rate': round(death_counts[0]/total_count, 2),
+                                       'Average Entropy': [total_average_entropy]
+                                       })
+    death_counts = death_counts[1:]
+
+    # Add cluster values to subgroups_overview df
+    for i, cluster_column in enumerate(clusters_entropy_columns):
+        count = complete_feature_influence.loc[complete_feature_influence.loc[:, 'Features']=='total_count', f'cluster_{i}_count'].item()
+        average_entropy = clusters_avg_entropy[i]
+        death_count = death_counts[i]
+        subgroups_overview.loc[len(subgroups_overview)] = [f'cluster_{i}', count, round(death_count/count, 2), average_entropy]
+
+    # Saving
+    if save_to_file:
+        current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
+        filename_string: str = f'./output/{use_case_name}/subgroup_analysis/subgroups_overview_{cohort_title}_{current_time}.csv'
+        filename = filename_string.encode()
+        with open(filename, 'w', newline='') as output_file:
+            subgroups_overview.to_csv(output_file, index=False)
+            print(f'STATUS: subgroups_overview was saved to {filename_string}')
+    else:
+        print('CHECK: subgroups_overview:')
+        # print(clusters_overview_table)
+
+    return subgroups_overview

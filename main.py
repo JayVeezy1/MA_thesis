@@ -282,19 +282,31 @@ if __name__ == '__main__':
     # TODO: add a clustering visualization plot (pacmap) above or next to the table in frontend -> much more helpful for analysis
     # TODO: use subgroups as selector to calculate fairness measures
     # TODO: display the table and the fairness depending on the subgroup as its own page in frontend
-
     # Cluster Comparison/Subgroup Detection
-    subgroup_analysis.calculate_clusters_overview_table(use_this_function=True,  # True | False
-                                                        selected_cohort=SELECTED_COHORT_preprocessed,
-                                                        cohort_title=SELECTED_COHORT_TITLE,
-                                                        use_case_name=USE_CASE_NAME,
-                                                        features_df=FEATURES_DF,
-                                                        selected_features=SELECTED_FEATURES,
-                                                        selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                                        selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
-                                                        show_value_influences=True,
-                                                        use_encoding=True,
-                                                        save_to_file=SELECT_SAVE_FILES)
+    subgroups_overview = subgroup_analysis.derive_subgroups(use_this_function=False,     # True | False
+                                                            selected_cohort=SELECTED_COHORT_preprocessed,
+                                                            cohort_title=SELECTED_COHORT_TITLE,
+                                                            use_case_name=USE_CASE_NAME,
+                                                            features_df=FEATURES_DF,
+                                                            selected_features=SELECTED_FEATURES,
+                                                            selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                            selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
+                                                            use_encoding=True,
+                                                            save_to_file=SELECT_SAVE_FILES)
+
+    # Feature Influence per Cluster
+    feature_influence = subgroup_analysis.calculate_feature_influence_table(use_this_function=False,  # True | False
+                                                                            selected_cohort=SELECTED_COHORT_preprocessed,
+                                                                            cohort_title=SELECTED_COHORT_TITLE,
+                                                                            use_case_name=USE_CASE_NAME,
+                                                                            features_df=FEATURES_DF,
+                                                                            selected_features=SELECTED_FEATURES,
+                                                                            selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                                            selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
+                                                                            selected_cluster='all',    # can be selected in frontend
+                                                                            show_value_influences=True,
+                                                                            use_encoding=True,
+                                                                            save_to_file=SELECT_SAVE_FILES)
 
     # Classification Comparison over Clusters (Fairness Pre-Check)
     subgroup_analysis.compare_classification_models_on_clusters(use_this_function=False,  # True | False
@@ -315,7 +327,7 @@ if __name__ == '__main__':
 
     ### Step 7.1) Streamlit App for Visualization
     start_streamlit_frontend(use_this_function=True)
-    # TODO next: add a feature-importance table. if death_in_hosp entropy < 0.5 then check for features with entropy < THRESHOLD (maybe: AND feature in 'protected/sensitive_features')
+    # TODO next: features_influence table needs continuous features, maybe always show ALL features, even if they are not used in the clustering
     # return cluster, feature with its entropy and values with occurrence_count -> display cluster with its dominant values -> relevant (!) subgroup detection
     # maybe after/below this display a pacmap with the clusters, circle the relevant/interesting clusters in red
     # still missing: fairness analysis based on clusters (not just the models-comparison-overview table)

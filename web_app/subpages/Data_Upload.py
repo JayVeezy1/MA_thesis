@@ -10,8 +10,7 @@ from step_3_data_analysis.clustering import calculate_cluster_kmeans, preprocess
     calculate_cluster_kprot, calculate_cluster_dbscan, calculate_cluster_SLINK, plot_SLINK_on_pacmap
 from step_3_data_analysis.data_visualization import calculate_pacmap
 from step_5_fairness.fairness_analysis import get_fairness_report
-from step_6_subgroup_analysis.subgroup_analysis import calculate_clusters_overview_table, \
-    compare_classification_models_on_clusters
+from step_6_subgroup_analysis.subgroup_analysis import compare_classification_models_on_clusters, calculate_feature_influence_table, derive_subgroups
 
 
 def data_upload_page():
@@ -72,7 +71,8 @@ def data_upload_page():
         plot_SLINK_on_pacmap.clear()
 
         # Subgroups
-        calculate_clusters_overview_table.clear()
+        derive_subgroups.clear()
+        calculate_feature_influence_table.clear()
         compare_classification_models_on_clusters.clear()
 
     st.markdown('___')

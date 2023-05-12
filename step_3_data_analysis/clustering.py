@@ -356,7 +356,7 @@ def plot_k_means_on_pacmap(use_this_function: False, display_sh_score: False, se
     return kmeans_plot
 
 
-def get_clusters_overview_table(original_cohort, selected_features, features_df, cohort_title):
+def get_feature_influence_table(original_cohort, selected_features, features_df, cohort_title):
     # creates the base for the base features_overview_table -> Variables | Classification(bins) | Count(complete_set)
 
     current_overview_table = pd.DataFrame({'Features': 'total_count',
@@ -487,7 +487,7 @@ def get_feature_entropy(current_overview_table, feature, column_name, appearance
     return round(entropy, 2)
 
 
-def get_overview_for_cluster(cluster_cohort, selected_features, features_df, current_overview_table,
+def get_feature_influence_for_cluster(cluster_cohort, selected_features, features_df, current_overview_table,
                              original_cohort, selected_cluster_number, show_value_influences):
     # Adds new columns to the features_overview_table for each cluster
 
@@ -523,7 +523,6 @@ def get_overview_for_cluster(cluster_cohort, selected_features, features_df, cur
 
             temp_fact_df = factorization_df.loc[factorization_df['feature'] == feature]
 
-            # TODO: Need to change this here! Have to iterate through all available appearances_names_complete, then do count and value_influence for each
             # Get count per appearance
             for appearance_name in appearances_names_complete:
                 # get appearance_raw value
