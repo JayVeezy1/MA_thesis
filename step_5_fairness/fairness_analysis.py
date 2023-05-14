@@ -1,18 +1,21 @@
 import datetime
 
+import numpy as np
 import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go
+import plotly.offline as pyo
 from aif360.datasets import StandardDataset
 from aif360.metrics import ClassificationMetric
 from fairlearn.metrics import MetricFrame, selection_rate, count
 from matplotlib import pyplot as plt
+
 from sklearn.metrics import accuracy_score, precision_score, roc_auc_score, recall_score
 
 from step_4_classification.classification import split_classification_data
 from step_4_classification.classification_deeplearning import get_sequential_model, split_classification_data_DL
 
 
-# TODO: here use the microsoft fairness package for visualization?
 def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, use_case_name,
                                     attributes_string, classification_method, cohort_title, sampling_title,
                                     save_to_file: False):
@@ -58,9 +61,9 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
         plt.show()
     else:
         print('CHECK: Overall metrics:')
-        print(metric_frame.overall)
+        # print(metric_frame.overall)
         print('CHECK: Metrics by group:')
-        print(metric_frame.by_group)
+        # print(metric_frame.by_group)
         # plt.show()
 
     # plt.close()
@@ -74,16 +77,25 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
     return performance_metrics_plot
 
 
+def get_factorized_values(feature, privileged_values, factorization_df):
+    factorized_values = []
+
+    temp_factorization_df = factorization_df.loc[factorization_df['feature'] == feature]
+    for unfactorized_value in privileged_values:
+        temp_fact_value = temp_factorization_df.loc[temp_factorization_df['unfactorized_value'] == unfactorized_value, 'factorized_value'].item()
+        factorized_values.append(temp_fact_value)
+
+    return factorized_values
+
+
 @st.cache_data
-def get_fairness_report(use_this_function: False, selected_cohort,
-                        cohort_title: str,
-                        features_df,
+def get_fairness_report(use_this_function: False, selected_cohort, cohort_title: str, features_df,
                         selected_features: list, selected_dependent_variable: str, classification_method: str,
                         sampling_method: str, use_case_name, save_to_file, plot_performance_metrics: False,
-                        use_grid_search: False, verbose: True):
+                        use_grid_search: False, verbose: True, protected_features, privileged_values):
     # calculate fairness metrics and return fairness-report
     if not use_this_function:
-        return None
+        return None, None, None
 
     # 0) get_classification_basics
     if classification_method == 'deeplearning_sequential':
@@ -93,19 +105,63 @@ def get_fairness_report(use_this_function: False, selected_cohort,
             selected_dependent_variable=selected_dependent_variable,
             sampling_method=sampling_method, verbose=verbose)
         model, history = get_sequential_model(x_train_final=x_train_final, y_train_final=y_train_final)
-
     else:
-
         clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
             selected_cohort, cohort_title, features_df, selected_features,
             selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
 
-    # 1) select unprivileged_groups and their respective values
-    # IMPORTANT: adjust selected_privileged_classes depending on selected_protected_attributes
-    selected_protected_attributes = ['gender', 'ethnicity_1']  # , 'ethnicity_1']
-    selected_privileged_classes = [[1]]  # privileged: gender=1=male, ethnicity_1=white
-    # insurance_1 = self_pay, insurance_4 = private | marital_status_1 = not-single | religion_1 = catholic
-    attributes_string = '_'.join(str(e) for e in selected_protected_attributes)
+    # 1) select unprivileged_groups and their respective values/classes | would have probably been better built with dict structure
+    # IMPORTANT: unfactorized values have to be translated into factorized feature column names and value = 1
+    factorization_df = pd.read_excel('./supplements/FACTORIZATION_TABLE.xlsx')  # columns: feature	unfactorized_value	factorized_value
+    features_to_factorize = pd.unique(factorization_df['feature']).tolist()
+    selected_protected_attributes = []
+    selected_privileged_classes = []
+    features_no_need_title_value = []
+    # clean_privileged_values = []
+    # for value_with_number in privileged_values:
+    #     clean_privileged_values.append(value_with_number[1:])
+
+    for i, feature in enumerate(protected_features):
+        # todo: do not do this for gender and stroke_type, they are not moved into separate columns when doing factorization
+        # mention this in overleaf -> factorization step is not well done
+        if feature == 'gender' or feature == 'stroke_type':
+            factorized_values = get_factorized_values(feature=feature, privileged_values=privileged_values[i], factorization_df=factorization_df)
+            selected_protected_attributes.append(feature)
+            selected_privileged_classes.append(factorized_values)
+        elif feature in features_to_factorize and not (feature == 'gender' or feature == 'stroke_type'):
+            factorized_values = get_factorized_values(feature=feature, privileged_values=privileged_values[i], factorization_df=factorization_df)
+            for value in factorized_values:
+                selected_protected_attributes.append(feature + f'_{value}')
+                selected_privileged_classes.append([1])
+                features_no_need_title_value.append(feature + f'_{value}')
+        else:
+            selected_protected_attributes.append(feature)
+            selected_privileged_classes.append(privileged_values[i])
+
+    # Create attributes_string for title
+    attributes_string = ''
+    for i, feature in enumerate(selected_protected_attributes):
+        if feature in features_no_need_title_value:
+            factorized_value = feature[len(feature)-1:]                        # not clean if feature number > 9
+            temp_factorization_df = factorization_df.loc[factorization_df['feature'] == feature[:-2]]
+            try:
+                unfactorized_value = temp_factorization_df.loc[temp_factorization_df['factorized_value'] == int(factorized_value), 'unfactorized_value'].to_list()
+                unfactorized_value = unfactorized_value[0]
+            except IndexError:
+                unfactorized_value = 'unknown'
+            attributes_string += '_' + feature[:-1]  + str(unfactorized_value)
+        else:
+            temp_values = ''
+            available_values = selected_privileged_classes[i]
+            for value in available_values:
+                try:
+                    temp_values += str(int(value)) + '_'
+                except ValueError:
+                    temp_values += str(value) + '_'
+            attributes_string += '_' + feature + '_' + temp_values[:-1]
+
+    attributes_string = attributes_string[1:]
+    # attributes_string = '_'.join(str(e) for e in selected_protected_attributes)
 
     # 2) get an aif360 StandardDataset
     # original_labels = selected_cohort[selected_dependent_variable]
@@ -128,8 +184,12 @@ def get_fairness_report(use_this_function: False, selected_cohort,
     # derive privileged groups for all protected_attribute_names
     attr = dataset_pred.protected_attribute_names[0]
     idx = dataset_pred.protected_attribute_names.index(attr)
-    privileged_groups = [{attr: dataset_pred.privileged_protected_attributes[idx][0]}]
-    unprivileged_groups = [{attr: dataset_pred.unprivileged_protected_attributes[idx][0]}]
+    try:
+        privileged_groups = [{attr: dataset_pred.privileged_protected_attributes[idx][0]}]
+        unprivileged_groups = [{attr: dataset_pred.unprivileged_protected_attributes[idx][0]}]
+    except IndexError as e:
+        print('Warning: IndexError because no privileged attributes selected.', e)
+        return None, None, None
 
     # 3) get metric objs for the report
     classification_metric = ClassificationMetric(dataset=dataset,
@@ -224,4 +284,40 @@ def get_fairness_report(use_this_function: False, selected_cohort,
             report.to_csv(output_file, index=True)  # keep index here for metrics titles
             print(f'STATUS: fairness_report was saved to {report_filename}')
 
-    return report, performance_metrics_plot
+    return report, performance_metrics_plot, attributes_string
+
+
+def plot_radar_fairness(categories, list_of_results):
+    # Matplot
+    # label_loc = np.linspace(start=0, stop=2 * np.pi, num=len(list_of_results[0]))
+    # plt.figure()        # figsize=(8, 8))
+    # plt.subplot(polar=True)
+    # for i, result in enumerate(list_of_results):
+    #     plt.plot(label_loc, result, label=f'Result {i}')
+    # # plt.title('Fairness Metrics Radar Chart')       # , size=20)
+    # lines, labels = plt.thetagrids(np.degrees(label_loc), labels=categories)
+    # plt.legend()
+
+    # Plotly
+    categories = [*categories, categories[0]]
+    data = []
+    for i, result in enumerate(list_of_results):
+        result = [*result, result[0]]
+        data.append(go.Scatterpolar(r=result, theta=categories, name=f'Result {i}'))
+
+    if len(list_of_results) > 1:
+        show_legend = True
+    else:
+        show_legend = False
+
+    fig = go.Figure(
+        data=data,
+        layout=go.Layout(
+            # title=go.layout.Title(text='Fairness comparison'),
+            polar={'radialaxis': {'visible': True, 'angle': 90}},
+            showlegend=show_legend
+        )
+    )
+    pyo.plot(fig, auto_open=False, auto_play=False)
+
+    return fig

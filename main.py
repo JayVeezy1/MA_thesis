@@ -68,20 +68,20 @@ if __name__ == '__main__':
     ALL_COHORTS_WITH_TITLES: dict = preprocessing_functions.get_all_cohorts(SELECTED_COHORT, FEATURES_DF, SELECTED_DATABASE)
     print('STATUS: Preprocessing finished.\n')
 
-    # TODO: add automated subgroup clustering with entropy, based on that get performance and fairness metrics per cluster, add to frontend
+    # todo: add continuous features to entropy calculation for subgroup detection
+    # todo text: update + interpret fairness and subgroup chapter
+    # todo text: mention that official fairness toolbox better than my approach https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md
 
-    # TODO after: add SHAPley values to classification chapter (+ shap waterfalls, with this different importance for subgroups)
+
+    # TODO code: add SHAPley values to classification chapter (+ shap waterfalls, with this different importance for subgroups)
     # get shapely function from there (also use this analysis to compare clusters?) https://antonsruberts.github.io/kproto-audience/
+    # todo text: add shapley to classification chapter and compare with correlation
 
-    # todo after: add fairness-feature selection to web_app frontend
-    # todo after: include the fairness package? https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md Also in general the AI Responsible package useful as a dashboard?
-    # todo after: update + interpret fairness chapter in overleaf
 
-    # todo after: graphic to visualize the filtering steps of complete mimic-iii dataset for chapter 2
+    # todo code: check open 'todos', add to 'future_research' chapter
+    # todo text: rewrite, gaps: interpret AUPRC plots in text, create graphic to visualize filtering steps of complete mimic-iii dataset for chapter 2
 
     # todo maybe long term: add filtering mechanism in Patient Class, recheck stroke filtering (move ischemic to front)
-    # todo maybe long term: add 'decision-boundary-plot' to visualize the clustering (on 2 features), maybe use clustering for predictions?
-    # todo maybe long term: add 3-features-visualization plot (like pacmap but with real dimensions)
 
     ### Data Analysis
     # Step 3.1) General Statistics
@@ -262,6 +262,8 @@ if __name__ == '__main__':
 
     ### Fairness Metrics
     # Step 5.1) Calculate Fairness for manual Subgroups
+    PROTECTED_FEATURES = ['ethnicity', 'gender']
+    PRIVILEGED_VALUES = [['WHITE', 'ASIAN'], ['M']]
     fairness_analysis.get_fairness_report(use_this_function=False,  # True | False
                                           plot_performance_metrics=True,
                                           classification_method=SELECTED_CLASSIFICATION_METHOD,
@@ -273,15 +275,13 @@ if __name__ == '__main__':
                                           selected_features=SELECTED_FEATURES,
                                           selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                           verbose=True,
+                                          protected_features=PROTECTED_FEATURES,
+                                          privileged_values=PRIVILEGED_VALUES,
                                           use_grid_search=USE_GRIDSEARCH,
                                           save_to_file=SELECT_SAVE_FILES)
 
     ### Subgroup Analysis
     # Step 6.1) Calculate automated Subgroups and related fairness metrics -> Inside ASDF-Dashboard
-    # TODO: calculate the entropy value of each feature per cluster (build the formula with log), decide if ranking or threshold (?)
-    # TODO: add a clustering visualization plot (pacmap) above or next to the table in frontend -> much more helpful for analysis
-    # TODO: use subgroups as selector to calculate fairness measures
-    # TODO: display the table and the fairness depending on the subgroup as its own page in frontend
     # Cluster Comparison/Subgroup Detection
     subgroups_overview = subgroup_analysis.derive_subgroups(use_this_function=False,     # True | False
                                                             selected_cohort=SELECTED_COHORT_preprocessed,
@@ -327,10 +327,6 @@ if __name__ == '__main__':
 
     ### Step 7.1) Streamlit App for Visualization
     start_streamlit_frontend(use_this_function=True)
-    # TODO next: features_influence table needs continuous features, maybe always show ALL features, even if they are not used in the clustering
-    # return cluster, feature with its entropy and values with occurrence_count -> display cluster with its dominant values -> relevant (!) subgroup detection
-    # maybe after/below this display a pacmap with the clusters, circle the relevant/interesting clusters in red
-    # still missing: fairness analysis based on clusters (not just the models-comparison-overview table)
 
 
     ### Deprecated: ASDF-Dashboard for visualization  https://github.com/jeschaef/ASDF-Dashboard
