@@ -434,9 +434,11 @@ def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, 
     else:
         try:
             clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, y_pred)
+            auroc_plot = plt.figure()
             plt.plot(clf_fpr, clf_tpr, label=f'{classification_method} (AUROC = {auc_score})')  # marker='.',
         except ValueError as e:
             print('Warning: Value Error occurred. clf_fpr and clf_tpr are set to 0. ', e)
+            auroc_plot = plt.figure()
             clf_fpr, clf_tpr, _ = (0, 0, 0)
 
     # Add a random predictor line to plot
@@ -471,6 +473,7 @@ def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, 
                                                           name=f'{classification_method} (AUPRC = {auc_prc_score})')
         _ = display.ax_.set_title(f'{classification_method} (AUPRC = {auc_prc_score})')
         plt.title(f"{classification_method} for {cohort_title} AUPRC: {auc_prc_score}, {sampling_title}", wrap=True)
+        auc_prc_plot = display.figure_
         if save_to_file:
             current_time = datetime.datetime.now().strftime("%H_%M_%S")
             auprc_filename = f'./output/{use_case_name}/classification/AUPRC_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png'
@@ -482,8 +485,9 @@ def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, 
         # do not close plt, this throws RunTimeError because TKinter not thread safe https://stackoverflow.com/questions/14694408/runtimeerror-main-thread-is-not-in-main-loop#14695007
     except ValueError as e:
         print('Warning: Plotting of PrecisionRecall not possible. ValueError: ', e)
+        auc_prc_plot = None
 
-    return auc_score, auc_prc_score
+    return auc_score, auroc_plot, auc_prc_score, auc_prc_plot
 
 
 def get_accuracy(cm_df):
@@ -539,7 +543,7 @@ def compare_classification_models_on_cohort(use_this_function, use_case_name, fe
                 print(
                     f'STATUS: Calculating auc_score for model settings: {title_with_cohort[0]}, {classification_method}, {dependent_variable}')
                 # get auc_score
-                auc_score, auc_prc_score = get_auc_score(use_this_function=True,  # True | False
+                auc_score, auroc_plot, auc_prc_score, auc_prc_plot = get_auc_score(use_this_function=True,  # True | False
                                                          classification_method=classification_method,
                                                          sampling_method='oversampling',  # sampling_method,
                                                          # SELECTED_SAMPLING_METHOD  -> currently always oversampling, can also be parameterized

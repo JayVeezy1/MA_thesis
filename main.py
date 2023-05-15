@@ -207,7 +207,7 @@ if __name__ == '__main__':
                                                       verbose=True,
                                                       save_to_file=SELECT_SAVE_FILES)
     # AUROC + AUPRC (plot & score)
-    auc_score, auc_prc_score = classification.get_auc_score(use_this_function=False,  # True | False
+    auc_score, auroc_plot, auc_prc_score, auc_prc_plot = classification.get_auc_score(use_this_function=False,  # True | False
                                                             classification_method=SELECTED_CLASSIFICATION_METHOD,
                                                             sampling_method=SELECTED_SAMPLING_METHOD,
                                                             selected_cohort=SELECTED_COHORT_preprocessed,

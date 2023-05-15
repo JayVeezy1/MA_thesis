@@ -108,7 +108,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                            verbose=False)
 
         # get total_auc_score for total set
-    total_auc_score, auc_prc_score = get_auc_score(use_this_function=True,  # True | False
+    total_auc_score, auroc_plot, auc_prc_score, auc_prc_plot = get_auc_score(use_this_function=True,  # True | False
                                                    classification_method=classification_method,
                                                    sampling_method=sampling_method,  # SELECTED_SAMPLING_METHOD
                                                    selected_cohort=selected_cohort,
@@ -150,7 +150,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
     for i, cluster in enumerate(clusters):               # for each cluster get prediction quality
         print(f'STATUS: Calculating auc_score for cluster: {i}, with model settings: {classification_method}, {dependent_variable}')
         # get auc_score for cluster
-        auc_score, auc_prc_score = get_auc_score(use_this_function=True,  # True | False
+        auc_score, auroc_plot, auc_prc_score, auc_prc_plot = get_auc_score(use_this_function=True,  # True | False
                                                  classification_method=classification_method,
                                                  sampling_method=sampling_method,
                                                  selected_cohort=cluster,

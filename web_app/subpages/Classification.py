@@ -6,7 +6,7 @@ import streamlit as st
 import seaborn as sn
 from matplotlib import pyplot as plt
 
-from step_4_classification.classification import get_classification_report, get_confusion_matrix
+from step_4_classification.classification import get_classification_report, get_confusion_matrix, get_auc_score
 from step_4_classification.classification_deeplearning import get_classification_report_deeplearning, \
     get_DL_confusion_matrix
 from web_app.util import get_avg_cohort_cache, add_download_button
@@ -304,6 +304,81 @@ def classification_page():
         ax1.set_title(f"{classification_method_2} on {cohort_title}, {sampling_method_2}", wrap=True)
         plt.tight_layout()
         col5.pyplot(fig1, use_container_width=True)
+        st.markdown('___')
 
+        # AUROC 1
+        col1, col2, col5 = st.columns((0.475, 0.05, 0.475))
+        col1.markdown("<h2 style='text-align: left; color: black;'>AUROC</h2>", unsafe_allow_html=True)
+        col1.write('Area under the receiver operating characteristic indicates a models performance.')
+        if classification_method == 'deeplearning_sequential':
+            col1.write(f'Calculating the classification with a deeplearning model for the first time takes about 1-2 minutes.')
+
+        auc_score, auroc_plot, auc_prc_score, auc_prc_plot = get_auc_score(use_this_function=True,  # True | False
+                                                                    classification_method=classification_method,
+                                                                    sampling_method=sampling_method,
+                                                                    selected_cohort=selected_cohort,
+                                                                    cohort_title=cohort_title,
+                                                                    use_case_name='frontend',
+                                                                    features_df=FEATURES_DF,
+                                                                    selected_features=selected_features,
+                                                                    selected_dependent_variable=selected_variable,
+                                                                    show_plot=False,
+                                                                    use_grid_search=use_grid_search_1,
+                                                                    verbose=False,
+                                                                    save_to_file=False)
+
+       # Plot AUROC 1
+        col1.pyplot(auroc_plot)
+
+        # AUROC 2
+        # col5.markdown("<h2 style='text-align: left; color: black;'>AUROC 2</h2>", unsafe_allow_html=True)
+        col5.write('')
+        col5.write('')
+        col5.write('')
+        col5.write('')
+        col5.write('')
+        col5.write('')
+        col5.write('')
+
+        if classification_method_2 == 'deeplearning_sequential':
+            col5.write(
+                f'Calculating the classification with a deeplearning model for the first time takes about 1-2 minutes.')
+
+        auc_score_2, auroc_plot_2, auc_prc_score_2, auc_prc_plot_2 = get_auc_score(use_this_function=True,
+                                                                                   # True | False
+                                                                                   classification_method=classification_method_2,
+                                                                                   sampling_method=sampling_method_2,
+                                                                                   selected_cohort=selected_cohort,
+                                                                                   cohort_title=cohort_title,
+                                                                                   use_case_name='frontend',
+                                                                                   features_df=FEATURES_DF,
+                                                                                   selected_features=selected_features,
+                                                                                   selected_dependent_variable=selected_variable,
+                                                                                   show_plot=False,
+                                                                                   use_grid_search=use_grid_search_2,
+                                                                                   verbose=False,
+                                                                                   save_to_file=False)
+        # Plot AUROC 2
+        col5.pyplot(auroc_plot_2)
+        st.markdown('___')
+
+
+        # Plot AUPRC 1
+        col1, col2, col5 = st.columns((0.475, 0.05, 0.475))
+        col1.markdown("<h2 style='text-align: left; color: black;'>AUPRC</h2>", unsafe_allow_html=True)
+        col1.write('Area under the precision-recall curve is a helpful indicator when working with imbalanced data.')
+        col1.pyplot(auc_prc_plot)
+
+        # Plot AUPRC 2
+        # col5.markdown("<h2 style='text-align: left; color: black;'>AUPRC</h2>", unsafe_allow_html=True)
+        col5.write('')
+        col5.write('')
+        col5.write('')
+        col5.write('')
+        col5.write('')
+        col5.write('')
+        col5.write('')
+
+        col5.pyplot(auc_prc_plot_2)
 
         st.markdown('___')
