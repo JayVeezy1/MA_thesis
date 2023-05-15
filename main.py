@@ -71,7 +71,7 @@ if __name__ == '__main__':
     # TODO frontend: Add AUROC Plot to classification page
 
 
-    # todo text: update + interpret fairness and subgroup chapter
+    # todo text: update + interpret fairness and subgroup chapter (especially formula)
     # todo text: mention that official fairness toolbox better than my approach https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md
 
 
@@ -296,7 +296,7 @@ if __name__ == '__main__':
                                                             save_to_file=SELECT_SAVE_FILES)
 
     # Feature Influence per Cluster
-    feature_influence = subgroup_analysis.calculate_feature_influence_table(use_this_function=True,  # True | False
+    feature_influence = subgroup_analysis.calculate_feature_influence_table(use_this_function=False,  # True | False
                                                                             selected_cohort=SELECTED_COHORT_preprocessed,
                                                                             cohort_title=SELECTED_COHORT_TITLE,
                                                                             use_case_name=USE_CASE_NAME,
