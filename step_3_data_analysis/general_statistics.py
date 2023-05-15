@@ -10,7 +10,6 @@ from objects.patients import Patient
 from step_3_data_analysis.correlations import get_correlations_to_dependent_var
 
 
-# todo long term: second type of Deaths table: cluster1/column1 = survived, cluster2/column2 = death, rows = features
 def calculate_deaths_table(use_this_function: False, selected_cohort, cohort_title, use_case_name, save_to_file):
     if not use_this_function:
         return None

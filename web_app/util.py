@@ -56,10 +56,11 @@ def create_st_button(link_text, link_url, hover_color="#e78ac3", st_col=None):
 
 @st.cache_data
 def get_avg_cohort_cache(project_path, use_case_name, features_df, selected_database, selected_stroke_type,
-                         delete_existing_cache, selected_patients=[]):
+                         delete_existing_cache, selected_patients=None):
+    if selected_patients is None:
+        selected_patients = []
 
-    # Directly get avg_cohort file
-    # TODO: has to be uploaded first in "Data Loader" by user
+    # Directly get avg_cohort file (uploaded by user in "Data Loader")
     raw_avg_cohort = Patient.get_avg_patient_cohort(project_path=project_path,
                                                          use_case_name=use_case_name,
                                                          features_df=features_df,

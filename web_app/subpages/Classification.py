@@ -64,9 +64,8 @@ def classification_page():
         col1.markdown("<h2 style='text-align: left; color: black;'>Confusion Matrix</h2>", unsafe_allow_html=True)
         col3.markdown("<h2 style='text-align: left; color: black;'>Classification Report</h2>", unsafe_allow_html=True)
 
-        # TODO: maybe put two classification methods next to each other for comparison
         if classification_method == 'deeplearning_sequential':
-            # TODO: check if DeepLearning cached correctly and also maybe make deeplearning parameters as user input?
+            # todo future work: maybe make deeplearning parameters as user input?
             st.write(f'Calculating the classification with a deeplearning model for the first time takes about 1-2 minutes.')
             cm_df = get_DL_confusion_matrix(classification_method=classification_method,
                                           sampling_method=sampling_method,

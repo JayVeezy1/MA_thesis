@@ -148,7 +148,6 @@ def get_binary_corr(binary_cohort, selected_dependent_variable):
     #       print(f'\n {feature}')
     #       print(rho)
 
-    # todo: check if normal chi-squared for binary
     # Significance: Chi-squared test on a contingency table per feature
     validity_df = pd.DataFrame()
     for feature in binary_cohort.columns:
@@ -179,16 +178,16 @@ def get_correlations_to_dependent_var(selected_cohort, features_df, selected_fea
         selected_dependent_variable=selected_dependent_variable)
 
     ## Correlations & Significance Tests
-    # todo future research: associations package might actually offer simultaneous correlation of continuous and categorical features -> use only one function?
+    # todo future work: associations package might actually offer simultaneous correlation of continuous and categorical features -> use only one function?
     # 2.1) Get correlation and validity (significance) for continuous
     # method: simply .corr -> r-value | significance = pearsonr -> p-value
     continuous_corr = get_continuous_corr(continuous_cohort, selected_dependent_variable)
     # 2.2) Get correlation and validity for categorical
-    # todo future research: if occurrence of one category is < 5 chi-squared is not possible -> use "Fisher’s exact test"
+    # todo future work: if occurrence of one category is < 5 chi-squared is not possible -> use "Fisher’s exact test"
     # method: Cramer’s V (symmetrical) or Theil’s U (asymmetrical) | significance = Chi-Squared
     categorical_corr = get_categorical_corr(categorical_cohort, selected_dependent_variable)
     # 2.3) Get correlation and validity for binary
-    # todo future research: currently chi-squared works fine, but maybe better to use McNemar’s chi-square?
+    # todo future work: currently chi-squared works fine, but maybe better to use McNemar’s chi-square?
     # method: tetrachoric correlation, works with .corr() | significance = chi-square
     binary_corr = get_binary_corr(binary_cohort, selected_dependent_variable)
 

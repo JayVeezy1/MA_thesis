@@ -81,10 +81,10 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
 
     # plt.close()
 
-    # todo future research: Extensions for Fairness Metrics
+    # todo future work: Check if these Extensions provide better Fairness Analysis approach or dashboards
     # Extension 1: Check if 7.2.1 makes sense to plot ROC curve for groups https://afraenkel.github.io/fairness-book/content/07-score-functions.html
     # Extension 2: Check if plotting accuracy with a metric depending on threshold (x-axis) can be done?
-    # This would be useful for threshold optimization, but can I even change threshold anywhere?
+    # This would be useful for threshold optimization, but can we even change threshold anywhere?
     # https://github.com/Trusted-AI/AIF360/blob/master/examples/tutorial_medical_expenditure.ipynb follow this
 
     return performance_metrics_plot
@@ -135,9 +135,9 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
     #     clean_privileged_values.append(value_with_number[1:])
 
     for i, feature in enumerate(protected_features):
-        # todo: do not do this for gender and stroke_type, they are not moved into separate columns when doing factorization
         # mention this in overleaf -> factorization step is not well done
         if feature == 'gender' or feature == 'stroke_type':
+            # do not refactorize for gender and stroke_type, they are not moved into separate columns when doing factorization
             factorized_values = get_factorized_values(feature=feature, privileged_values=privileged_values[i], factorization_df=factorization_df)
             selected_protected_attributes.append(feature)
             selected_privileged_classes.append(factorized_values)

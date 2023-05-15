@@ -206,7 +206,6 @@ def clustering_page():
         selected_features = st.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
 
         ## Select Clustering Specific Parameters
-        # TODO: maybe put two Clustering methods next to each other for comparison
         col5, col6, col7, col8 = st.columns((0.25, 0.25, 0.25, 0.25))
         ALL_CLUSTERING_METHODS: list = ['kmeans', 'kprototype', 'DBSCAN', 'SLINK']
         clustering_method = col5.selectbox(label='Select clustering method', options=ALL_CLUSTERING_METHODS)

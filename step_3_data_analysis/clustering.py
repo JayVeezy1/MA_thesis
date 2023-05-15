@@ -207,7 +207,7 @@ def calculate_cluster_kprot(selected_cohort, cohort_title: str, selected_feature
         sh_score = round(silhouette_score(X=avg_np, labels=clustering_labels_list, metric='euclidean', random_state=0),
                          2)
         inertia = kprot_obj.cost_
-        # todo future research: only cost_ available instead of inertia_ for KPROT
+        # todo future work: only cost_ available instead of inertia_ for KPROT, somehow derive inertia_?
         # but cost = sum of distances to cluster and inertia = squared-sum of distances to cluster
         # might be good to calculate inertia, but ^2 is monotonous, transformation not really needed to assess clusters
 
@@ -631,7 +631,6 @@ def get_feature_influence_for_cluster(cluster_cohort, selected_features, feature
                 binning_value_influence: list = get_binned_value_influence(temp_appearances_df=temp_appearances_df,
                                                                            feature=feature)
 
-                # todo: Get Entropy for these bins
                 for i in range(0, len(binning_intervals)):
                     # Get Count for this bin
                     current_overview_table.loc[(current_overview_table['Features'] == feature) & (

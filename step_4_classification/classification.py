@@ -690,8 +690,9 @@ def get_cohort_classified(use_this_function, project_path, classification_method
     classified_cohort['class'] = y_test_basic_array  # naming convention from ASDF
     classified_cohort['out'] = y_pred
 
+    # Option to merge ground truths to classified_cohort, not needed
     # dependent_variable_df = pd.DataFrame({'ground_truth_values': y_test_basic_array, 'y_pred': y_pred})
-    # classified_cohort: dataframe = x_test_basic.merge(right=dependent_variable_df)  # , axis=1)            # Todo: somehow add icustay_id to x_test_basic
+    # classified_cohort: dataframe = x_test_basic.merge(right=dependent_variable_df)  # , axis=1)
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%H_%M_%S")

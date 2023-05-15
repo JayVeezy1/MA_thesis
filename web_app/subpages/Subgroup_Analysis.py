@@ -46,7 +46,7 @@ def subgroup_analysis_page():
 
         ## Select Clustering Specific Parameters
         col5, col6, col7, col8 = st.columns((0.25, 0.25, 0.25, 0.25))
-        ALL_CLUSTERING_METHODS: list = ['kmeans', 'kprototype']       # todo future research: add ['DBSCAN', 'SLINK']
+        ALL_CLUSTERING_METHODS: list = ['kmeans', 'kprototype']       # todo future work: add ['DBSCAN', 'SLINK']
         clustering_method = col5.selectbox(label='Select clustering method', options=ALL_CLUSTERING_METHODS)
         ALL_CRITERIA: list = ['maxclust', 'distance', 'monocrit', 'inconsistent']
         if clustering_method == 'kmeans' or clustering_method == 'kprototype':

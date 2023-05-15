@@ -61,7 +61,7 @@ def get_clean_raw_data(patient_data, feature_df):
             temp_fact_value = temp_factorization_df.loc[temp_factorization_df['unfactorized_value'] == unfactorized_value, 'factorized_value'].item()
             cleaned_raw_data.loc[cleaned_raw_data[f'{feature}'] == unfactorized_value,  f'{feature}'] = temp_fact_value
 
-    # TODO check: was this empty data problem removed with this?
+    # todo future work: Unclean factorization, rework
     # Making certain 'no_data' is transformed to 0 (somehow those are not factorized completely)
     cleaned_raw_data.loc[cleaned_raw_data['marital_status'] == 'no_data',  'marital_status'] = -10
     cleaned_raw_data.loc[cleaned_raw_data['marital_status'] == 'no_data ',  'marital_status'] = -10
@@ -77,7 +77,7 @@ def get_clean_raw_data(patient_data, feature_df):
             cleaned_raw_data.loc[cleaned_raw_data[feature].isin(['ERROR']), feature] = np.nan
             cleaned_raw_data[feature] = cleaned_raw_data[feature].astype(float)     # is the feature contained 'ERROR', all existing values were set as string
 
-    # todo future research: check if this outlier-removal method is sensible or has any impact at all
+    # todo future work: check if this outlier-removal method is sensible or has any impact at all
     # Automatically remove very incorrect single min/max-outliers
     for feature in continuous_features:
         # if max() value of this column for a patient is 10x higher than mean() of this column then set = 0
@@ -230,7 +230,7 @@ class Patient:
             avg_patient_cohort = avg_patient_cohort.reset_index(drop=True)
 
             # Remove outliers where patient-avg is 5x higher than feature-mean()
-            OUTLIERS_THRESHOLD = 10             # todo discuss: is this too strict? Do I remove important patients?
+            OUTLIERS_THRESHOLD = 10             # todo future work: check if this outliers removal is sensible or better to only remove when loading individual patient data
             continuous_features = features_df['feature_name'].loc[
                 features_df['categorical_or_continuous'] == 'continuous'].to_list()
             removed_entries = 0
@@ -256,7 +256,7 @@ class Patient:
 
     @classmethod
     def get_avg_scaled_data(cls, avg_patient_cohort, features_df):
-        # TODO: Choose which normalization option!
+        # todo future work: make multiple scaling options selectable for user, check which has best results
         # normalization (between 0 and 1):
         # min-max-scaling: (df - df.min()) / (df.max() - df.min())
 
@@ -278,7 +278,7 @@ class Patient:
         scaled_avg_cohort_num = (avg_patient_cohort_num - avg_patient_cohort_num.min()) / \
                                 (avg_patient_cohort_num.max() - avg_patient_cohort_num.min())
 
-        avg_patient_cohort[avg_patient_cohort_num.columns] = scaled_avg_cohort_num   # throws SettingWithCopyWarning but works as intended   # todo: check again
+        avg_patient_cohort[avg_patient_cohort_num.columns] = scaled_avg_cohort_num   # throws SettingWithCopyWarning but works as intended
 
         # following approach still has SettingWithCopyWarning
         # for column in avg_patient_cohort_num.columns:

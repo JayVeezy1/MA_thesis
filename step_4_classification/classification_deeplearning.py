@@ -245,7 +245,7 @@ def get_sequential_model(x_train_final, y_train_final):
     # Optional idea: use tf.keras.layers.GRU nodes for Deep Learning model instead of Sequential() model https://www.tensorflow.org/api_docs/python/tf/keras/layers/GRU
     model = Sequential()  # basic keras model for deep learning network
     model.add(Dense(16, input_shape=(None, len(x_train_final.columns)), activation='relu'))
-    model.add(Dense(12, activation='relu'))  # amount and setup of layers can be changed
+    model.add(Dense(12, activation='relu'))  # amount and setup of layers can be changed, maybe make selectable by user
     model.add(Dense(10, activation='relu'))
     model.add(Dense(8, activation='relu'))
     model.add(Dense(8, activation='relu'))

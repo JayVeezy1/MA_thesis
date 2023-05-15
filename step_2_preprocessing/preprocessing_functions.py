@@ -21,7 +21,7 @@ def get_one_hot_encoding(selected_cohort, categorical_features):
 
 # not used anymore
 def create_factorization_table(avg_cohort, features_df, cohort_title, features_to_remove):
-    # todo future work: check if this automatic factorization was actually a good solution for categorical features?
+    # todo future work: rework, was this automatic factorization with supplements table a good solution for categorical features? Why do some have problems with correlation and bad influence on clustering?
     features_to_factorize = features_df['feature_name'].loc[
         features_df['categorical_or_continuous'] == 'categorical'].to_list()
     features_to_factorize = [x for x in features_to_factorize if
