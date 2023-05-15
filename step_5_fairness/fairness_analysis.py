@@ -33,12 +33,25 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
                                y_pred=y_pred,
                                sensitive_features=selected_attribute_array)
 
-    figure_object = metric_frame.by_group.plot.bar(subplots=True,
-                                                   layout=[3, 3],
-                                                   legend=False,
-                                                   figsize=[12, 8],
-                                                   title=f'Metrics per Subgroup on {attributes_string}')
+    # figure_object = metric_frame.by_group.plot.bar(subplots=True,
+    #                                                layout=[3, 3],
+    #                                                legend=False,
+    #                                                figsize=[12, 8],
+    #                                                title=f'Metrics per Subgroup on {attributes_string}')
 
+    # Customize plots with ylim
+    figure_object = metric_frame.by_group.plot(
+        kind="bar",
+        ylim=[0, 1],
+        subplots=True,
+        layout=[3, 3],
+        legend=False,
+        figsize=[12, 8],
+        title=f'Metrics per Subgroup on {attributes_string}')
+
+    count_axis = figure_object[1][2]
+    y_limit = len(y_pred) + 50
+    count_axis.set_ylim(bottom=0, top=y_limit)
     performance_metrics_plot = figure_object[0][0].figure
 
     if save_to_file:
@@ -303,7 +316,7 @@ def plot_radar_fairness(categories, list_of_results):
     data = []
     for i, result in enumerate(list_of_results):
         result = [*result, result[0]]
-        data.append(go.Scatterpolar(r=result, theta=categories, name=f'Result {i}'))
+        data.append(go.Scatterpolar(r=result, theta=categories, name=f'Method {i + 1}'))
 
     if len(list_of_results) > 1:
         show_legend = True
