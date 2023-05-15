@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 from numpy import mean
 
-from step_3_data_analysis.clustering import get_feature_influence_table, get_kmeans_clusters, get_feature_influence_for_cluster, \
+from step_3_data_analysis.clustering import get_feature_influence_table, get_selected_clusters, get_feature_influence_for_cluster, \
     plot_sh_score
 from step_4_classification.classification import get_auc_score, get_confusion_matrix, get_accuracy, get_recall, get_precision
 
@@ -12,7 +12,7 @@ from step_4_classification.classification import get_auc_score, get_confusion_ma
 @st.cache_data
 def calculate_feature_influence_table(use_this_function: False, selected_cohort, cohort_title, use_case_name,
                                       features_df, selected_features, selected_dependent_variable,
-                                      selected_k_means_count, selected_cluster, show_value_influences, use_encoding: False, save_to_file: False):
+                                      selected_cluster_count, selected_cluster, show_value_influences, clustering_method, use_encoding: False, save_to_file: False):
     # currently this function is only usable for manually selected cluster_count -> kmeans but not DBSCAN
     if not use_this_function:
         return None
@@ -24,18 +24,18 @@ def calculate_feature_influence_table(use_this_function: False, selected_cohort,
                                                           features_df=features_df,
                                                           cohort_title=cohort_title)
 
-    # TODO: make selectable for other clustering methods
     # step 2: get all clusters as df in a list
-    kmeans_clusters: list = get_kmeans_clusters(
+    clusters: list = get_selected_clusters(
         original_cohort=selected_cohort,
         features_df=features_df,
         selected_features=selected_features,
         selected_dependent_variable=selected_dependent_variable,
-        selected_k_means_count=selected_k_means_count,
+        selected_cluster_count=selected_cluster_count,
+        clustering_method=clustering_method,
         use_encoding=use_encoding,
         verbose=True)
 
-    for i, cluster in enumerate(kmeans_clusters):
+    for i, cluster in enumerate(clusters):
         # step 3: get count of occurrences per bin for this cluster
         feature_influence_table = get_feature_influence_for_cluster(cluster_cohort=cluster,
                                                            original_cohort=selected_cohort,
@@ -75,7 +75,7 @@ def calculate_feature_influence_table(use_this_function: False, selected_cohort,
 @st.cache_data
 def compare_classification_models_on_clusters(use_this_function, use_case_name, features_df, selected_features,
                                               selected_cohort, classification_method, sampling_method, cohort_title, clustering_method, dependent_variable,
-                                              selected_k_means_count, check_sh_score, use_grid_search: False,
+                                              selected_cluster_count, check_sh_score, use_grid_search: False,
                                               use_encoding: False,
                                               save_to_file):
     # calculate prediction quality per cluster, save into table classification_clusters_overview
@@ -98,16 +98,16 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
 
     classification_clusters_overview = pd.DataFrame()
 
+    clusters: list = get_selected_clusters(original_cohort=selected_cohort,
+                                           features_df=features_df,
+                                           selected_features=selected_features,
+                                           selected_dependent_variable=dependent_variable,
+                                           selected_cluster_count=selected_cluster_count,
+                                           clustering_method=clustering_method,
+                                           use_encoding=use_encoding,
+                                           verbose=False)
 
-    kmeans_clusters: list = get_kmeans_clusters(original_cohort=selected_cohort,
-                                                features_df=features_df,
-                                                selected_features=selected_features,
-                                                selected_dependent_variable=dependent_variable,
-                                                selected_k_means_count=selected_k_means_count,
-                                                use_encoding=use_encoding,
-                                                verbose=False)
-
-    # get total_auc_score for total set
+        # get total_auc_score for total set
     total_auc_score, auc_prc_score = get_auc_score(use_this_function=True,  # True | False
                                                    classification_method=classification_method,
                                                    sampling_method=sampling_method,  # SELECTED_SAMPLING_METHOD
@@ -147,7 +147,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
     classification_clusters_overview = pd.concat([classification_clusters_overview, current_settings],
                                                  ignore_index=True)
 
-    for i, cluster in enumerate(kmeans_clusters):               # for each cluster get prediction quality
+    for i, cluster in enumerate(clusters):               # for each cluster get prediction quality
         print(f'STATUS: Calculating auc_score for cluster: {i}, with model settings: {classification_method}, {dependent_variable}')
         # get auc_score for cluster
         auc_score, auc_prc_score = get_auc_score(use_this_function=True,  # True | False
@@ -210,7 +210,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
 
 @st.cache_data
 def derive_subgroups(use_this_function, selected_cohort, cohort_title, use_case_name, features_df, selected_features,
-                     selected_dependent_variable, selected_k_means_count, use_encoding,
+                     selected_dependent_variable, selected_cluster_count, clustering_method, use_encoding,
                      save_to_file):
     # Filters the clusters_overview df to display the most influential features per cluster
     if not use_this_function:
@@ -223,9 +223,10 @@ def derive_subgroups(use_this_function, selected_cohort, cohort_title, use_case_
                                                                    features_df=features_df,
                                                                    selected_features=selected_features,
                                                                    selected_dependent_variable=selected_dependent_variable,
-                                                                   selected_k_means_count=selected_k_means_count,
+                                                                   selected_cluster_count=selected_cluster_count,
                                                                    selected_cluster='all',
                                                                    show_value_influences=False,
+                                                                   clustering_method=clustering_method,
                                                                    use_encoding=use_encoding,
                                                                    save_to_file=False)
 

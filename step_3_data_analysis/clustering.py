@@ -53,8 +53,8 @@ def preprocess_for_clustering(selected_cohort, features_df, selected_features, s
 
 
 def get_ids_for_cluster(avg_patient_cohort, cohort_title, features_df, selected_features, selected_dependent_variable,
-                        selected_k_means_count, selected_cluster, use_encoding, verbose: False) -> list | None:
-    if selected_cluster > selected_k_means_count - 1:
+                        selected_cluster_count, selected_cluster, clustering_method, use_encoding, verbose: False) -> list | None:
+    if selected_cluster > selected_cluster_count - 1:
         print('ERROR: selected_cluster number must be < selected_k_means_count.')
         return None
 
@@ -65,10 +65,19 @@ def get_ids_for_cluster(avg_patient_cohort, cohort_title, features_df, selected_
                                                 selected_dependent_variable=selected_dependent_variable,
                                                 use_encoding=use_encoding)  # use selected_features.copy() because in function other dependent variables are remove
 
-    # get the cluster for selected_k_means_count -> currently this function is not for DBSCAN, because dynamic cluster count there
-    k_means_list, sh_score, inertia = calculate_cluster_kmeans(selected_cohort, cohort_title,
-                                                               n_clusters=selected_k_means_count,
-                                                               verbose=False)
+    if clustering_method == 'kmeans':
+        # get the cluster for selected_k_means_count -> currently this function is not for DBSCAN, because dynamic cluster count there
+        k_means_list, sh_score, inertia = calculate_cluster_kmeans(selected_cohort, cohort_title,
+                                                                   n_clusters=selected_cluster_count,
+                                                                   verbose=False)
+    elif clustering_method == 'kprototype':
+        k_means_list, sh_score, inertia = calculate_cluster_kprot(selected_cohort, cohort_title,
+                                                                  selected_features=selected_features,
+                                                                   n_clusters=selected_cluster_count,
+                                                                   verbose=False)
+    else:
+        return None
+
 
     # connect k-means clusters back to icustay_ids
     clusters_df = pd.DataFrame({'icustay_id': avg_patient_cohort['icustay_id'], 'cluster': k_means_list})
@@ -634,26 +643,27 @@ def get_feature_influence_for_cluster(cluster_cohort, selected_features, feature
     return current_overview_table
 
 
-def get_kmeans_clusters(original_cohort, features_df, selected_features, selected_dependent_variable,
-                        selected_k_means_count, use_encoding, verbose: False):
+def get_selected_clusters(original_cohort, features_df, selected_features, selected_dependent_variable,
+                          selected_cluster_count, clustering_method, use_encoding, verbose: False):
     # returns a list of clusters [dataframe, ...]
-    kmeans_clusters: list = []
-    for selected_cluster in range(0, selected_k_means_count):
+    clusters: list = []
+    for selected_cluster in range(0, selected_cluster_count):
         filtered_cluster_icustay_ids: list = get_ids_for_cluster(
             avg_patient_cohort=original_cohort,
             cohort_title='clustered_cohort',
             features_df=features_df,
             selected_features=selected_features,
             selected_dependent_variable=selected_dependent_variable,
-            selected_k_means_count=selected_k_means_count,
+            selected_cluster_count=selected_cluster_count,
             selected_cluster=selected_cluster,
+            clustering_method=clustering_method,
             use_encoding=use_encoding,
             verbose=verbose)
 
         filtered_cluster_cohort = original_cohort[original_cohort['icustay_id'].isin(filtered_cluster_icustay_ids)]
-        kmeans_clusters.append(filtered_cluster_cohort)
+        clusters.append(filtered_cluster_cohort)
 
-    return kmeans_clusters
+    return clusters
 
 
 @st.cache_data

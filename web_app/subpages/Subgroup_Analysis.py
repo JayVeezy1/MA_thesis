@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import streamlit as st
 
-from step_3_data_analysis.clustering import plot_k_means_on_pacmap
+from step_3_data_analysis.clustering import plot_k_means_on_pacmap, plot_k_prot_on_pacmap
 from step_5_fairness.fairness_analysis import get_fairness_report, plot_radar_fairness
 from step_6_subgroup_analysis.subgroup_analysis import compare_classification_models_on_clusters, derive_subgroups, calculate_feature_influence_table
 from web_app.util import get_avg_cohort_cache, add_download_button, get_unfactorized_values
@@ -46,7 +46,7 @@ def subgroup_analysis_page():
 
         ## Select Clustering Specific Parameters
         col5, col6, col7, col8 = st.columns((0.25, 0.25, 0.25, 0.25))
-        ALL_CLUSTERING_METHODS: list = ['kmeans']       # todo future research: add ['kprototype', 'DBSCAN', 'SLINK']
+        ALL_CLUSTERING_METHODS: list = ['kmeans', 'kprototype']       # todo future research: add ['DBSCAN', 'SLINK']
         clustering_method = col5.selectbox(label='Select clustering method', options=ALL_CLUSTERING_METHODS)
         ALL_CRITERIA: list = ['maxclust', 'distance', 'monocrit', 'inconsistent']
         if clustering_method == 'kmeans' or clustering_method == 'kprototype':
@@ -79,7 +79,7 @@ def subgroup_analysis_page():
             selected_threshold = None
         st.markdown('___')
 
-        if clustering_method == 'kmeans':
+        if clustering_method == 'kmeans' or clustering_method == 'kprototype':
             # Cluster Comparison for subgroups_overview
             col1, col2 = st.columns((0.5, 0.5))
             col1.markdown("<h2 style='text-align: left; color: black;'>Cluster Entropy Overview</h2>", unsafe_allow_html=True)
@@ -91,23 +91,37 @@ def subgroup_analysis_page():
                                                   features_df=FEATURES_DF,
                                                   selected_features=selected_features,
                                                   selected_dependent_variable=selected_variable,
-                                                  selected_k_means_count=selected_cluster_count,
+                                                  selected_cluster_count=selected_cluster_count,
+                                                  clustering_method=clustering_method,
                                                   use_encoding=True,
                                                   save_to_file=False)
             col1.dataframe(subgroups_overview.set_index(subgroups_overview.columns[0]), use_container_width=True)
 
             # Clustering
-            clustering_plot = plot_k_means_on_pacmap(use_this_function=True,
-                                                     display_sh_score=False,
-                                                     selected_cohort=selected_cohort,
-                                                     cohort_title=cohort_title,
-                                                     use_case_name='frontend',
-                                                     features_df=FEATURES_DF,
-                                                     selected_features=selected_features,
-                                                     selected_dependent_variable=selected_variable,
-                                                     selected_cluster_count=selected_cluster_count,
-                                                     use_encoding=True,
-                                                     save_to_file=False)
+            if clustering_method == 'kmeans':
+                clustering_plot = plot_k_means_on_pacmap(use_this_function=True,
+                                                         display_sh_score=False,
+                                                         selected_cohort=selected_cohort,
+                                                         cohort_title=cohort_title,
+                                                         use_case_name='frontend',
+                                                         features_df=FEATURES_DF,
+                                                         selected_features=selected_features,
+                                                         selected_dependent_variable=selected_variable,
+                                                         selected_cluster_count=selected_cluster_count,
+                                                         use_encoding=True,
+                                                         save_to_file=False)
+            else:
+                clustering_plot = plot_k_prot_on_pacmap(use_this_function=True,
+                                                         display_sh_score=False,
+                                                         selected_cohort=selected_cohort,
+                                                         cohort_title=cohort_title,
+                                                         use_case_name='frontend',
+                                                         features_df=FEATURES_DF,
+                                                         selected_features=selected_features,
+                                                         selected_dependent_variable=selected_variable,
+                                                         selected_cluster_count=selected_cluster_count,
+                                                         use_encoding=True,
+                                                         save_to_file=False)
             col2.pyplot(clustering_plot, use_container_width=True)
             st.markdown('___')
 
@@ -133,9 +147,10 @@ def subgroup_analysis_page():
                                                                      features_df=FEATURES_DF,
                                                                      selected_features=selected_features_for_table,
                                                                      selected_dependent_variable=selected_variable,
-                                                                     selected_k_means_count=selected_cluster_count,
+                                                                     selected_cluster_count=selected_cluster_count,
                                                                      show_value_influences=selected_show_influences,
                                                                      selected_cluster=selected_cluster,
+                                                                     clustering_method=clustering_method,
                                                                      use_encoding=True,
                                                                      save_to_file=False)
             st.dataframe(feature_influence_df.set_index(feature_influence_df.columns[0]), use_container_width=True)
@@ -244,7 +259,7 @@ def subgroup_analysis_page():
                                                                                           clustering_method=clustering_method,
                                                                                           cohort_title=cohort_title,
                                                                                           dependent_variable=selected_variable,
-                                                                                          selected_k_means_count=selected_cluster_count,
+                                                                                          selected_cluster_count=selected_cluster_count,
                                                                                           check_sh_score=False,
                                                                                           use_grid_search=use_grid_search,
                                                                                           use_encoding=True,

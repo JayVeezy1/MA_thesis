@@ -18,7 +18,7 @@ from xgboost import XGBClassifier
 import seaborn as sn
 
 from step_2_preprocessing.preprocessing_functions import get_one_hot_encoding
-from step_3_data_analysis.clustering import get_kmeans_clusters, plot_sh_score
+from step_3_data_analysis.clustering import get_selected_clusters, plot_sh_score
 from step_4_classification.classification_deeplearning import get_DL_auc_score, get_DL_confusion_matrix
 
 

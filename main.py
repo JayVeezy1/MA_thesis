@@ -290,7 +290,8 @@ if __name__ == '__main__':
                                                             features_df=FEATURES_DF,
                                                             selected_features=SELECTED_FEATURES,
                                                             selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                                            selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
+                                                            selected_cluster_count=SELECTED_KMEANS_CLUSTERS_COUNT,
+                                                            clustering_method='kmeans',
                                                             use_encoding=True,
                                                             save_to_file=SELECT_SAVE_FILES)
 
@@ -302,9 +303,10 @@ if __name__ == '__main__':
                                                                             features_df=FEATURES_DF,
                                                                             selected_features=SELECTED_FEATURES,
                                                                             selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
-                                                                            selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
+                                                                            selected_cluster_count=SELECTED_KMEANS_CLUSTERS_COUNT,
                                                                             selected_cluster='all',    # can be selected in frontend
                                                                             show_value_influences=True,
+                                                                            clustering_method='kmeans',
                                                                             use_encoding=True,
                                                                             save_to_file=SELECT_SAVE_FILES)
 
@@ -319,7 +321,7 @@ if __name__ == '__main__':
                                                                 sampling_method=SELECTED_SAMPLING_METHOD,
                                                                 dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                                                 clustering_method='kmeans',
-                                                                selected_k_means_count=SELECTED_KMEANS_CLUSTERS_COUNT,
+                                                                selected_cluster_count=SELECTED_KMEANS_CLUSTERS_COUNT,
                                                                 use_grid_search=True,
                                                                 check_sh_score=True,
                                                                 use_encoding=True,
