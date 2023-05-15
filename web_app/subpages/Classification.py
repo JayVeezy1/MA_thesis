@@ -46,26 +46,128 @@ def classification_page():
         default_values.remove('age')            # remove these because too many categorical variables
         default_values.remove('stroke_type')
         selected_features = st.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
-
-        ## Select Classification Specific Parameters
-        col5, col6, col7, col8 = st.columns((0.25, 0.25, 0.25, 0.25))
-        ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost', 'deeplearning_sequential']
-        classification_method = col5.selectbox(label='Select classification method', options=ALL_CLASSIFICATION_METHODS)
-        ALL_SAMPLING_METHODS = ['no_sampling', 'oversampling']  # undersampling not useful
-        sampling_method = col6.selectbox(label='Select classification method', options=ALL_SAMPLING_METHODS)
-        if classification_method == 'RandomForest_with_gridsearch':
-            use_grid_search = True
-        else:
-            use_grid_search = False
         st.markdown('___')
 
-        ## CM and Report
-        col1, col2, col3 = st.columns((0.3, 0.1, 0.4))
-        col1.markdown("<h2 style='text-align: left; color: black;'>Confusion Matrix</h2>", unsafe_allow_html=True)
-        col3.markdown("<h2 style='text-align: left; color: black;'>Classification Report</h2>", unsafe_allow_html=True)
 
+        ## Select Classification Specific Parameters
+        # Selection 1
+        col1, col2, col5 = st.columns((0.475, 0.05, 0.475))
+        col1.markdown("<h2 style='text-align: left; color: black;'>Classification Method 1</h2>",
+                      unsafe_allow_html=True)
+        col3, col4 = col1.columns((0.5, 0.5))
+        ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost',
+                                            'deeplearning_sequential']
+        classification_method = col3.selectbox(label='Select classification method 1',
+                                               options=ALL_CLASSIFICATION_METHODS)
+        ALL_SAMPLING_METHODS = ['no_sampling', 'oversampling']  # undersampling not useful
+        sampling_method = col4.selectbox(label='Select sampling method 1', options=ALL_SAMPLING_METHODS)
+        if classification_method == 'RandomForest_with_gridsearch':
+            use_grid_search_1 = True
+        else:
+            use_grid_search_1 = False
+
+        # Selection 2
+        col5.markdown("<h2 style='text-align: left; color: black;'>Classification Method  2</h2>",
+                      unsafe_allow_html=True)
+        # Select Classification Specific Parameters
+        col3, col4 = col5.columns((0.5, 0.5))
+        classification_method_2 = col3.selectbox(label='Select classification method 2',
+                                                 options=ALL_CLASSIFICATION_METHODS)
+        sampling_method_2 = col4.selectbox(label='Select sampling method 2', options=ALL_SAMPLING_METHODS)
+        if classification_method == 'RandomForest_with_gridsearch':
+            use_grid_search_2 = True
+        else:
+            use_grid_search_2 = False
+        st.markdown('___')
+
+        # todo future work: maybe make deeplearning parameters as user input
+
+        # Get Report Selection 1
+        col1, col2, col5 = st.columns((0.475, 0.05, 0.475))
         if classification_method == 'deeplearning_sequential':
-            # todo future work: maybe make deeplearning parameters as user input?
+            classification_report = get_classification_report_deeplearning(use_this_function=True,
+                                                                           sampling_method=sampling_method,
+                                                                           selected_cohort=selected_cohort,
+                                                                           cohort_title=cohort_title,
+                                                                           use_case_name='frontend',
+                                                                           features_df=FEATURES_DF,
+                                                                           selected_features=selected_features,
+                                                                           selected_dependent_variable=selected_variable,
+                                                                           verbose=False,
+                                                                           save_to_file=False)
+
+        else:
+            classification_report = get_classification_report(use_this_function=True,  # True | False
+                                                              display_confusion_matrix=False,  # option for CM
+                                                              classification_method=classification_method,
+                                                              sampling_method=sampling_method,
+                                                              selected_cohort=selected_cohort,
+                                                              cohort_title=cohort_title,
+                                                              use_case_name='frontend',
+                                                              features_df=FEATURES_DF,
+                                                              selected_features=selected_features,
+                                                              selected_dependent_variable=selected_variable,
+                                                              use_grid_search=use_grid_search_1,
+                                                              verbose=False,
+                                                              save_to_file=False)
+        col1.markdown("<h2 style='text-align: left; color: black;'>Classification Report</h2>", unsafe_allow_html=True)
+        col1.dataframe(classification_report, use_container_width=True)
+        add_download_button(position=col1, dataframe=classification_report, title='classification_report',
+                            cohort_title=cohort_title)
+        accuracy = round(classification_report.loc['accuracy', 'recall'], 2)
+        recall = round(classification_report.loc['1.0', 'recall'], 2)
+        precision = round(classification_report.loc['1.0', 'precision'], 2)
+        col1.write(f'**Key metrics: Accuracy={accuracy}  |  Recall={recall}  |  Precision={precision}**')
+
+
+        # Get Report Selection 2
+        if classification_method_2 == 'deeplearning_sequential':
+            classification_report_2 = get_classification_report_deeplearning(use_this_function=True,
+                                                                             sampling_method=sampling_method_2,
+                                                                             selected_cohort=selected_cohort,
+                                                                             cohort_title=cohort_title,
+                                                                             use_case_name='frontend',
+                                                                             features_df=FEATURES_DF,
+                                                                             selected_features=selected_features,
+                                                                             selected_dependent_variable=selected_variable,
+                                                                             verbose=False,
+                                                                             save_to_file=False)
+
+        else:
+            classification_report_2 = get_classification_report(use_this_function=True,  # True | False
+                                                                display_confusion_matrix=False,  # option for CM
+                                                                classification_method=classification_method_2,
+                                                                sampling_method=sampling_method_2,
+                                                                selected_cohort=selected_cohort,
+                                                                cohort_title=cohort_title,
+                                                                use_case_name='frontend',
+                                                                features_df=FEATURES_DF,
+                                                                selected_features=selected_features,
+                                                                selected_dependent_variable=selected_variable,
+                                                                use_grid_search=use_grid_search_2,
+                                                                verbose=False,
+                                                                save_to_file=False)
+        # col5.markdown("<h2 style='text-align: left; color: black;'>Classification Report 2</h2>", unsafe_allow_html=True)
+        col5.write('')
+        col5.write('')
+        col5.write('')
+        col5.write('')
+        col5.write('')
+
+        col5.dataframe(classification_report_2, use_container_width=True)
+        add_download_button(position=col5, dataframe=classification_report_2, title='classification_report_2',
+                            cohort_title=cohort_title)
+        accuracy = round(classification_report_2.loc['accuracy', 'recall'], 2)
+        recall = round(classification_report_2.loc['1.0', 'recall'], 2)
+        precision = round(classification_report_2.loc['1.0', 'precision'], 2)
+        col5.write(f'**Key metrics: Accuracy={accuracy}  |  Recall={recall}  |  Precision={precision}**')
+        st.markdown('___')
+
+
+        ## CM Selection 1
+        col1, col2, col5 = st.columns((0.475, 0.05, 0.475))
+        col1.markdown("<h2 style='text-align: left; color: black;'>Confusion Matrix</h2>", unsafe_allow_html=True)
+        if classification_method == 'deeplearning_sequential':
             st.write(f'Calculating the classification with a deeplearning model for the first time takes about 1-2 minutes.')
             cm_df = get_DL_confusion_matrix(classification_method=classification_method,
                                           sampling_method=sampling_method,
@@ -87,7 +189,7 @@ def classification_page():
                                           features_df=FEATURES_DF,
                                           selected_features=selected_features,
                                           selected_dependent_variable=selected_variable,
-                                          use_grid_search=use_grid_search,
+                                          use_grid_search=use_grid_search_1,
                                           verbose=False,
                                           save_to_file=False)
 
@@ -130,38 +232,78 @@ def classification_page():
         col1.pyplot(fig1, use_container_width=True)
 
 
-        # Get Report
-        if classification_method == 'deeplearning_sequential':
-            classification_report = get_classification_report_deeplearning(use_this_function=True,
-                                                                          sampling_method=sampling_method,
-                                                                          selected_cohort=selected_cohort,
-                                                                          cohort_title=cohort_title,
-                                                                          use_case_name='frontend',
-                                                                          features_df=FEATURES_DF,
-                                                                          selected_features=selected_features,
-                                                                          selected_dependent_variable=selected_variable,
-                                                                          verbose=False,
-                                                                          save_to_file=False)
+        ## CM Selection 2
+        # col5.markdown("<h2 style='text-align: left; color: black;'>Confusion Matrix 2</h2>", unsafe_allow_html=True)
+        col5.write('')
+        col5.write('')
+        col5.write('')
+        col5.write('')
+        col5.write('')
 
+        if classification_method_2 == 'deeplearning_sequential':
+            st.write(
+                f'Calculating the classification with a deeplearning model for the first time takes about 1-2 minutes.')
+            cm_df_2 = get_DL_confusion_matrix(classification_method=classification_method_2,
+                                            sampling_method=sampling_method_2,
+                                            selected_cohort=selected_cohort,
+                                            cohort_title=cohort_title,
+                                            use_case_name='frontend',
+                                            features_df=FEATURES_DF,
+                                            selected_features=selected_features,
+                                            selected_dependent_variable=selected_variable,
+                                            verbose=False,
+                                            save_to_file=False)
         else:
-            classification_report = get_classification_report(use_this_function=True,  # True | False
-                                                          display_confusion_matrix=False,  # option for CM
-                                                          classification_method=classification_method,
-                                                          sampling_method=sampling_method,
-                                                          selected_cohort=selected_cohort,
-                                                          cohort_title=cohort_title,
-                                                          use_case_name='frontend',
-                                                          features_df=FEATURES_DF,
-                                                          selected_features=selected_features,
-                                                          selected_dependent_variable=selected_variable,
-                                                          use_grid_search=use_grid_search,
-                                                          verbose=False,
-                                                          save_to_file=False)
-        col3.dataframe(classification_report)
-        add_download_button(position=col3, dataframe=classification_report, title='classification_report', cohort_title=cohort_title)
-        accuracy = round(classification_report.loc['accuracy', 'recall'], 2)
-        recall = round(classification_report.loc['1.0', 'recall'], 2)
-        precision = round(classification_report.loc['1.0', 'precision'], 2)
+            cm_df_2 = get_confusion_matrix(use_this_function=True,  # True | False
+                                         classification_method=classification_method_2,
+                                         sampling_method=sampling_method_2,
+                                         selected_cohort=selected_cohort,
+                                         cohort_title=cohort_title,
+                                         use_case_name='frontend',
+                                         features_df=FEATURES_DF,
+                                         selected_features=selected_features,
+                                         selected_dependent_variable=selected_variable,
+                                         use_grid_search=use_grid_search_1,
+                                         verbose=False,
+                                         save_to_file=False)
 
-        col3.write(f'**Key metrics: Accuracy={accuracy}  |  Recall={recall}  |  Precision={precision}**')
+        # Transform cm_df to plot object
+        cmap = 'viridis'
+        fig1, ax1 = plt.subplots()
+        # add totals to cm_df
+        sum_col = []
+        for c in cm_df_2.columns:
+            sum_col.append(cm_df_2[c].sum())
+        sum_lin = []
+        for item_line in cm_df_2.iterrows():
+            sum_lin.append(item_line[1].sum())
+        cm_df_2['sum_actual'] = sum_lin
+        sum_col.append(np.sum(sum_lin))
+        cm_df_2.loc['sum_predicted'] = sum_col
+        # create seaborn heatmap
+        ax1 = sn.heatmap(
+            data=cm_df_2,
+            annot=True,
+            fmt=".0f",
+            annot_kws={"size": 15},
+            linewidths=0.5,
+            ax=ax1,
+            cbar=False,
+            cmap=cmap,
+            vmin=0,
+            vmax=(cm_df_2['sum_actual']['sum_predicted'] + 20)
+            # adding a bit to max value -> not such a strong color difference
+        )
+        # sn.set(font_scale=3.0)
+        # set ticklabels rotation (0 rotation, but with this horizontal)
+        ax1.set_xticklabels(ax1.get_xticklabels(), rotation=0, fontsize=10)
+        ax1.set_yticklabels(ax1.get_yticklabels(), rotation=0, fontsize=10)
+        # titles and legends
+        plt.tick_params(axis='x', which='major', labelsize=11, labelbottom=False, bottom=False, top=False,
+                        labeltop=True)
+        ax1.set_title(f"{classification_method_2} on {cohort_title}, {sampling_method_2}", wrap=True)
+        plt.tight_layout()
+        col5.pyplot(fig1, use_container_width=True)
+
+
         st.markdown('___')

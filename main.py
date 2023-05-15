@@ -68,22 +68,20 @@ if __name__ == '__main__':
     ALL_COHORTS_WITH_TITLES: dict = preprocessing_functions.get_all_cohorts(SELECTED_COHORT, FEATURES_DF, SELECTED_DATABASE)
     print('STATUS: Preprocessing finished.\n')
 
-    # TODO frontend: maybe put two classification methods next to each other for comparison
+    # TODO frontend: Add AUROC Plot to classification page
 
 
     # todo text: update + interpret fairness and subgroup chapter
     # todo text: mention that official fairness toolbox better than my approach https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md
 
 
-    # TODO code: add SHAPley values to classification chapter (+ shap waterfalls, with this different importance for subgroups)
-    # get shapely function from there (also use this analysis to compare clusters?) https://antonsruberts.github.io/kproto-audience/
-    # todo text: add shapley to classification chapter and compare with correlation
+    # todo code: add SHAPley values to classification page (+ shap waterfalls, with this different importance for subgroups)
+    ## get shapely function from there: https://antonsruberts.github.io/kproto-audience/
+    ## add shapley to classification chapter and compare with correlation
 
 
-    # todo code: check open 'todos', add to 'future_research' chapter
     # todo text: rewrite, gaps: interpret AUPRC plots in text, create graphic to visualize filtering steps of complete mimic-iii dataset for chapter 2
 
-    # todo maybe long term: add filtering mechanism in Patient Class, recheck stroke filtering (move ischemic to front)
 
     ### Data Analysis
     # Step 3.1) General Statistics
