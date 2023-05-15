@@ -79,7 +79,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                               use_encoding: False,
                                               save_to_file):
     # calculate prediction quality per cluster, save into table classification_clusters_overview
-    # todo long term: this is only for kmeans, also add for other clustering methods (dynamic like DBSCAN and ASDF also possible?)
+    # todo long term: also add for other clustering methods (DBSCAN and SLINK)
     if not use_this_function:
         return None
 

@@ -49,7 +49,7 @@ def preprocess_for_clustering(selected_cohort, features_df, selected_features, s
 
     # print(f'CHECK: {len(selected_features)} features used for Clustering.')
 
-    return selected_cohort  # TODO: this was removed: turn back? .to_numpy()        # dependent_variable and icustay_id still inside, will be used and removed outside
+    return selected_cohort  # dependent_variable and icustay_id still inside, will be used and removed outside
 
 
 def get_ids_for_cluster(avg_patient_cohort, cohort_title, features_df, selected_features, selected_dependent_variable,
@@ -482,6 +482,7 @@ def get_refactorized_appearances(cluster_cohort, feature, factorization_df):
 
 
 def get_feature_entropy(current_overview_table, feature, column_name, appearances_raw):
+    # for continuous features appearances_raw = binning_intervals
     entropy = 1
 
     try:  # this normalization shifts entropy between 0 and 1
@@ -491,9 +492,25 @@ def get_feature_entropy(current_overview_table, feature, column_name, appearance
         normalization_factor = 0
 
     influence_values = current_overview_table.loc[current_overview_table['Features'] == feature, column_name].to_list()
+    # Applying entropy normalization formula here
     entropy = normalization_factor * sum(influence_values)
 
     return round(entropy, 2)
+
+
+def get_binned_value_influence(temp_appearances_df, feature):
+    # print(f'CHECK: Value influences for feature {feature}')
+    value_influences = []
+    feature_count = sum(temp_appearances_df['counts'])
+    for appearance_count in temp_appearances_df['counts']:
+        # Calculating value_influence here
+        if feature_count == 0 or feature_count is None:
+            value_influence = 0
+        else:
+            value_influence = round((appearance_count / feature_count) * math.log2(appearance_count / feature_count), 2)
+        value_influences.append(value_influence)
+
+    return value_influences
 
 
 def get_feature_influence_for_cluster(cluster_cohort, selected_features, features_df, current_overview_table,
@@ -568,6 +585,7 @@ def get_feature_influence_for_cluster(cluster_cohort, selected_features, feature
                 if appearance_count < 1:
                     value_influence = 0
                 else:
+                    # Calculating value_influence here
                     value_influence = ((appearance_count / feature_count) * math.log2(appearance_count / feature_count))
 
                 current_overview_table.loc[(current_overview_table['Features'] == feature) & (
@@ -603,19 +621,17 @@ def get_feature_influence_for_cluster(cluster_cohort, selected_features, feature
                                                                                                         feature_max - feature_min) * 2 / 3,
                                                                                                 2),
                                                                                             feature_max])
-                feature_appearances_df = pd.DataFrame()
-                feature_appearances_df['intervals'] = feature_appearances_series.keys()
-                feature_appearances_df['interval_starts'] = feature_appearances_df['intervals'].map(lambda x: x.left)
-                feature_appearances_df['counts'] = feature_appearances_series.values
+                temp_appearances_df = pd.DataFrame()
+                temp_appearances_df['intervals'] = feature_appearances_series.keys()
+                temp_appearances_df['interval_starts'] = temp_appearances_df['intervals'].map(lambda x: x.left)
+                temp_appearances_df['counts'] = feature_appearances_series.values
+                binning_intervals: list = temp_appearances_df['intervals'].to_list()
+                temp_appearances_df = temp_appearances_df.sort_values(by='interval_starts')
+                binning_counts: list = temp_appearances_df['counts'].to_list()
+                binning_value_influence: list = get_binned_value_influence(temp_appearances_df=temp_appearances_df,
+                                                                           feature=feature)
 
                 # todo: Get Entropy for these bins
-                feature_appearances_df['entropies'] = ['todo' for x in feature_appearances_series]
-
-                binning_intervals: list = feature_appearances_df['intervals'].to_list()
-                feature_appearances_df = feature_appearances_df.sort_values(by='interval_starts')
-                binning_counts: list = feature_appearances_df['counts'].to_list()
-                binning_entropies: list = feature_appearances_df['entropies'].to_list()
-
                 for i in range(0, len(binning_intervals)):
                     # Get Count for this bin
                     current_overview_table.loc[(current_overview_table['Features'] == feature) & (
@@ -623,10 +639,17 @@ def get_feature_influence_for_cluster(cluster_cohort, selected_features, feature
                         binning_intervals[i])), f'cluster_{selected_cluster_number}_count'] = binning_counts[i]
 
                     # Get Entropy for this bin
-                    # current_overview_table.loc[(current_overview_table['Features'] == feature) & (
-                    #         current_overview_table['Values'] == str(
-                    #     binning_intervals[i])), f'cluster_{selected_cluster_number}_entropy'] = binning_entropies[i]
-#
+                    current_overview_table.loc[(current_overview_table['Features'] == feature) & (
+                            current_overview_table['Values'] == str(
+                        binning_intervals[i])), f'cluster_{selected_cluster_number}_value_influence'] = binning_value_influence[i]
+
+                # Get Feature Entropy (normalized sum of influence values)
+                current_overview_table.loc[(current_overview_table['Features'] == feature), f'cluster_{selected_cluster_number}_entropy'] = \
+                    get_feature_entropy(current_overview_table=current_overview_table,
+                                        feature=feature,
+                                        column_name=f'cluster_{selected_cluster_number}_value_influence',
+                                        appearances_raw=binning_intervals)
+
             except ValueError as e:  # this happens if for the selected cohort (a small cluster) all patients have NaN
                 print(f'WARNING: Column {feature} probably is all-NaN or only one entry. Error-Message: {e}')
                 current_overview_table.loc[
@@ -635,6 +658,9 @@ def get_feature_influence_for_cluster(cluster_cohort, selected_features, feature
     # Cleanup of NaN
     current_overview_table.loc[
         current_overview_table[f'cluster_{selected_cluster_number}_count'].isnull(), f'cluster_{selected_cluster_number}_count'] = 0
+    # entropy is only NaN if no influence_values were calculated, that happens when the feature is not in the cluster at all
+    current_overview_table.loc[
+        current_overview_table[f'cluster_{selected_cluster_number}_entropy'].isnull(), f'cluster_{selected_cluster_number}_entropy'] = 0
 
     if not show_value_influences:
         # current_overview_table.drop(columns.appendix == 'value_influence')

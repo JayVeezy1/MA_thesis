@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
     # Step 3.4) Clustering (kmeans, kprototype, DBSCAN, ...)
     # KMEANS
-    SELECTED_KMEANS_CLUSTERS_COUNT = 5  # manually checking silhouette score shows optimal cluster count (higher is better)
+    SELECTED_KMEANS_CLUSTERS_COUNT = 3  # manually checking silhouette score shows optimal cluster count (higher is better)
     clustering.plot_k_means_on_pacmap(use_this_function=False,  # True | False
                                       display_sh_score=False,  # option for sh_score
                                       selected_cohort=SELECTED_COHORT_preprocessed,
@@ -296,7 +296,7 @@ if __name__ == '__main__':
                                                             save_to_file=SELECT_SAVE_FILES)
 
     # Feature Influence per Cluster
-    feature_influence = subgroup_analysis.calculate_feature_influence_table(use_this_function=False,  # True | False
+    feature_influence = subgroup_analysis.calculate_feature_influence_table(use_this_function=True,  # True | False
                                                                             selected_cohort=SELECTED_COHORT_preprocessed,
                                                                             cohort_title=SELECTED_COHORT_TITLE,
                                                                             use_case_name=USE_CASE_NAME,
