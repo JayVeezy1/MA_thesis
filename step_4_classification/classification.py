@@ -180,7 +180,7 @@ def split_classification_data(selected_cohort, cohort_title: str, features_df,
     elif classification_method == 'RandomForest_with_gridsearch':
         clf = RandomForestClassifier(random_state=1321, oob_score=True)
     elif classification_method == 'XGBoost':
-        clf = XGBClassifier()
+        clf = XGBClassifier()                   # todo future research: add and optimize parameters for classifiers
     else:
         print(
             f'ERROR: classification_method "{classification_method}" not valid. Choose from options: "RandomForest" or "XGBoost".')
@@ -369,10 +369,10 @@ def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, 
     # calculate & plot the AUROC, return: auc_score
     # also calculate & plot AUPRC and return: auc_prc_score
     if not use_this_function:
-        return None, None
+        return None, None, None, None
 
     if classification_method == 'deeplearning_sequential':
-        auc_score, auc_prc_score = get_DL_auc_score(selected_cohort=selected_cohort, cohort_title=cohort_title,
+        auc_score, auroc_plot, auc_prc_score, auc_prc_plot = get_DL_auc_score(selected_cohort=selected_cohort, cohort_title=cohort_title,
                                                     features_df=features_df, selected_features=selected_features,
                                                     selected_dependent_variable=selected_dependent_variable,
                                                     classification_method=classification_method,
@@ -381,7 +381,7 @@ def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, 
                                                     save_to_file=save_to_file,
                                                     verbose=verbose)
 
-        return auc_score, auc_prc_score
+        return auc_score, auroc_plot, auc_prc_score, auc_prc_plot
 
     # split_classification_data
     clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
@@ -420,7 +420,7 @@ def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, 
     # print(f'CHECK: {classification_method}: AUROC = %.3f' % auc_score)
     print(f'CHECK: {classification_method}: average_precision_score = %.3f' % auc_prc_score)
 
-    # Plot AUC-ROC Curve
+    ## Plot AUC-ROC Curve
     # Get false-positive-rate = x-axis and true-positive-rate = y-axis
     if y_test_basic.sum() == 0:
         print('WARNING: No death cases in y_test_final. Calculation of roc_curve not possible.')
@@ -428,9 +428,11 @@ def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, 
                                 message='No positive samples in y_true, true positive value should be meaningless')  # UndefinedMetricWarning:
         try:
             clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, y_pred)
+            auroc_plot = None
         except ValueError as e:
             print('Warning: Value Error occurred. clf_fpr and clf_tpr are set to 0. ', e)
             clf_fpr, clf_tpr, _ = (0, 0, 0)
+            auroc_plot = None
     else:
         try:
             clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, y_pred)

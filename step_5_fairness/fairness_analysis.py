@@ -195,9 +195,9 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
     dataset_pred.labels = predicted_labels
 
     # derive privileged groups for all protected_attribute_names
-    attr = dataset_pred.protected_attribute_names[0]
-    idx = dataset_pred.protected_attribute_names.index(attr)
     try:
+        attr = dataset_pred.protected_attribute_names[0]
+        idx = dataset_pred.protected_attribute_names.index(attr)
         privileged_groups = [{attr: dataset_pred.privileged_protected_attributes[idx][0]}]
         unprivileged_groups = [{attr: dataset_pred.unprivileged_protected_attributes[idx][0]}]
     except IndexError as e:

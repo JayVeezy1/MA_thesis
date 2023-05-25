@@ -81,15 +81,28 @@ def get_DL_auc_score(selected_cohort, cohort_title, features_df,
         auc_prc_score = round(average_precision_score(y_test_basic, y_pred), 3)
     # print(f'CHECK: {classification_method}: AUROC = %.3f' % auc_score)
 
+    ## Plot AUC-ROC Curve
     # Get false-positive-rate = x-axis and true-positive-rate = y-axis
     if y_test_basic.sum() == 0:
         print('WARNING: No death cases in y_test_final. Calculation of roc_curve not possible.')
         warnings.filterwarnings(action='ignore',
                                 message='No positive samples in y_true, true positive value should be meaningless')  # UndefinedMetricWarning:
-        clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, y_pred)
+        try:
+            clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, y_pred)
+            auroc_plot = None
+        except ValueError as e:
+            print('Warning: Value Error occurred. clf_fpr and clf_tpr are set to 0. ', e)
+            clf_fpr, clf_tpr, _ = (0, 0, 0)
+            auroc_plot = None
     else:
-        clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, y_pred)
-        plt.plot(clf_fpr, clf_tpr, marker='.', label=f'{classification_method} (AUROC = {auc_score})')
+        try:
+            clf_fpr, clf_tpr, _ = roc_curve(y_test_basic, y_pred)
+            auroc_plot = plt.figure()
+            plt.plot(clf_fpr, clf_tpr, label=f'{classification_method} (AUROC = {auc_score})')  # marker='.',
+        except ValueError as e:
+            print('Warning: Value Error occurred. clf_fpr and clf_tpr are set to 0. ', e)
+            auroc_plot = plt.figure()
+            clf_fpr, clf_tpr, _ = (0, 0, 0)
 
     # Add a random predictor line to plot
     random_probs = [0 for _ in range(len(y_test_basic))]
@@ -113,19 +126,26 @@ def get_DL_auc_score(selected_cohort, cohort_title, features_df,
         plt.show()
 
     # Plot AUPRC Curve
-    display = PrecisionRecallDisplay.from_predictions(y_test_basic, y_pred,
-                                                      name=f'{classification_method} (AUPRC = {auc_prc_score})')
-    _ = display.ax_.set_title(f'{classification_method} (AUPRC = {auc_prc_score})')
-    plt.title(f"{classification_method} for {cohort_title} AUPRC: {auc_prc_score}, {sampling_title}", wrap=True)
-    if save_to_file:
-        current_time = datetime.datetime.now().strftime("%H_%M_%S")
-        auprc_filename = f'./output/{use_case_name}/classification_deeplearning/AUPRC_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png'
-        plt.savefig(auprc_filename, dpi=600)
-        print(f'STATUS: AUPRC was saved to {auprc_filename}')
-    if show_plot:
-        plt.show()
+    try:
+        display = PrecisionRecallDisplay.from_predictions(y_test_basic, y_pred,
+                                                          name=f'{classification_method} (AUPRC = {auc_prc_score})')
+        _ = display.ax_.set_title(f'{classification_method} (AUPRC = {auc_prc_score})')
+        plt.title(f"{classification_method} for {cohort_title} AUPRC: {auc_prc_score}, {sampling_title}", wrap=True)
+        auc_prc_plot = display.figure_
+        if save_to_file:
+            current_time = datetime.datetime.now().strftime("%H_%M_%S")
+            auprc_filename = f'./output/{use_case_name}/classification_deeplearning/AUPRC_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png'
+            plt.savefig(auprc_filename, dpi=600)
+            print(f'STATUS: AUPRC was saved to {auprc_filename}')
+        if show_plot:
+            plt.show()
+        # plt.close()
+        # do not close plt, this throws RunTimeError because TKinter not thread safe https://stackoverflow.com/questions/14694408/runtimeerror-main-thread-is-not-in-main-loop#14695007
+    except ValueError as e:
+        print('Warning: Plotting of PrecisionRecall not possible. ValueError: ', e)
+        auc_prc_plot = None
 
-    return auc_score, auc_prc_score
+    return auc_score, auroc_plot, auc_prc_score, auc_prc_plot
 
 
 # plot DL CM from existing CM

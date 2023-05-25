@@ -2,12 +2,9 @@ import os
 import re
 import uuid
 
-import pandas as pd
 import streamlit as st
 
 from objects.patients import Patient
-from step_1_setup_data import cache_IO
-from step_1_setup_data.cache_IO import load_data_from_cache
 from step_2_preprocessing.preprocessing_functions import get_preprocessed_avg_cohort
 
 
@@ -16,6 +13,59 @@ def start_streamlit_frontend(use_this_function: False):
         print(f'\nSTATUS: Starting Frontend: ')
         os.system('streamlit run web_app/app.py')
 
+
+def get_default_values(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable):
+    default_values = [x for x in ALL_FEATURES if x not in ALL_DEPENDENT_VARIABLES]
+    # default_values.insert(0, selected_variable)
+
+    # remove these because too many categorical variables
+    try:
+        default_values.remove('age')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('stroke_type')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('admission_type')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('dbsource')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('electivesurgery')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('mechvent')
+    except ValueError as e:
+        pass
+
+
+    # remove these because otherwise too many variables
+    try:
+        default_values.remove('Bicarbonate')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('Chloride (whole blood)')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('Creatinine')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('icustay_id')
+    except ValueError as e:
+        pass
+
+    # keep: ethnicity, gender, oasis, gcs, o2, heart reate, anion gap, sodium, white blood cells
+
+    return default_values
 
 # From https://github.com/JayVeezy1/rascore
 def create_st_button(link_text, link_url, hover_color="#e78ac3", st_col=None):

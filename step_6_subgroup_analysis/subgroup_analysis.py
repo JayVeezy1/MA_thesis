@@ -76,8 +76,7 @@ def calculate_feature_influence_table(use_this_function: False, selected_cohort,
 def compare_classification_models_on_clusters(use_this_function, use_case_name, features_df, selected_features,
                                               selected_cohort, classification_method, sampling_method, cohort_title, clustering_method, dependent_variable,
                                               selected_cluster_count, check_sh_score, use_grid_search: False,
-                                              use_encoding: False,
-                                              save_to_file):
+                                              use_encoding: False, save_to_file):
     # calculate prediction quality per cluster, save into table classification_clusters_overview
     # todo future work: also add for other clustering methods (DBSCAN and SLINK)
     if not use_this_function:
@@ -135,9 +134,13 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                        verbose=False,
                                        save_to_file=False)
 
+    total_count = len(selected_cohort['icustay_id'].to_list())
+    total_deaths = selected_cohort.loc[selected_cohort[dependent_variable] == 1, dependent_variable].count()
     current_settings = pd.DataFrame([{'dependent_variable': dependent_variable,
                                       'classification_method': classification_method,
                                       'cluster': 'complete_set',
+                                      'total_count': total_count,
+                                      'deaths': total_deaths,
                                       'auc_score': total_auc_score,
                                       'auc_prc_score': auc_prc_score,
                                       'accuracy': get_accuracy(total_cm_df),
@@ -148,7 +151,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                                  ignore_index=True)
 
     for i, cluster in enumerate(clusters):               # for each cluster get prediction quality
-        print(f'STATUS: Calculating auc_score for cluster: {i}, with model settings: {classification_method}, {dependent_variable}')
+        print(f'\n STATUS: Calculating auc_score for cluster: {i}, with model settings: {classification_method}, {dependent_variable}')
         # get auc_score for cluster
         auc_score, auroc_plot, auc_prc_score, auc_prc_plot = get_auc_score(use_this_function=True,  # True | False
                                                  classification_method=classification_method,
@@ -176,9 +179,14 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                      verbose=False,
                                      save_to_file=False
                                      )
+
+        cluster_count = len(cluster['icustay_id'].to_list())
+        cluster_deaths = cluster.loc[cluster[dependent_variable] == 1, dependent_variable].count()
         current_settings = pd.DataFrame([{'dependent_variable': dependent_variable,
                                           'classification_method': classification_method,
                                           'cluster': f'cluster_{i}',
+                                          'total_count': cluster_count,
+                                          'deaths': cluster_deaths,
                                           'auc_score': auc_score,
                                           'auc_prc_score': auc_prc_score,
                                           'accuracy': get_accuracy(cm_df),

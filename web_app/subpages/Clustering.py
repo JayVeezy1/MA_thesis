@@ -8,7 +8,7 @@ from scipy.cluster.hierarchy import dendrogram
 
 from step_3_data_analysis.clustering import plot_sh_score, plot_k_means_on_pacmap, plot_k_prot_on_pacmap, \
     plot_sh_score_DBSCAN, plot_DBSCAN_on_pacmap, plot_SLINK_on_pacmap, plot_clusters_on_3D_pacmap, plot_sh_score_SLINK
-from web_app.util import get_avg_cohort_cache
+from web_app.util import get_avg_cohort_cache, get_default_values
 
 
 def my_plot_dendrogram(icoords, dcoords, ivl, p, n, mh, orientation, no_labels, color_list, leaf_font_size,
@@ -199,10 +199,10 @@ def clustering_page():
                                                delete_existing_cache=False,
                                                selected_patients=[])  # empty = all
         ALL_FEATURES = list(selected_cohort.columns)
-        default_values = [x for x in ALL_FEATURES if x not in ALL_DEPENDENT_VARIABLES]
-        default_values.insert(0, selected_variable)
-        default_values.remove('age')  # remove these because too many categorical variables
-        default_values.remove('stroke_type')
+        default_values = get_default_values(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable)
+        # additionally remove the following for clustering (otherwise too many variables)
+
+
         selected_features = st.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
 
         ## Select Clustering Specific Parameters

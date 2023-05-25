@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from step_5_fairness.fairness_analysis import get_fairness_report, plot_radar_fairness
-from web_app.util import get_avg_cohort_cache, add_download_button, get_unfactorized_values
+from web_app.util import get_avg_cohort_cache, add_download_button, get_unfactorized_values, get_default_values
 
 
 def fairness_page():
@@ -36,10 +36,8 @@ def fairness_page():
                                                delete_existing_cache=False,
                                                selected_patients=[])  # empty = all
         ALL_FEATURES = list(selected_cohort.columns)
-        default_values = [x for x in ALL_FEATURES if x not in ALL_DEPENDENT_VARIABLES]
-        default_values.insert(0, selected_variable)
-        default_values.remove('age')            # remove these because too many categorical variables
-        default_values.remove('stroke_type')
+        default_values = get_default_values(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable)
+
         selected_features = st.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
         st.markdown('___')
 
