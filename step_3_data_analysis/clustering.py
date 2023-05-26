@@ -215,7 +215,7 @@ def calculate_cluster_kprot(selected_cohort, cohort_title: str, selected_feature
 
 
 def plot_sh_score(use_this_function: False, selected_cohort, cohort_title, use_case_name, features_df,
-                  selected_features, selected_dependent_variable, use_encoding: False, clustering_method,
+                  selected_features, selected_dependent_variable, use_encoding: False, clustering_method, selected_cluster_count,
                   save_to_file: bool = False):
     if not use_this_function:
         return None
@@ -230,7 +230,12 @@ def plot_sh_score(use_this_function: False, selected_cohort, cohort_title, use_c
                                                 selected_dependent_variable=selected_dependent_variable)
 
     # Find best k-means cluster option depending on sh_score -> check plot manually
-    krange = list(range(2, 15))  # choose multiple k-means cluster options to test
+    if selected_cluster_count < 10:
+        max_x_axis = 15
+    else:
+        max_x_axis = int(selected_cluster_count + 5)
+
+    krange = list(range(2, max_x_axis))  # choose multiple k-means cluster options to test
     avg_silhouettes = []
     inertias = []
 
@@ -336,6 +341,7 @@ def plot_k_means_on_pacmap(use_this_function: False, display_sh_score: False, se
                       selected_dependent_variable=selected_dependent_variable,
                       use_encoding=use_encoding,
                       clustering_method='kmeans',
+                      selected_cluster_count=selected_cluster_count,
                       save_to_file=save_to_file)
 
 
@@ -844,6 +850,7 @@ def plot_k_prot_on_pacmap(use_this_function, display_sh_score, selected_cohort, 
                       selected_dependent_variable=selected_dependent_variable,
                       use_encoding=use_encoding,
                       clustering_method='kprot',
+                      selected_cluster_count=selected_cluster_count,
                       save_to_file=save_to_file)
 
     # PacMap needed for visualization

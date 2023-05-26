@@ -247,7 +247,7 @@ def clustering_page():
                                           cohort_title=cohort_title, use_case_name='frontend', features_df=FEATURES_DF,
                                           selected_features=selected_features,
                                           selected_dependent_variable=selected_variable,
-                                          use_encoding=True, clustering_method='kmeans', save_to_file=False)
+                                          use_encoding=True, clustering_method='kmeans', selected_cluster_count=selected_cluster_count, save_to_file=False)
 
             col1.pyplot(sh_score_plot, use_container_width=True)
             # Clustering
@@ -272,7 +272,8 @@ def clustering_page():
                                           selected_features=selected_features,
                                           selected_dependent_variable=selected_variable,
                                           use_encoding=False,        # not needed for kprot
-                                          clustering_method='kprot', save_to_file=False)
+                                          clustering_method='kprot', selected_cluster_count=selected_cluster_count,
+                                          save_to_file=False)
 
             col1.pyplot(sh_score_plot, use_container_width=True)
             # Clustering

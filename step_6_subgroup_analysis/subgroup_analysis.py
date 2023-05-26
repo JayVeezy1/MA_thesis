@@ -92,6 +92,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                       selected_features=selected_features,
                       selected_dependent_variable=dependent_variable,
                       clustering_method=clustering_method,
+                      selected_cluster_count=selected_cluster_count,
                       use_encoding=use_encoding,
                       save_to_file=False)
 

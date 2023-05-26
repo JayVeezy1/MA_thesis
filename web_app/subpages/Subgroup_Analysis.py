@@ -96,6 +96,7 @@ def subgroup_analysis_page():
                                                   use_encoding=True,
                                                   save_to_file=False)
             col1.dataframe(subgroups_overview.set_index(subgroups_overview.columns[0]), use_container_width=True)
+            add_download_button(position=col1, dataframe=subgroups_overview, title='subgroups_overview_table', cohort_title=cohort_title)
 
             # Clustering
             if clustering_method == 'kmeans':

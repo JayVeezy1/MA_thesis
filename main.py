@@ -68,7 +68,7 @@ if __name__ == '__main__':
     ALL_COHORTS_WITH_TITLES: dict = preprocessing_functions.get_all_cohorts(SELECTED_COHORT, FEATURES_DF, SELECTED_DATABASE)
     print('STATUS: Preprocessing finished.\n')
 
-    # todo text: update + interpret fairness and subgroup chapter (especially formula)
+    # todo text: update + interpret fairness and subgroup chapter
     ## mention that official fairness toolbox better than my approach https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md
 
     # todo: check Error of fairness metrics for 'female + black' -> then include this case into text and quote 'women and cardiovascular health Impact of sex and gender on stroke'
