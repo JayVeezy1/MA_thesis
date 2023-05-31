@@ -62,8 +62,48 @@ def get_default_values(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable)
         default_values.remove('icustay_id')
     except ValueError as e:
         pass
+    try:
+        default_values.remove('patientweight')      # no statistical significance
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('hypertension_flag')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('insurance')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('religion')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('Respiratory Rate')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('marital_status')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('Arterial Blood Pressure mean')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('cancer_flag')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('drug_abuse_flag')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('Glucose (whole blood)')
+    except ValueError as e:
+        pass
 
-    # keep: ethnicity, gender, oasis, gcs, o2, heart reate, anion gap, sodium, white blood cells
+    # keep: ethnicity, gender, oasis, gcs, o2, heart rate, anion gap, sodium, white blood cells
 
     return default_values
 

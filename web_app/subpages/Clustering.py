@@ -209,7 +209,7 @@ def clustering_page():
         col5, col6, col7, col8 = st.columns((0.25, 0.25, 0.25, 0.25))
         ALL_CLUSTERING_METHODS: list = ['kmeans', 'kprototype', 'DBSCAN', 'SLINK']
         clustering_method = col5.selectbox(label='Select clustering method', options=ALL_CLUSTERING_METHODS)
-        ALL_CRITERIA: list = ['maxclust', 'distance', 'monocrit', 'inconsistent']
+        ALL_CRITERIA: list = ['maxclust', 'distance', 'inconsistent']     # 'monocrit',
         if clustering_method == 'kmeans' or clustering_method == 'kprototype':
             selected_cluster_count = col6.number_input(label='Select cluster count k', min_value=1, max_value=50, value=3)
             selected_eps = None

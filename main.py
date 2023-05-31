@@ -72,14 +72,11 @@ if __name__ == '__main__':
     ## mention that official fairness toolbox better than my approach https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md
 
     # todo: check Error of fairness metrics for 'female + black' -> then include this case into text and quote 'women and cardiovascular health Impact of sex and gender on stroke'
-
+    # todo: probably want the cluster to be the deciding aspect when choosing fairness analysis for subgroup. Not 'Female' 'White' features but directly the cluster as a selectable feature -> future work?
 
     # todo code: add SHAPley values to classification page (+ shap waterfalls, with this different importance for subgroups)
     ## get shapely function from there: https://antonsruberts.github.io/kproto-audience/
     ## add shapley to classification chapter and compare with correlation
-
-
-    # todo text: rewrite, gaps: interpret AUPRC plots in text, create graphic to visualize filtering steps of complete mimic-iii dataset for chapter 2
 
 
     ### Data Analysis
