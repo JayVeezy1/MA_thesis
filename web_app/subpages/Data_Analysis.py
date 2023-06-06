@@ -6,7 +6,7 @@ import streamlit as st
 from step_1_setup_data.cache_IO import load_data_from_cache
 from step_3_data_analysis.correlations import plot_correlations, plot_pairplot
 from step_3_data_analysis.general_statistics import calculate_deaths_table, calculate_feature_overview_table
-from web_app.util import get_avg_cohort_cache, add_download_button, get_default_values
+from web_app.util import get_avg_cohort_cache, add_download_button, get_default_values, insert_feature_selectors
 
 
 def data_analysis_page():
@@ -35,10 +35,9 @@ def data_analysis_page():
                                              selected_stroke_type=selected_stroke_type,
                                              delete_existing_cache=False,
                                              selected_patients=[])  # empty = all
+        # Feature Selector
         ALL_FEATURES = list(selected_cohort.columns)
-        default_values = get_default_values(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable)
-
-        selected_features = st.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
+        selected_features = insert_feature_selectors(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable)
         st.markdown('___')
 
         ## General Statistics DF

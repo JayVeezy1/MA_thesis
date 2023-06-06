@@ -9,7 +9,8 @@ from matplotlib import pyplot as plt
 from step_4_classification.classification import get_classification_report, get_confusion_matrix, get_auc_score
 from step_4_classification.classification_deeplearning import get_classification_report_deeplearning, \
     get_DL_confusion_matrix
-from web_app.util import get_avg_cohort_cache, add_download_button, get_default_values
+from web_app.util import get_avg_cohort_cache, add_download_button, get_default_values, get_preselection_one, \
+    get_preselection_two, insert_feature_selectors
 
 
 def classification_page():
@@ -40,10 +41,10 @@ def classification_page():
                                              selected_stroke_type=selected_stroke_type,
                                              delete_existing_cache=False,
                                              selected_patients=[])  # empty = all
-        ALL_FEATURES = list(selected_cohort.columns)
-        default_values = get_default_values(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable)
 
-        selected_features = st.multiselect(label='Select features', options=ALL_FEATURES, default=default_values)
+        # Feature Selector
+        ALL_FEATURES = list(selected_cohort.columns)
+        selected_features = insert_feature_selectors(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable)
         st.markdown('___')
 
 

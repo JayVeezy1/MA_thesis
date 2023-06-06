@@ -107,6 +107,40 @@ def get_default_values(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable)
 
     return default_values
 
+
+def get_preselection_one():
+    return ['Anion Gap', 'ethnicity', 'gcs', 'gender', 'Heart Rate', 'O2 saturation pulseoxymetry', 'oasis',
+              'Sodium (whole blood)', 'White Blood Cells']
+
+
+def get_preselection_two():
+    return ['Anion Gap', 'ethnicity', 'gcs', 'gender', 'Heart Rate', 'O2 saturation pulseoxymetry', 'oasis',
+              'Sodium (whole blood)', 'White Blood Cells',
+              'admission_type', 'age', 'Bicarbonate', 'Chloride (whole blood)', 'Creatinine',
+              'electivesurgery', 'mechvent', 'stroke_type']
+
+
+def insert_feature_selectors(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable):
+    col1, col2, col3 = st.columns((0.25, 0.25, 0.5))
+
+    # parameter on_change would be useful to set checker_2=False and reset previous default_values
+    checker_1 = col1.checkbox(label='Feature Pre-Selection 1', value=True)   # , help='Select the optimized feature selection from the thesis.')
+    checker_2 = col2.checkbox(label='Feature Pre-Selection 2', value=False)     # , help='Select the original feature selection from the thesis.')
+    if checker_1 and not checker_2:
+        # selected_features = st.multiselect(label='Select features', options=ALL_FEATURES, default=get_preselection_one())
+        selected_features = get_preselection_one()
+        st.markdown(f'Selected Features: {selected_features}')
+    elif checker_2 and not checker_1:
+        # selected_features = st.multiselect(label='Select features', options=ALL_FEATURES, default=get_preselection_two())
+        selected_features = get_preselection_two()
+        st.markdown(f'Selected Features: {selected_features}')
+    else:
+        default_values = get_default_values(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable)
+        selected_features = st.multiselect(label='Manually select features', options=ALL_FEATURES, default=default_values)
+
+    return selected_features
+
+
 # From https://github.com/JayVeezy1/rascore
 def create_st_button(link_text, link_url, hover_color="#e78ac3", st_col=None):
 

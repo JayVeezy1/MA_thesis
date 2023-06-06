@@ -272,9 +272,10 @@ def get_sequential_model(x_train_final, y_train_final):
     model.add(Dense(1, activation='sigmoid'))
 
     # compile the keras model
-    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy', tensorflow.keras.metrics.Recall()])
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])       # , tensorflow.keras.metrics.Recall()])
     # alternative optimizer: 'sgd'
-    # alternative use recall as metric: metrics=[tf.keras.metrics.Recall(thresholds=0)]
+    # Currently optimizing for accuracy without Recall, Recall is already too high compared to Precision
+    # alternative only use recall as metric: metrics=[tf.keras.metrics.Recall(thresholds=0)]
 
     # fit the keras model on the dataset + predict values y_pred
     history = model.fit(x=x_train_final, y=y_train_final, epochs=175, batch_size=32)
