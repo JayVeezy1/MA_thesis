@@ -211,35 +211,44 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
                                                  privileged_groups=privileged_groups)
 
     # 4) Calculate Fairness Metrics
-    accuracy = round(classification_metric.accuracy(), 3)
-    accuracy_def = 'performance metric for overall accuracy'
-    accuracy_expected = 1
-    recall = round(classification_metric.recall(), 3)
-    recall_def = 'performance metric for TP/True Positives detection'
-    recall_expected = 1
-    precision = round(classification_metric.precision(), 3)
-    precision_def = 'performance metric for TP/Predicted Positives detection'
-    precision_expected = 1
+    accuracy_privileged = round(classification_metric.accuracy(privileged=True), 3)
+    accuracy_unprivileged = round(classification_metric.accuracy(privileged=False), 3)
+    accuracy = accuracy_unprivileged - accuracy_privileged
+    accuracy_def = 'Comparing performance for accuracy'
+    accuracy_expected = 0
+
+    recall_privileged = round(classification_metric.recall(privileged=True), 3)
+    recall_unprivileged = round(classification_metric.recall(privileged=False), 3)
+    recall = recall_unprivileged - recall_privileged
+    recall_def = 'Comparing performance for Recall (TP/Real Positives)'
+    recall_expected = 0
+
+    precision_privileged = round(classification_metric.precision(privileged=True), 3)
+    precision_unprivileged = round(classification_metric.precision(privileged=False), 3)
+    precision = precision_unprivileged - precision_privileged
+    precision_def = 'Comparing performance for Precision (TP/Predicted Positives)'
+    precision_expected = 0
+
     num_instances = round(classification_metric.num_instances(), 0)
     num_instances_def = 'Instances used for prediction'
     num_instances_expected = '-'
     statistical_parity_difference = round(classification_metric.statistical_parity_difference(), 3)
-    parity_def = 'Difference between Subgroups'
+    parity_def = 'Alias for Statistical Parity Difference'
     parity_expected = 0
     disparate_impact = round(classification_metric.disparate_impact(), 3)
-    disparate_def = 'Ratio between Subgroups'
+    disparate_def = 'Alias for Disparate Impact Ratio'
     disparate_expected = 1
     true_positive_rate_difference = round(classification_metric.true_positive_rate_difference(), 3)
-    tp_rate_def = 'alias for Equal Opportunity'
+    tp_rate_def = 'Alias for True Positive Rate Difference'
     tp_rate_expected = 0
     false_negative_rate_difference = round(classification_metric.false_negative_rate_difference(), 3)
     fp_rate_def = 'False Negative Rate, used for Equalized Odds'
     fp_rate_expected = 0
     average_odds_difference = round(classification_metric.average_odds_difference(), 3)
-    average_odds_def = 'alias for Equalized Odds'
+    average_odds_def = 'Alias for Average Odds'
     average_odds_expected = 0
     generalized_entropy_index = round(classification_metric.generalized_entropy_index(), 3)
-    entropy_def = 'alias for Theil Index when alpha=1'
+    entropy_def = 'Alias for Theil Index with alpha=1. Optimal value=0'
     entropy_expected = 0
     # OPTIONAL metric:
     # differential_fairness_bias_amplification = round(classification_metric.differential_fairness_bias_amplification(), 3)
@@ -249,23 +258,24 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
 
     # 4) return Fairness Report as print if verbose, save as table if save_files
     report = pd.DataFrame({'Number of Instances': [num_instances, num_instances_expected, num_instances_def],
-                           # 'Accuracy': [accuracy, accuracy_expected, accuracy_def],
-                           # 'Recall': [recall, recall_expected, recall_def],
-                           # 'Precision': [precision, precision_expected, precision_def],
-                           'Statistical Parity Difference': [statistical_parity_difference, parity_expected,
-                                                             parity_def],
-                           'Disparate Impact Ratio': [disparate_impact, disparate_expected, disparate_def],
-                           'True Positive Rate Difference': [true_positive_rate_difference, tp_rate_expected,
-                                                             tp_rate_def],
+                           # why were these commented out? Not same values as Plot?
+                           '1.1 Accuracy Parity Difference': [accuracy, accuracy_expected, accuracy_def],
+                           '1.1 Recall Parity Difference': [recall, recall_expected, recall_def],
+                           '1.1 Precision Parity Difference': [precision, precision_expected, precision_def],
+                           '1.2 Demographic Parity Difference': [statistical_parity_difference, parity_expected, parity_def],
+                           # '1.2 Disparate Impact Ratio': [disparate_impact, disparate_expected, disparate_def],
+                           '2.1 Equalized Odds Difference': [average_odds_difference, average_odds_expected, average_odds_def],
+                           '2.2 Equal Opportunity Difference': [true_positive_rate_difference, tp_rate_expected, tp_rate_def],
                            # 'False Negative Rate Difference': [false_negative_rate_difference, fp_rate_expected, fp_rate_def],
-                           'Average Odds Difference': [average_odds_difference, average_odds_expected,
-                                                       average_odds_def],
                            # 'differential_fairness_bias_amplification': [differential_fairness_bias_amplification],
-                           'Generalized Entropy Index': [generalized_entropy_index, entropy_expected, entropy_def]
+                           '3. Generalized Entropy Index': [generalized_entropy_index, entropy_expected, entropy_def]
                            })
     report = report.transpose()
     report.index.names = ['Metrics']
     report.rename(columns={0: attributes_string, 1: 'Optimum', 2: 'Information'}, inplace=True)
+
+    # remove the optimum column, as only 0 values for differences
+    report = report.loc[:, [attributes_string, 'Information']]
 
     if verbose:
         print(f'\n CHECK: Fairness Report for {classification_method} on {cohort_title}, {sampling_title}:')

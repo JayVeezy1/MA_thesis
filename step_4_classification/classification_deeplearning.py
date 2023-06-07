@@ -114,7 +114,7 @@ def get_DL_auc_score(selected_cohort, cohort_title, features_df,
         plt.plot(random_fpr, random_tpr, linestyle='--', label='Random prediction (AUROC = %0.3f)' % random_auc)
 
     # Plot Settings
-    plt.title(f"{classification_method} for {cohort_title} AUROC: {auc_score}, {sampling_title}")
+    plt.title(f'{classification_method} for {cohort_title} AUROC: {auc_score}, {sampling_title}', wrap=True)
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.legend()

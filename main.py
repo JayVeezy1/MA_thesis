@@ -21,7 +21,7 @@ if __name__ == '__main__':
     USE_CASE_NAME: str = 'stroke_all_systems'
     FEATURES_DF = pd.read_excel('./supplements/FEATURE_PREPROCESSING_TABLE.xlsx')
     SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'
-    ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp'] # , 'death_3_days', 'death_30_days', 'death_180_days', 'death_365_days']
+    ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days']   # , 'death_30_days', 'death_180_days', 'death_365_days']
     ### Setup, MIMIC-III Export from DB, Load from Cache
     # Step 0) Setup when first time using db:
     # mimic_to_csv.setup_postgre_files()                 # setup all needed background functions and views for postgre. Warning: Sometimes this setup from Python does not work. Then you simply copy&paste each SQL Script into PostGre QueryTool and execute it.
@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     # Step 1.3) Load all .csv files as a 'Patient' Object, use Pickle for Cache
     DELETE_CACHE = False
-    SELECT_SAVE_FILES = False
+    SELECT_SAVE_FILES = True
     cache_IO.load_data_from_cache(project_path=PROJECT_PATH, features_df=FEATURES_DF, use_case_name=USE_CASE_NAME,
                                   delete_existing_cache=DELETE_CACHE)
     ### Preprocessing
@@ -53,8 +53,8 @@ if __name__ == '__main__':
     # Scaling
     SELECTED_COHORT = Patient.get_avg_scaled_data(raw_avg_cohort, FEATURES_DF)
     # Choose Cohort Parameters
-    ALL_DATABASES: list = ['complete', 'metavision', 'carevue']
-    ALL_STROKE_TYPES: list = ['all_stroke', 'hemorrhagic', 'ischemic', 'other_stroke']
+    ALL_DATABASES: list = ['complete']      # , 'metavision', 'carevue']
+    ALL_STROKE_TYPES: list = ['all_stroke']     # , 'hemorrhagic', 'ischemic', 'other_stroke']
     SELECTED_DATABASE = 'complete'
     SELECTED_STROKE_TYPE = 'all_stroke'
     SELECTED_COHORT_TITLE = 'scaled_' + SELECTED_DATABASE + '_avg_cohort_' + SELECTED_STROKE_TYPE
@@ -187,7 +187,7 @@ if __name__ == '__main__':
     SELECTED_CLASSIFICATION_METHOD = 'XGBoost'  # options: RandomForest | XGBoost || NOT deeplearning_sequential -> use function get_classification_report_deeplearning()
     USE_GRIDSEARCH = True
     SELECTED_SAMPLING_METHOD = 'oversampling'  # options: no_sampling | oversampling | undersampling   -> estimation: oversampling > no_sampling > undersampling (very bad results)
-    ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'XGBoost'] # , 'RandomForest_with_gridsearch', 'XGBoost', 'deeplearning_sequential']
+    ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost', 'deeplearning_sequential']
     # Classification Report
     report = classification.get_classification_report(use_this_function=False,  # True | False
                                                       display_confusion_matrix=True,  # option for CM
