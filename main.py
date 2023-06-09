@@ -17,7 +17,7 @@ if __name__ == '__main__':
     starting_time = datetime.now()
     PROJECT_PATH: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'  # this variable must be fitted to the users local project folder
     PROJECT_PATH_LAPTOP = 'C:/Users/vanek/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'
-    PROJECT_PATH = PROJECT_PATH_LAPTOP
+    # PROJECT_PATH = PROJECT_PATH_LAPTOP
     USE_CASE_NAME: str = 'stroke_all_systems'
     FEATURES_DF = pd.read_excel('./supplements/FEATURE_PREPROCESSING_TABLE.xlsx')
     SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'
@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     # Step 1.3) Load all .csv files as a 'Patient' Object, use Pickle for Cache
     DELETE_CACHE = False
-    SELECT_SAVE_FILES = True
+    SELECT_SAVE_FILES = False
     cache_IO.load_data_from_cache(project_path=PROJECT_PATH, features_df=FEATURES_DF, use_case_name=USE_CASE_NAME,
                                   delete_existing_cache=DELETE_CACHE)
     ### Preprocessing
@@ -257,9 +257,9 @@ if __name__ == '__main__':
     ### Fairness Metrics
     # Step 5.1) Calculate Fairness for manual Subgroups
     PROTECTED_FEATURES = ['ethnicity', 'gender']
-    PRIVILEGED_VALUES = [['WHITE', 'ASIAN'], ['M']]
+    PRIVILEGED_VALUES = [['WHITE'], ['M']]      # , 'ASIAN'
     fairness_analysis.get_fairness_report(use_this_function=False,  # True | False
-                                          plot_performance_metrics=True,
+                                          plot_performance_metrics=False,
                                           classification_method=SELECTED_CLASSIFICATION_METHOD,
                                           sampling_method=SELECTED_SAMPLING_METHOD,
                                           selected_cohort=SELECTED_COHORT_preprocessed,

@@ -12,7 +12,7 @@ from web_app.util import get_avg_cohort_cache, add_download_button, get_unfactor
 
 def subgroup_analysis_page():
     ## Start of Page: User Input Selector
-    st.markdown("<h1 style='text-align: left; color: black;'>Subgroups Analysis</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: left; color: black;'>Subgroup Analysis</h1>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns((0.25, 0.25, 0.25))
     ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days', 'death_30_days', 'death_180_days',
                                      'death_365_days']
@@ -162,7 +162,7 @@ def subgroup_analysis_page():
 
             ## Fairness Report and Performance Metrics Plot
             col1, col2 = st.columns((0.5, 0.5))
-            col1.markdown("<h2 style='text-align: left; color: black;'>Subgroups Fairness Analysis</h2>", unsafe_allow_html=True)
+            col1.markdown("<h2 style='text-align: left; color: black;'>Subgroup Fairness Analysis</h2>", unsafe_allow_html=True)
             ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost',
                                                 'deeplearning_sequential']
             classification_method = col1.selectbox(label='Select classification method',
@@ -215,7 +215,7 @@ def subgroup_analysis_page():
                                                                 sampling_method=sampling_method,
                                                                 use_case_name='frontend',
                                                                 save_to_file=False,
-                                                                plot_performance_metrics=True,
+                                                                plot_performance_metrics=False,
                                                                 use_grid_search=use_grid_search,
                                                                 verbose=False,
                                                                 protected_features=selected_features_for_fairness,
@@ -226,7 +226,7 @@ def subgroup_analysis_page():
                 col2.markdown("<h2 style='text-align: left; color: black;'>Fairness Metrics</h2>",
                               unsafe_allow_html=True)
                 categories = fairness_report.index.values.tolist()[1:]
-                result = fairness_report[attributes_string].to_list()[1:]
+                result = fairness_report['fairness_metrics'].to_list()[1:]
                 fairness_radar = plot_radar_fairness(categories=categories, list_of_results=[result])
                 col2.plotly_chart(figure_or_data=fairness_radar, use_container_width=True)
 
@@ -235,7 +235,7 @@ def subgroup_analysis_page():
                 col1.markdown("<h2 style='text-align: left; color: black;'>Subgroups Comparison</h2>",
                               unsafe_allow_html=True)
                 col1.pyplot(metrics_plot)
-                col1.dataframe(metrics_per_group_df)
+                col1.dataframe(metrics_per_group_df.transpose())
                 col1.write('Class 1 is made up of the selected protected features and their privileged attributes.')
 
                 # Plot Fairness Report

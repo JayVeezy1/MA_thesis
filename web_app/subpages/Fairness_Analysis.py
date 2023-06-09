@@ -113,7 +113,6 @@ def fairness_page():
 
         ## Plot Fairness Metrics
         try:
-            st.markdown("<h2 style='text-align: left; color: black;'>Fairness Metrics</h2>", unsafe_allow_html=True)
             fairness_report, metrics_plot, metrics_per_group_df, attributes_string = get_fairness_report(use_this_function=True,
                                                                                    selected_cohort=selected_cohort,
                                                                                    cohort_title=cohort_title,
@@ -145,36 +144,39 @@ def fairness_page():
                                                                                    protected_features=selected_features_for_fairness,
                                                                                    privileged_values=selected_privileged_values)
 
-            # Plot Fairness Radar combined
-            categories = fairness_report_2.index.values.tolist()[1:]
-            result_1 = fairness_report[attributes_string].to_list()[1:]
-            result_2 = fairness_report_2[attributes_string_2].to_list()[1:]
-            fairness_radar_2 = plot_radar_fairness(categories=categories, list_of_results=[result_1, result_2])
-            st.plotly_chart(figure_or_data=fairness_radar_2, use_container_width=True)
-
             # Plot Fairness Report 1
-            col1, col2, col5 = st.columns((0.475, 0.05, 0.475))
+            st.markdown("<h2 style='text-align: left; color: black;'>Fairness Metrics</h2>", unsafe_allow_html=True)
+            col1, col2, col3 = st.columns((0.2, 0.6, 0.2))
             col1.dataframe(fairness_report)
             add_download_button(position=col1, dataframe=fairness_report, title='fairness_report',
                                 cohort_title=cohort_title)
 
+            # Plot Fairness Radar combined
+            categories = fairness_report_2.index.values.tolist()[1:]
+            result_1 = fairness_report['fairness_metrics'].to_list()[1:]
+            result_2 = fairness_report_2['fairness_metrics'].to_list()[1:]
+            fairness_radar_2 = plot_radar_fairness(categories=categories, list_of_results=[result_1, result_2])
+            col2.plotly_chart(figure_or_data=fairness_radar_2, use_container_width=True)
+
             # Plot Fairness Report 2
-            col5.dataframe(fairness_report_2)
-            add_download_button(position=col5, dataframe=fairness_report_2, title='fairness_report_2',
+            col3.dataframe(fairness_report_2)
+            add_download_button(position=col3, dataframe=fairness_report_2, title='fairness_report_2',
                                 cohort_title=cohort_title)
             st.markdown('___')
 
-            # Plot Subgroups comparison
-            st.markdown("<h2 style='text-align: left; color: black;'>Subgroups Comparison</h2>", unsafe_allow_html=True)
+
+
+            # Plot Subgroups comparison 1
+            st.markdown("<h2 style='text-align: left; color: black;'>Subgroup Comparison</h2>", unsafe_allow_html=True)
             col1, col_center, col2 = st.columns((0.475, 0.05, 0.475))
+            col1.dataframe(metrics_per_group_df.transpose(), use_container_width=True)
             col1.pyplot(metrics_plot)
-            col1.dataframe(metrics_per_group_df)
             col1.write('Class 1 is made up of the selected protected features and their privileged attributes.')
 
-            # Plot Subgroups comparison
+            # Plot Subgroups comparison 2
+            col2.dataframe(metrics_per_group_df_2.transpose(), use_container_width=True)
             col2.pyplot(metrics_plot_2)
-            col2.dataframe(metrics_per_group_df_2)
+
         except AttributeError:
             st.warning('Select protected attributes to conduct a Fairness Analysis.')
-
         st.markdown('___')
