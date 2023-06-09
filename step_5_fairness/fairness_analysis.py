@@ -54,6 +54,19 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
     count_axis.set_ylim(bottom=0, top=y_limit)
     performance_metrics_plot = figure_object[0][0].figure
 
+    # Get metrics_per_group_df
+    metrics_per_group_df = metric_frame.by_group
+    metrics_per_group_df.loc[
+        'overall', ['accuracy', 'precision', 'recall', 'roc_auc', 'selection rate', 'count']] = metric_frame.overall
+    cols = metrics_per_group_df.columns.tolist()
+    cols = cols[-1:] + cols[:-1]
+    metrics_per_group_df = metrics_per_group_df[cols]
+    metrics_per_group_df.loc[:,
+    ['accuracy', 'precision', 'recall', 'roc_auc', 'selection rate']] = metrics_per_group_df.loc[:,
+                                                                        ['accuracy', 'precision', 'recall', 'roc_auc',
+                                                                         'selection rate']].round(3)
+    metrics_per_group_df = metrics_per_group_df.transpose()
+
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%H_%M_%S")  # removed %d%m%Y_ from date
         performance_metrics_plot.savefig(
@@ -62,21 +75,15 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
 
         filename_string: str = f'./output/{use_case_name}/classification/GROUP_FAIRNESS_{attributes_string}_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
         filename = filename_string.encode()
-        metrics_per_group_df = metric_frame.by_group
-        metrics_per_group_df.loc['overall', ['accuracy', 'precision', 'recall', 'roc_auc', 'selection rate', 'count']] = metric_frame.overall
-        cols = metrics_per_group_df.columns.tolist()
-        cols = cols[-1:] + cols[:-1]
-        metrics_per_group_df = metrics_per_group_df[cols]
-        metrics_per_group_df.loc[:, ['accuracy', 'precision', 'recall', 'roc_auc', 'selection rate']] = metrics_per_group_df.loc[:, ['accuracy', 'precision', 'recall', 'roc_auc', 'selection rate']].round(3)
         with open(filename, 'w', newline='') as output_file:
-            metrics_per_group_df.transpose().to_csv(output_file, index=True)
+            metrics_per_group_df.to_csv(output_file, index=True)
             print(f'STATUS: metrics_per_group_df was saved to {filename_string}')
         plt.show()
     else:
-        print('CHECK: Overall metrics:')
+        # print('CHECK: Overall metrics:')
         # print(metric_frame.overall)
         print('CHECK: Metrics by group:')
-        # print(metric_frame.by_group)
+        print(metric_frame.by_group)
         # plt.show()
 
     # plt.close()
@@ -87,7 +94,7 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
     # This would be useful for threshold optimization, but can we even change threshold anywhere?
     # https://github.com/Trusted-AI/AIF360/blob/master/examples/tutorial_medical_expenditure.ipynb follow this
 
-    return performance_metrics_plot
+    return performance_metrics_plot, metrics_per_group_df
 
 
 def get_factorized_values(feature, privileged_values, factorization_df):
@@ -286,7 +293,7 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
         # check where all selected columns contain a 1
         all_ones_array = temp_df.apply(lambda x: all(x == 1), axis=1).astype(int)
         # temp_df['new_checking_column'] = all_ones_array.astype(int)
-        performance_metrics_plot = create_performance_metrics_plot(y_pred=predicted_labels,
+        performance_metrics_plot, metrics_per_group_df = create_performance_metrics_plot(y_pred=predicted_labels,
                                         y_true=y_test_basic,
                                         selected_attribute_array=all_ones_array,
                                         use_case_name=use_case_name,
@@ -297,6 +304,7 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
                                         save_to_file=save_to_file)
     else:
         performance_metrics_plot = None
+        metrics_per_group_df = None
 
     if save_to_file:
         current_time = datetime.datetime.now().strftime("%H_%M_%S")  # removed %d%m%Y_ from date
@@ -307,7 +315,7 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
             report.to_csv(output_file, index=True)  # keep index here for metrics titles
             print(f'STATUS: fairness_report was saved to {report_filename}')
 
-    return report, performance_metrics_plot, attributes_string
+    return report, performance_metrics_plot, metrics_per_group_df, attributes_string
 
 
 def plot_radar_fairness(categories, list_of_results):

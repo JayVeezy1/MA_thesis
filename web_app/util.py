@@ -14,11 +14,10 @@ def start_streamlit_frontend(use_this_function: False):
         os.system('streamlit run web_app/app.py')
 
 
-def get_default_values(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable):
+def get_default_values(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable):       # selected_variable not used but better kept here
     default_values = [x for x in ALL_FEATURES if x not in ALL_DEPENDENT_VARIABLES]
-    # default_values.insert(0, selected_variable)
 
-    # remove these because too many categorical variables
+    # remove these for standard selection, keep: ethnicity, gender, oasis, gcs, o2, heart rate, anion gap, sodium, white blood cells
     try:
         default_values.remove('age')
     except ValueError as e:
@@ -43,9 +42,6 @@ def get_default_values(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable)
         default_values.remove('mechvent')
     except ValueError as e:
         pass
-
-
-    # remove these because otherwise too many variables
     try:
         default_values.remove('Bicarbonate')
     except ValueError as e:
@@ -99,11 +95,25 @@ def get_default_values(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable)
     except ValueError as e:
         pass
     try:
+        default_values.remove('sepsis_flag')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('obesity_flag')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('diabetes_flag')
+    except ValueError as e:
+        pass
+    try:
+        default_values.remove('gauges_total')
+    except ValueError as e:
+        pass
+    try:
         default_values.remove('Glucose (whole blood)')
     except ValueError as e:
         pass
-
-    # keep: ethnicity, gender, oasis, gcs, o2, heart rate, anion gap, sodium, white blood cells
 
     return default_values
 

@@ -114,7 +114,7 @@ def fairness_page():
         ## Plot Fairness Metrics
         try:
             st.markdown("<h2 style='text-align: left; color: black;'>Fairness Metrics</h2>", unsafe_allow_html=True)
-            fairness_report, metrics_plot, attributes_string = get_fairness_report(use_this_function=True,
+            fairness_report, metrics_plot, metrics_per_group_df, attributes_string = get_fairness_report(use_this_function=True,
                                                                                    selected_cohort=selected_cohort,
                                                                                    cohort_title=cohort_title,
                                                                                    features_df=FEATURES_DF,
@@ -129,7 +129,7 @@ def fairness_page():
                                                                                    verbose=False,
                                                                                    protected_features=selected_features_for_fairness,
                                                                                    privileged_values=selected_privileged_values)
-            fairness_report_2, metrics_plot_2, attributes_string_2 = get_fairness_report(use_this_function=True,
+            fairness_report_2, metrics_plot_2, metrics_per_group_df_2, attributes_string_2 = get_fairness_report(use_this_function=True,
                                                                                    selected_cohort=selected_cohort,
                                                                                    cohort_title=cohort_title,
                                                                                    features_df=FEATURES_DF,
@@ -168,10 +168,12 @@ def fairness_page():
             st.markdown("<h2 style='text-align: left; color: black;'>Subgroups Comparison</h2>", unsafe_allow_html=True)
             col1, col_center, col2 = st.columns((0.475, 0.05, 0.475))
             col1.pyplot(metrics_plot)
+            col1.dataframe(metrics_per_group_df)
             col1.write('Class 1 is made up of the selected protected features and their privileged attributes.')
 
             # Plot Subgroups comparison
             col2.pyplot(metrics_plot_2)
+            col2.dataframe(metrics_per_group_df_2)
         except AttributeError:
             st.warning('Select protected attributes to conduct a Fairness Analysis.')
 

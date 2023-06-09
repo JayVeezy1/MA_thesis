@@ -205,7 +205,7 @@ def subgroup_analysis_page():
                 elif len(protected_values_for_feature) > 1:
                     col1.warning('Warning: For most categorical features only a selection of one attribute is sensible.')
 
-            fairness_report, metrics_plot, attributes_string = get_fairness_report(use_this_function=True,
+            fairness_report, metrics_plot, metrics_per_group_df, attributes_string = get_fairness_report(use_this_function=True,
                                                                 selected_cohort=selected_cohort,
                                                                 cohort_title=cohort_title,
                                                                 features_df=FEATURES_DF,
@@ -235,6 +235,7 @@ def subgroup_analysis_page():
                 col1.markdown("<h2 style='text-align: left; color: black;'>Subgroups Comparison</h2>",
                               unsafe_allow_html=True)
                 col1.pyplot(metrics_plot)
+                col1.dataframe(metrics_per_group_df)
                 col1.write('Class 1 is made up of the selected protected features and their privileged attributes.')
 
                 # Plot Fairness Report

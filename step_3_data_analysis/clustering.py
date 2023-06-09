@@ -491,7 +491,7 @@ def get_feature_entropy(current_overview_table, feature, column_name, appearance
     # for continuous features appearances_raw = binning_intervals
     entropy = 1
 
-    try:  # this normalization shifts entropy between 0 and 1
+    try:  # this normalization formula shifts entropy between 0 and 1
         normalization_factor = (-1 / math.log2(len(appearances_raw)))  # count of possible values for this attribute
     except ZeroDivisionError as e:
         print(f'Warning: ZeroDivisionError occurred. Only one feature appearance exists for {feature}. Normalization and entropy is set to 0.', e)
@@ -591,7 +591,7 @@ def get_feature_influence_for_cluster(cluster_cohort, selected_features, feature
                 if appearance_count < 1:
                     value_influence = 0
                 else:
-                    # Calculating value_influence here
+                    # Calculating value_influence here with formula
                     value_influence = ((appearance_count / feature_count) * math.log2(appearance_count / feature_count))
 
                 current_overview_table.loc[(current_overview_table['Features'] == feature) & (

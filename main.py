@@ -17,7 +17,7 @@ if __name__ == '__main__':
     starting_time = datetime.now()
     PROJECT_PATH: str = 'C:/Users/Jakob/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'  # this variable must be fitted to the users local project folder
     PROJECT_PATH_LAPTOP = 'C:/Users/vanek/Documents/Studium/Master_Frankfurt/Masterarbeit/MIMIC_III/my_queries/'
-    # PROJECT_PATH = PROJECT_PATH_LAPTOP
+    PROJECT_PATH = PROJECT_PATH_LAPTOP
     USE_CASE_NAME: str = 'stroke_all_systems'
     FEATURES_DF = pd.read_excel('./supplements/FEATURE_PREPROCESSING_TABLE.xlsx')
     SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'
@@ -68,10 +68,8 @@ if __name__ == '__main__':
     ALL_COHORTS_WITH_TITLES: dict = preprocessing_functions.get_all_cohorts(SELECTED_COHORT, FEATURES_DF, SELECTED_DATABASE)
     print('STATUS: Preprocessing finished.\n')
 
-    # todo text: update + interpret fairness and subgroup chapter
-    ## mention that official fairness toolbox better than my approach https://github.com/microsoft/responsible-ai-toolbox/blob/main/docs/fairness-dashboard-README.md
 
-    # todo: check Error of fairness metrics for 'female + black' -> then include this case into text and quote 'women and cardiovascular health Impact of sex and gender on stroke'
+    # todo text: update + interpret fairness and subgroup chapter
     # todo: probably want the cluster to be the deciding aspect when choosing fairness analysis for subgroup. Not 'Female' 'White' features but directly the cluster as a selectable feature -> future work?
 
     # todo code: add SHAPley values to classification page (+ shap waterfalls, with this different importance for subgroups)
