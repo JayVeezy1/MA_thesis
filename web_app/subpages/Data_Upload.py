@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import streamlit as st
 from web_app.util import get_avg_cohort_cache
-from step_4_classification.classification import get_classification_report, get_confusion_matrix
+from step_4_classification.classification import get_classification_report, get_confusion_matrix, get_shapely_explainer
 from step_4_classification.classification_deeplearning import get_classification_report_deeplearning, \
     get_DL_confusion_matrix
 from step_3_data_analysis.clustering import calculate_cluster_kmeans, preprocess_for_clustering, \
@@ -54,12 +54,16 @@ def data_upload_page():
     if col2.button(label='Clear Cache'):
         # This clears all previous cached data
         get_avg_cohort_cache.clear()
+
         # Classification
         get_confusion_matrix.clear()
         get_classification_report.clear()
         get_classification_report_deeplearning.clear()
         get_DL_confusion_matrix.clear()
         get_fairness_report.clear()
+
+        # Shapley
+        get_shapely_explainer.clear()
 
         # Clustering
         calculate_cluster_kmeans.clear()
@@ -74,6 +78,14 @@ def data_upload_page():
         derive_subgroups.clear()
         calculate_feature_influence_table.clear()
         compare_classification_models_on_clusters.clear()
+
+        # Delete all cached Shapley Plots from web_app/data_upload/temp folder
+        directory = './web_app/data_upload/temp/'
+        for filename in os.listdir(directory):
+            file = os.path.join(directory, filename)
+            # checking if it is a file
+            if os.path.isfile(file):
+                os.remove(file)
 
     st.markdown('___')
 

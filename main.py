@@ -254,6 +254,23 @@ if __name__ == '__main__':
                                                            all_dependent_variables=ALL_DEPENDENT_VARIABLES,
                                                            save_to_file=SELECT_SAVE_FILES)
 
+    # Step 4.4) Shapley Feature Relevance
+    classification.get_shapely_relevance(use_this_function=False,
+                                         selected_feature='oasis',      # ethnicity_1
+                                         classification_method=SELECTED_CLASSIFICATION_METHOD,
+                                         sampling_method=SELECTED_SAMPLING_METHOD,
+                                         selected_cohort=SELECTED_COHORT_preprocessed,
+                                         cohort_title=SELECTED_COHORT_TITLE,
+                                         use_case_name=USE_CASE_NAME,
+                                         features_df=FEATURES_DF,
+                                         selected_features=SELECTED_FEATURES,
+                                         selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                         show_plot=True,
+                                         use_grid_search=USE_GRIDSEARCH,
+                                         verbose=True,
+                                         save_to_cache=False,
+                                         save_to_file=SELECT_SAVE_FILES)
+
     ### Fairness Metrics
     # Step 5.1) Calculate Fairness for manual Subgroups
     PROTECTED_FEATURES = ['ethnicity', 'gender']
