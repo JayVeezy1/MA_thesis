@@ -29,6 +29,9 @@ def preprocess_for_classification(selected_cohort, features_df, selected_feature
     features_to_remove = features_df['feature_name'].loc[features_df['must_be_removed'] == 'yes'].to_list()
     selected_features = [x for x in selected_features if x not in features_to_remove]
 
+    if 'cluster' in selected_cohort.columns:
+        selected_features.append('cluster')
+
     # Removal of other dependent_variables
     prediction_variables = features_df['feature_name'].loc[
         features_df['potential_for_analysis'] == 'prediction_variable'].to_list()
@@ -181,7 +184,7 @@ def split_classification_data(selected_cohort, cohort_title: str, features_df,
     elif classification_method == 'RandomForest_with_gridsearch':
         clf = RandomForestClassifier(random_state=1321, oob_score=True)
     elif classification_method == 'XGBoost':
-        clf = XGBClassifier()                   # todo future research: add and optimize parameters for classifiers
+        clf = XGBClassifier(random_state=1321)                   # todo future research: add and optimize parameters for classifiers
     else:
         print(
             f'ERROR: classification_method "{classification_method}" not valid. Choose from options: "RandomForest" or "XGBoost".')

@@ -89,6 +89,35 @@ def get_ids_for_cluster(avg_patient_cohort, cohort_title, features_df, selected_
     return clusters_df['icustay_id'][clusters_df['cluster'] == selected_cluster].to_list()
 
 
+def add_clustering_to_cohort(selected_cohort, cohort_title, features_df, selected_features, selected_dependent_variable,
+                        selected_cluster_count, clustering_method, use_encoding):
+    # adds a new column to selected_cohort with corresponding cluster_number
+    # transform df to np
+    selected_cohort_preprocessed = preprocess_for_clustering(selected_cohort=selected_cohort,
+                                                features_df=features_df,
+                                                selected_features=selected_features.copy(),
+                                                selected_dependent_variable=selected_dependent_variable,
+                                                use_encoding=use_encoding)
+    if clustering_method == 'kmeans':
+        # get the cluster for selected_k_means_count -> currently this function is not for DBSCAN, because dynamic cluster count there
+        k_means_list, sh_score, inertia = calculate_cluster_kmeans(selected_cohort_preprocessed, cohort_title,
+                                                                   n_clusters=selected_cluster_count,
+                                                                   verbose=False)
+    elif clustering_method == 'kprototype':
+        k_means_list, sh_score, inertia = calculate_cluster_kprot(selected_cohort_preprocessed, cohort_title,
+                                                                  selected_features=selected_features,
+                                                                  n_clusters=selected_cluster_count,
+                                                                  verbose=False)
+    else:
+        return None
+
+    # connect clusters to selected_cohort
+    cohort_with_clusters = selected_cohort
+    cohort_with_clusters['cluster'] = k_means_list
+
+    return cohort_with_clusters
+
+
 def plot_clusters_on_3D_pacmap(plot_title, use_case_name, pacmap_data_points, cluster_count, sh_score, coloring,
                                save_to_file):
     if cluster_count > 15 or cluster_count is None:

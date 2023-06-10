@@ -70,11 +70,10 @@ if __name__ == '__main__':
 
 
     # todo text: update + interpret fairness and subgroup chapter
-    # todo: probably want the cluster to be the deciding aspect when choosing fairness analysis for subgroup. Not 'Female' 'White' features but directly the cluster as a selectable feature -> future work?
 
-    # todo code: add SHAPley values to classification page (+ shap waterfalls, with this different importance for subgroups)
-    ## get shapely function from there: https://antonsruberts.github.io/kproto-audience/
-    ## add shapley to classification chapter and compare with correlation
+    # todo code: add SHAPley values to classification page
+    ## probably choose different explainer objects depending on selected prediction model
+    ## add shapley to classification chapter and compare with correlation (mention future work: different importance per subgroups)
 
 
     ### Data Analysis
@@ -274,8 +273,8 @@ if __name__ == '__main__':
     ### Fairness Metrics
     # Step 5.1) Calculate Fairness for manual Subgroups
     PROTECTED_FEATURES = ['ethnicity', 'gender']
-    PRIVILEGED_VALUES = [['WHITE'], ['M']]      # , 'ASIAN'
-    fairness_analysis.get_fairness_report(use_this_function=False,  # True | False
+    PRIVILEGED_VALUES = [['ASIAN'], ['M']]      # , 'WHITE'
+    fairness_analysis.get_fairness_report(use_this_function=True,  # True | False
                                           plot_performance_metrics=False,
                                           classification_method=SELECTED_CLASSIFICATION_METHOD,
                                           sampling_method=SELECTED_SAMPLING_METHOD,

@@ -45,12 +45,16 @@ def data_upload_page():
             st.markdown('File was successfully deleted.')
         else:
             st.markdown(f'No file exists in {file_path}')
+        st.write('Files were successfully deleted.')
+
     st.markdown('___')
 
     ## Clear Cache
     st.markdown("<h2 style='text-align: left; color: black;'>Clear Cache</h2>", unsafe_allow_html=True)
     col1, col2 = st.columns((0.1, 0.1))
-    col1.markdown("Streamlit cacheing enables extremely fast display of tables and plots. Be certain to clear the cache when using a new dataset.")
+    col1.markdown("Streamlit cacheing enables extremely fast display of tables and plots. "
+                  "Be certain to clear the cache when using a new dataset. "
+                  "You can also delete all temporary cached Shapley Plots here.")
     if col2.button(label='Clear Cache'):
         # This clears all previous cached data
         get_avg_cohort_cache.clear()
@@ -86,6 +90,7 @@ def data_upload_page():
             # checking if it is a file
             if os.path.isfile(file):
                 os.remove(file)
+        st.write('Cache was successfully deleted.')
 
     st.markdown('___')
 

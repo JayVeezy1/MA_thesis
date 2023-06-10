@@ -86,8 +86,7 @@ def fairness_page():
         col1.markdown("<h2 style='text-align: left; color: black;'>Classification Method 1</h2>",
                       unsafe_allow_html=True)
         col3, col4 = col1.columns((0.5, 0.5))
-        ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost',
-                                            'deeplearning_sequential']
+        ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost']      # 'deeplearning_sequential'] not yet possible, needs rework in code
         classification_method = col3.selectbox(label='Select classification method 1',
                                                options=ALL_CLASSIFICATION_METHODS)
         ALL_SAMPLING_METHODS = ['no_sampling', 'oversampling']  # undersampling not useful
@@ -144,8 +143,24 @@ def fairness_page():
                                                                                    protected_features=selected_features_for_fairness,
                                                                                    privileged_values=selected_privileged_values)
 
-            # Plot Fairness Report 1
+            # Plot Fairness
             st.markdown("<h2 style='text-align: left; color: black;'>Fairness Metrics</h2>", unsafe_allow_html=True)
+            # Warning if values not reliable
+            col1, col2 = st.columns((0.5, 0.5))
+            recall_privileged_1 = metrics_per_group_df.transpose().loc[1, 'recall']
+            precision_privileged_1 = metrics_per_group_df.transpose().loc[1, 'precision']
+            if recall_privileged_1 == 0 or recall_privileged_1 == 1 or precision_privileged_1 == 0 or precision_privileged_1 == 1:
+                col1.write('Warning: Recall and Precision values can not be calculated reliably. '
+                           'True Positives may be 0 because no enough cases available for classification. '
+                           'It is recommended to select a larger privileged group.')
+            recall_privileged_2 = metrics_per_group_df_2.transpose().loc[1, 'recall']
+            precision_privileged_2 = metrics_per_group_df_2.transpose().loc[1, 'precision']
+            if recall_privileged_2 == 0 or recall_privileged_1 == 1 or precision_privileged_2 == 0 or precision_privileged_2 == 1:
+                col2.write('Warning: Recall and Precision values can not be calculated reliably. '
+                             'True Positives may be 0 because no enough cases available for classification. '
+                             'It is recommended to select a larger privileged group.')
+
+            # Plot Fairness Report 1
             col1, col2, col3 = st.columns((0.2, 0.6, 0.2))
             col1.dataframe(fairness_report)
             add_download_button(position=col1, dataframe=fairness_report, title='fairness_report',

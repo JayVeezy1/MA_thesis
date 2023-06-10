@@ -399,39 +399,42 @@ def classification_page():
         else:
             selected_shap_feature = st.multiselect(label='Select a Feature for Shapley Analysis', options=selected_features, max_selections=1)
 
+        # Calculate Shapleys if Button pressed
+        if st.button('Start Shapley Calculation'):
+            shap_values, sampling_title = get_shapely_relevance(use_this_function=True,  # True | False
+                                                                selected_feature=selected_shap_feature,
+                                                                classification_method=classification_method,
+                                                                sampling_method=sampling_method,
+                                                                selected_cohort=selected_cohort,
+                                                                cohort_title=cohort_title,
+                                                                use_case_name='frontend',
+                                                                features_df=FEATURES_DF,
+                                                                selected_features=selected_features,
+                                                                selected_dependent_variable=selected_variable,
+                                                                show_plot=False,
+                                                                use_grid_search=use_grid_search_1,
+                                                                verbose=False,
+                                                                save_to_cache=True,
+                                                                save_to_file=False)
 
-        shap_values, sampling_title = get_shapely_relevance(use_this_function=True, # True | False
-                                                       selected_feature=selected_shap_feature,
-                                                       classification_method=classification_method,
-                                                       sampling_method=sampling_method,
-                                                       selected_cohort=selected_cohort,
-                                                       cohort_title=cohort_title,
-                                                       use_case_name='frontend',
-                                                       features_df=FEATURES_DF,
-                                                       selected_features=selected_features,
-                                                       selected_dependent_variable=selected_variable,
-                                                       show_plot=False,
-                                                       use_grid_search=use_grid_search_1,
-                                                       verbose=False,
-                                                       save_to_cache=True,
-                                                       save_to_file=False)
+            col1, col2, col5 = st.columns((0.475, 0.05, 0.475))
+            # col1.dataframe(shap_values[:, selected_shap_feature], use_container_width=True)
 
-        col1, col2, col5 = st.columns((0.475, 0.05, 0.475))
-        # col1.dataframe(shap_values[:, selected_shap_feature], use_container_width=True)
+            plot_name = 'single_shap'
+            filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
+            single_value_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
+            col1.image(single_value_plot)
 
-        plot_name = 'single_shap'
-        filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
-        single_value_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
-        col1.image(single_value_plot)
+            # plot_name = 'waterfall'
+            # filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
+            # waterfall_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
+            # col2.image(waterfall_plot)
 
-        # plot_name = 'waterfall'
-        # filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
-        # waterfall_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
-        # col2.image(waterfall_plot)
-
-        # plot_name = 'beeswarm'
-        # filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
-        # beeswarm_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
-        # col2.image(beeswarm_plot)
+            # plot_name = 'beeswarm'
+            # filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
+            # beeswarm_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
+            # col2.image(beeswarm_plot)
+        else:
+            st.write('Calculation can take up to 1 minute.')
 
         st.markdown('___')

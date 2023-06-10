@@ -3,7 +3,8 @@ import os
 import pandas as pd
 import streamlit as st
 
-from step_3_data_analysis.clustering import plot_k_means_on_pacmap, plot_k_prot_on_pacmap
+from step_3_data_analysis.clustering import plot_k_means_on_pacmap, plot_k_prot_on_pacmap, add_clustering_to_cohort, \
+    plot_sh_score
 from step_5_fairness.fairness_analysis import get_fairness_report, plot_radar_fairness
 from step_6_subgroup_analysis.subgroup_analysis import compare_classification_models_on_clusters, derive_subgroups, calculate_feature_influence_table
 from web_app.util import get_avg_cohort_cache, add_download_button, get_unfactorized_values, get_default_values, \
@@ -101,30 +102,49 @@ def subgroup_analysis_page():
 
             # Clustering
             if clustering_method == 'kmeans':
-                clustering_plot = plot_k_means_on_pacmap(use_this_function=True,
-                                                         display_sh_score=False,
-                                                         selected_cohort=selected_cohort,
-                                                         cohort_title=cohort_title,
-                                                         use_case_name='frontend',
-                                                         features_df=FEATURES_DF,
-                                                         selected_features=selected_features,
-                                                         selected_dependent_variable=selected_variable,
-                                                         selected_cluster_count=selected_cluster_count,
-                                                         use_encoding=True,
-                                                         save_to_file=False)
+                # clustering_plot = plot_k_means_on_pacmap(use_this_function=True,
+                #                                          display_sh_score=False,
+                #                                          selected_cohort=selected_cohort,
+                #                                          cohort_title=cohort_title,
+                #                                          use_case_name='frontend',
+                #                                          features_df=FEATURES_DF,
+                #                                          selected_features=selected_features,
+                #                                          selected_dependent_variable=selected_variable,
+                #                                          selected_cluster_count=selected_cluster_count,
+                #                                          use_encoding=True,
+                #                                          save_to_file=False)
+                # col2.pyplot(clustering_plot, use_container_width=True)
+                sh_score_plot = plot_sh_score(use_this_function=True, selected_cohort=selected_cohort,
+                                              cohort_title=cohort_title, use_case_name='frontend',
+                                              features_df=FEATURES_DF,
+                                              selected_features=selected_features,
+                                              selected_dependent_variable=selected_variable,
+                                              use_encoding=True, clustering_method='kmeans',
+                                              selected_cluster_count=selected_cluster_count, save_to_file=False)
+                col2.pyplot(sh_score_plot, use_container_width=True)
             else:
-                clustering_plot = plot_k_prot_on_pacmap(use_this_function=True,
-                                                         display_sh_score=False,
-                                                         selected_cohort=selected_cohort,
-                                                         cohort_title=cohort_title,
-                                                         use_case_name='frontend',
-                                                         features_df=FEATURES_DF,
-                                                         selected_features=selected_features,
-                                                         selected_dependent_variable=selected_variable,
-                                                         selected_cluster_count=selected_cluster_count,
-                                                         use_encoding=True,
-                                                         save_to_file=False)
-            col2.pyplot(clustering_plot, use_container_width=True)
+                # clustering_plot = plot_k_prot_on_pacmap(use_this_function=True,
+                #                                          display_sh_score=False,
+                #                                          selected_cohort=selected_cohort,
+                #                                          cohort_title=cohort_title,
+                #                                          use_case_name='frontend',
+                #                                          features_df=FEATURES_DF,
+                #                                          selected_features=selected_features,
+                #                                          selected_dependent_variable=selected_variable,
+                #                                          selected_cluster_count=selected_cluster_count,
+                #                                          use_encoding=True,
+                #                                          save_to_file=False)
+                # col2.pyplot(clustering_plot, use_container_width=True)
+                col2.write(f'Calculating the silhouette scores of kprototype for the first time can take up to 1 minute.')
+                sh_score_plot = plot_sh_score(use_this_function=True, selected_cohort=selected_cohort,
+                                              cohort_title=cohort_title, use_case_name='frontend',
+                                              features_df=FEATURES_DF,
+                                              selected_features=selected_features,
+                                              selected_dependent_variable=selected_variable,
+                                              use_encoding=False,  # not needed for kprot
+                                              clustering_method='kprot', selected_cluster_count=selected_cluster_count,
+                                              save_to_file=False)
+                col2.pyplot(sh_score_plot, use_container_width=True)
             st.markdown('___')
 
             # Feature Influence Table with selected Cluster
@@ -173,40 +193,30 @@ def subgroup_analysis_page():
                 use_grid_search = True
             else:
                 use_grid_search = False
-            FEATURE_OPTIONS = ALL_FEATURES
-            selected_features_for_fairness = col1.multiselect(label='Select features for fairness',
-                                                            options=FEATURE_OPTIONS,
-                                                            default=['ethnicity', 'gender'],
-                                                            max_selections=3)
-            for feature in selected_features_for_fairness:
-                if feature not in selected_features:
-                    col1.warning(f'Feature {feature} must also be selected at top for fairness analysis.')
-            if len(selected_features_for_fairness) == 3:
-                col1.write('Maximum selection of protected features for fairness analysis reached.')
 
-            # Factorize categorical features
-            factorization_df = pd.read_excel(
-                './supplements/FACTORIZATION_TABLE.xlsx')  # columns: feature	unfactorized_value	factorized_value
-            features_to_factorize = pd.unique(factorization_df['feature']).tolist()
+            # Select a Cluster to use as Subgroup for Fairness Analysis
+            selected_privileged_clusters = []
+            available_values = range(0, selected_cluster_count)
+            protected_values_for_feature = col1.multiselect(label=f'Select privileged clusters for {clustering_method} with {selected_cluster_count} clusters',
+                                                          options=available_values)
+            selected_privileged_clusters.append(protected_values_for_feature)
+            if len(protected_values_for_feature) < 1:
+                col1.warning('Choose one value/class for each selected features.')
+            elif len(protected_values_for_feature) > 1:
+                col1.warning('Warning: For most categorical features only a selection of one attribute is sensible.')
 
-            selected_privileged_values = []
-            for feature in selected_features_for_fairness:
-                available_values = selected_cohort[feature].unique()
-                if feature in features_to_factorize:
-                    factorized_values = factorization_df.loc[factorization_df['feature'] == feature][
-                        'factorized_value'].to_list()       # might be helpful to display these in the label
-                    available_values = get_unfactorized_values(feature, factorization_df)
-
-                protected_values_for_feature = col1.multiselect(label=f'Select protected values for {feature}',
-                                                              options=available_values)
-                selected_privileged_values.append(protected_values_for_feature)
-                if len(protected_values_for_feature) < 1:
-                    col1.warning('Choose one value/class for each selected features.')
-                elif len(protected_values_for_feature) > 1:
-                    col1.warning('Warning: For most categorical features only a selection of one attribute is sensible.')
+            # add clustering result to the selected_cohort as a new feature
+            cohort_with_clusters = add_clustering_to_cohort(selected_cohort=selected_cohort,
+                                                            cohort_title=cohort_title,
+                                                            features_df=FEATURES_DF,
+                                                            selected_features=selected_features,
+                                                            selected_dependent_variable=selected_variable,
+                                                            selected_cluster_count=selected_cluster_count,
+                                                            clustering_method=clustering_method,
+                                                            use_encoding=True)
 
             fairness_report, metrics_plot, metrics_per_group_df, attributes_string = get_fairness_report(use_this_function=True,
-                                                                selected_cohort=selected_cohort,
+                                                                selected_cohort=cohort_with_clusters,
                                                                 cohort_title=cohort_title,
                                                                 features_df=FEATURES_DF,
                                                                 selected_features=selected_features,
@@ -218,33 +228,41 @@ def subgroup_analysis_page():
                                                                 plot_performance_metrics=False,
                                                                 use_grid_search=use_grid_search,
                                                                 verbose=False,
-                                                                protected_features=selected_features_for_fairness,
-                                                                privileged_values=selected_privileged_values)
+                                                                protected_features=['cluster'],
+                                                                privileged_values=selected_privileged_clusters)
+            # Warning if values not reliable
+            recall_privileged_1 = metrics_per_group_df.transpose().loc[1, 'recall']
+            precision_privileged_1 = metrics_per_group_df.transpose().loc[1, 'precision']
+            if recall_privileged_1 == 0 or recall_privileged_1 == 1 or precision_privileged_1 == 0 or precision_privileged_1 == 1:
+                col1.write('Warning: Recall and Precision values can not be calculated reliably. '
+                         'True Positives may be 0 because no enough cases available for classification. '
+                         'It is recommended to select a larger privileged group.')
 
-            # Plot Fairness Radar
+            st.markdown('___')
+
+            # Plot Fairness Metrics & Radar
             try:
-                col2.markdown("<h2 style='text-align: left; color: black;'>Fairness Metrics</h2>",
+                col1, col2, col3, col4 = st.columns((0.2, 0.3, 0.05, 0.45))
+                col1.markdown("<h2 style='text-align: left; color: black;'>Fairness Metrics</h2>",
                               unsafe_allow_html=True)
+
+                # Plot Fairness Report
+                col1.write('')
+                col1.dataframe(fairness_report)
+                add_download_button(position=col1, dataframe=fairness_report,
+                                    title='fairness_report', cohort_title=cohort_title)
+
                 categories = fairness_report.index.values.tolist()[1:]
                 result = fairness_report['fairness_metrics'].to_list()[1:]
                 fairness_radar = plot_radar_fairness(categories=categories, list_of_results=[result])
                 col2.plotly_chart(figure_or_data=fairness_radar, use_container_width=True)
 
                 # Plot Subgroups comparison
-                col1, col2, col3 = st.columns((0.5, 0.05, 0.45))
-                col1.markdown("<h2 style='text-align: left; color: black;'>Subgroups Comparison</h2>",
+                col4.markdown("<h2 style='text-align: left; color: black;'>Subgroup Comparison</h2>",
                               unsafe_allow_html=True)
-                col1.pyplot(metrics_plot)
-                col1.dataframe(metrics_per_group_df.transpose())
-                col1.write('Class 1 is made up of the selected protected features and their privileged attributes.')
-
-                # Plot Fairness Report
-                col3.write('')
-                # col3.write('')
-                # col3.write('')
-                col3.dataframe(fairness_report)
-                add_download_button(position=col3, dataframe=fairness_report,
-                                    title='fairness_report', cohort_title=cohort_title)
+                col4.pyplot(metrics_plot)
+                col4.dataframe(metrics_per_group_df.transpose())
+                col4.write('Class 1 is made up of the selected protected features and their privileged attributes.')
                 st.markdown('___')
 
 

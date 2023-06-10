@@ -83,7 +83,6 @@ def get_rates_from_cm(cm):
 
     return true_positive_rate, false_positive_rate
 
-
 def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, use_case_name,
                                     attributes_string, classification_method, cohort_title, sampling_title, plot_performance_metrics,
                                     save_to_file: False):
@@ -94,6 +93,42 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
                'roc_auc': roc_auc_score,
                'selection rate': selection_rate,
                'count': count}
+
+    # if selection too small, privileged class has no death cases, recall and precision = 0
+    # must be calculated manually and with dummy, otherwise no useful metrics
+    # add dummy values if privileged class has no TP
+    y_pred_privileged = y_pred[selected_attribute_array[selected_attribute_array == 1]]
+    y_true_privileged = y_true[selected_attribute_array[selected_attribute_array == 1].index].to_numpy()
+
+    # For loop not ideal when working with arrays, but works
+    # maybe better: np.count_nonzero(y_pred_privileged == y_true_privileged)
+
+    true_positives = 0
+    for i, real_value in enumerate(y_true_privileged):
+        if real_value == 1:
+            predicted_value = y_pred_privileged[i]
+            if real_value == predicted_value:
+                true_positives += 1
+
+    # This does not work. Simply not enough cases if no TP, display warning in frontend
+    # if true_positives == 0:
+    #     # Adding one dummy TP, FP, FN, TN to the predictions for privileged class -> recall and precision can be calculated
+    #     # TP
+    #     selected_attribute_array[-1] = 1
+    #     y_true[-1] = 1
+    #     y_pred = np.append(y_pred, 1)
+    #     # FP
+    #     selected_attribute_array[-2] = 1
+    #     y_true[-2] = 0
+    #     y_pred = np.append(y_pred, 1)
+    #     # FN
+    #     selected_attribute_array[-3] = 1
+    #     y_true[-3] = 1
+    #     y_pred = np.append(y_pred, 0)
+    #     # TN
+    #     selected_attribute_array[-4] = 1
+    #     y_true[-4] = 0
+    #     y_pred = np.append(y_pred, 0)
 
     performance_obj = MetricFrame(metrics=performance_metrics,
                                y_true=y_true.to_numpy(),
@@ -375,7 +410,6 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
     #     clean_privileged_values.append(value_with_number[1:])
 
     for i, feature in enumerate(protected_features):
-        # mention this in overleaf -> factorization step is not well done
         if feature == 'gender' or feature == 'stroke_type':
             # do not refactorize for gender and stroke_type, they are not moved into separate columns when doing factorization
             factorized_values = get_factorized_values(feature=feature, privileged_values=privileged_values[i], factorization_df=factorization_df)
@@ -387,6 +421,9 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
                 selected_protected_attributes.append(feature + f'_{value}')
                 selected_privileged_classes.append([1])
                 features_no_need_title_value.append(feature + f'_{value}')
+        elif feature == 'cluster':
+            selected_protected_attributes.append(feature)
+            selected_privileged_classes.append(privileged_values)
         else:
             selected_protected_attributes.append(feature)
             selected_privileged_classes.append(privileged_values[i])
@@ -409,7 +446,7 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
             for value in available_values:
                 try:
                     temp_values += str(int(value)) + '_'
-                except ValueError:
+                except TypeError:
                     temp_values += str(value) + '_'
             attributes_string += '_' + feature + '_' + temp_values[:-1]
     attributes_string = attributes_string[1:]
@@ -424,29 +461,34 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
     #     print(old_report.to_string())
 
     # 2) New: Get Fairness Metrics from Performance Metrics Plot Function
-    temp_df = x_test_basic[selected_protected_attributes]
-    # check where all selected columns contain a 1
-    all_ones_array = temp_df.apply(lambda x: all(x == 1), axis=1).astype(int)
-    # temp_df['new_checking_column'] = all_ones_array.astype(int)
-    performance_metrics_plot, performance_per_group_df, fairness_report = create_performance_metrics_plot(y_pred=predicted_labels,
-                                    y_true=y_test_basic,
-                                    selected_attribute_array=all_ones_array,
-                                    use_case_name=use_case_name,
-                                    attributes_string=attributes_string,
-                                    classification_method=classification_method,
-                                    cohort_title=cohort_title,
-                                    sampling_title=sampling_title,
-                                    plot_performance_metrics=plot_performance_metrics,
-                                    save_to_file=save_to_file)
+    if classification_method == 'deeplearning_sequential':      # still a problem with layout of predicted_labels, for now not important
+        fairness_report = None
+        performance_metrics_plot = None
+        performance_per_group_df = None
+    else:
+        temp_df = x_test_basic[selected_protected_attributes]
+        # check where all selected columns contain a 1
+        all_ones_array = temp_df.apply(lambda x: all(x == 1), axis=1).astype(int)
+        # temp_df['new_checking_column'] = all_ones_array.astype(int)
+        performance_metrics_plot, performance_per_group_df, fairness_report = create_performance_metrics_plot(y_pred=predicted_labels,
+                                        y_true=y_test_basic,
+                                        selected_attribute_array=all_ones_array,
+                                        use_case_name=use_case_name,
+                                        attributes_string=attributes_string,
+                                        classification_method=classification_method,
+                                        cohort_title=cohort_title,
+                                        sampling_title=sampling_title,
+                                        plot_performance_metrics=plot_performance_metrics,
+                                        save_to_file=save_to_file)
 
-    if save_to_file:
-        current_time = datetime.datetime.now().strftime("%H_%M_%S")  # removed %d%m%Y_ from date
-        report_filename_string: str = f'./output/{use_case_name}/classification/FAIRNESS_{attributes_string}_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
-        report_filename = report_filename_string.encode()
-        # code to export a df
-        with open(report_filename, 'w', newline='') as output_file:
-            fairness_report.to_csv(output_file, index=True)  # keep index here for metrics titles
-            print(f'STATUS: fairness_report was saved to {report_filename}')
+        if save_to_file:
+            current_time = datetime.datetime.now().strftime("%H_%M_%S")  # removed %d%m%Y_ from date
+            report_filename_string: str = f'./output/{use_case_name}/classification/FAIRNESS_{attributes_string}_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.csv'
+            report_filename = report_filename_string.encode()
+            # code to export a df
+            with open(report_filename, 'w', newline='') as output_file:
+                fairness_report.to_csv(output_file, index=True)  # keep index here for metrics titles
+                print(f'STATUS: fairness_report was saved to {report_filename}')
 
     return fairness_report, performance_metrics_plot, performance_per_group_df, attributes_string
 
