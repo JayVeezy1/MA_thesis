@@ -99,6 +99,8 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
     # add dummy values if privileged class has no TP
     y_pred_privileged = y_pred[selected_attribute_array[selected_attribute_array == 1]]
     y_true_privileged = y_true[selected_attribute_array[selected_attribute_array == 1].index].to_numpy()
+    y_pred_unprivileged = y_pred[selected_attribute_array[selected_attribute_array == 0]]
+    y_true_unprivileged = y_true[selected_attribute_array[selected_attribute_array == 0].index].to_numpy()
 
     # For loop not ideal when working with arrays, but works
     # maybe better: np.count_nonzero(y_pred_privileged == y_true_privileged)
@@ -196,7 +198,7 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
                                   y_true=y_true.to_numpy(),
                                   y_pred=y_pred,
                                   sensitive_features=selected_attribute_array)
-    fairness_report = pd.DataFrame(columns=['fairness_metrics'])
+    fairness_report = pd.DataFrame(columns=['Values'])
 
     # Get group_fairness metrics 1.1 (Performance Parity)
     # todo future work: maybe also use ratio (unprivileged/privileged) as a second column in report, next to difference
@@ -234,8 +236,19 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
     fairness_report.loc['Equal Opportunity'] = round(equal_opportunity, 3)
 
     # Get General Fairness Metric 3. (Entropy with Theil Index)
-    entropy_index = generalized_entropy_error(y_true=y_true, y_pred=y_pred, alpha=1, pos_label=1)        # using Theil-Index for Entropy Metric
-    fairness_report.loc['Generalized Entropy'] = round(entropy_index, 3)
+    # todo future research: entropy is calculated per subgroup here, could also be displayed in the
+    ## performance metrics table. Actually all fairness metrics could be displayed in there.
+    ## maybe better to only have one table for this complete topic.
+
+    entropy_index_unprivileged = generalized_entropy_error(y_true=y_true_unprivileged, y_pred=y_pred_unprivileged, alpha=1, pos_label=1)        # using Theil-Index for Entropy Metric
+    entropy_index_privileged = generalized_entropy_error(y_true=y_true_privileged, y_pred=y_pred_privileged, alpha=1, pos_label=1)        # using Theil-Index for Entropy Metric
+    entropy_diff = entropy_index_unprivileged - entropy_index_privileged
+
+    print('CHECK: ')
+    print(entropy_index_privileged)
+    print(entropy_index_unprivileged)
+    fairness_report.loc['Entropy Difference'] = round(entropy_diff, 3)
+    fairness_report.index.names = ['Metrics']
 
     return performance_metrics_plot, metrics_per_group_df, fairness_report
 
