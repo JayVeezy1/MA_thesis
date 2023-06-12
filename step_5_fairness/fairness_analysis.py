@@ -90,7 +90,7 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
     performance_metrics = {'accuracy': accuracy_score,
                'recall': recall_score,
                'precision': precision_score,
-               'roc_auc': roc_auc_score,
+               'auroc score': roc_auc_score,
                'selection rate': selection_rate,
                'count': count}
 
@@ -151,12 +151,12 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
 
     # Get metrics_per_group_df
     metrics_per_group_df = performance_obj.by_group
-    metrics_per_group_df.loc['overall', ['accuracy', 'recall', 'precision', 'roc_auc', 'selection rate', 'count']] = performance_obj.overall
+    metrics_per_group_df.loc['overall', ['accuracy', 'recall', 'precision', 'auroc score', 'selection rate', 'count']] = performance_obj.overall
     # cols = metrics_per_group_df.columns.tolist()
     # cols = cols[-1:] + cols[:-1]
     # metrics_per_group_df = metrics_per_group_df[cols]
-    metrics_per_group_df.loc[:, ['accuracy','recall',  'precision', 'roc_auc', 'selection rate']] = metrics_per_group_df.loc[:,
-                                                                        ['accuracy', 'recall', 'precision', 'roc_auc',
+    metrics_per_group_df.loc[:, ['accuracy','recall',  'precision', 'auroc score', 'selection rate']] = metrics_per_group_df.loc[:,
+                                                                        ['accuracy', 'recall', 'precision', 'auroc score',
                                                                          'selection rate']].round(3)
     metrics_per_group_df = metrics_per_group_df.transpose()
 
@@ -199,6 +199,7 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
     fairness_report = pd.DataFrame(columns=['fairness_metrics'])
 
     # Get group_fairness metrics 1.1 (Performance Parity)
+    # todo future work: maybe also use ratio (unprivileged/privileged) as a second column in report, next to difference
     group_report = fairness_obj.by_group
     group_report = group_report.transpose()
     temp_differences = group_report.diff(periods=-1, axis=1)

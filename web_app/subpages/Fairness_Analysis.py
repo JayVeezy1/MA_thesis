@@ -164,7 +164,7 @@ def fairness_page():
             col1, col2, col3 = st.columns((0.2, 0.6, 0.2))
             col1.dataframe(fairness_report)
             add_download_button(position=col1, dataframe=fairness_report, title='fairness_report',
-                                cohort_title=cohort_title)
+                                cohort_title=cohort_title, keep_index=True)
 
             # Plot Fairness Radar combined
             categories = fairness_report_2.index.values.tolist()[1:]
@@ -176,7 +176,7 @@ def fairness_page():
             # Plot Fairness Report 2
             col3.dataframe(fairness_report_2)
             add_download_button(position=col3, dataframe=fairness_report_2, title='fairness_report_2',
-                                cohort_title=cohort_title)
+                                cohort_title=cohort_title, keep_index=True)
             st.markdown('___')
 
 
@@ -185,11 +185,15 @@ def fairness_page():
             st.markdown("<h2 style='text-align: left; color: black;'>Subgroup Comparison</h2>", unsafe_allow_html=True)
             col1, col_center, col2 = st.columns((0.475, 0.05, 0.475))
             col1.dataframe(metrics_per_group_df.transpose(), use_container_width=True)
+            add_download_button(position=col1, dataframe=metrics_per_group_df, title='metrics_per_group_df',
+                                cohort_title=cohort_title, keep_index=True)
             col1.pyplot(metrics_plot)
             col1.write('Class 1 is made up of the selected protected features and their privileged attributes.')
 
             # Plot Subgroups comparison 2
             col2.dataframe(metrics_per_group_df_2.transpose(), use_container_width=True)
+            add_download_button(position=col2, dataframe=metrics_per_group_df_2, title='metrics_per_group_df_2',
+                                cohort_title=cohort_title, keep_index=True)
             col2.pyplot(metrics_plot_2)
 
         except AttributeError:

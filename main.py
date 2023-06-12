@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     # Step 1.3) Load all .csv files as a 'Patient' Object, use Pickle for Cache
     DELETE_CACHE = False
-    SELECT_SAVE_FILES = False
+    SELECT_SAVE_FILES = True
     cache_IO.load_data_from_cache(project_path=PROJECT_PATH, features_df=FEATURES_DF, use_case_name=USE_CASE_NAME,
                                   delete_existing_cache=DELETE_CACHE)
     ### Preprocessing
@@ -272,9 +272,9 @@ if __name__ == '__main__':
 
     ### Fairness Metrics
     # Step 5.1) Calculate Fairness for manual Subgroups
-    PROTECTED_FEATURES = ['ethnicity', 'gender']
-    PRIVILEGED_VALUES = [['ASIAN'], ['M']]      # , 'WHITE'
-    fairness_analysis.get_fairness_report(use_this_function=True,  # True | False
+    PROTECTED_FEATURES = ['gender']         # 'ethnicity',
+    PRIVILEGED_VALUES = [['F']]      # , ['ASIAN'],  'WHITE'
+    fairness_analysis.get_fairness_report(use_this_function=False,  # True | False
                                           plot_performance_metrics=False,
                                           classification_method=SELECTED_CLASSIFICATION_METHOD,
                                           sampling_method=SELECTED_SAMPLING_METHOD,
@@ -339,7 +339,6 @@ if __name__ == '__main__':
 
     ### Step 7.1) Streamlit App for Visualization
     start_streamlit_frontend(use_this_function=True)
-
 
     ### Deprecated: ASDF-Dashboard for visualization  https://github.com/jeschaef/ASDF-Dashboard
     # Important: Start Background Services First

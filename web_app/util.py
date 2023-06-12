@@ -214,9 +214,9 @@ def get_avg_cohort_cache(project_path, use_case_name, features_df, selected_data
     return filtered_avg_cohort
 
 
-def add_download_button(position, dataframe, title, cohort_title):
+def add_download_button(position, dataframe, title, cohort_title, keep_index: False):
     try:
-        csv_table = dataframe.to_csv(index=False).encode('utf-8')
+        csv_table = dataframe.to_csv(index=keep_index).encode('utf-8')
     except AttributeError:      # if previous function returns None instead of table, no download button possible
         return None
 

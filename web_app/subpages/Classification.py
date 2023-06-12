@@ -116,7 +116,7 @@ def classification_page():
         col1.markdown("<h2 style='text-align: left; color: black;'>Classification Report</h2>", unsafe_allow_html=True)
         col1.dataframe(classification_report, use_container_width=True)
         add_download_button(position=col1, dataframe=classification_report, title='classification_report',
-                            cohort_title=cohort_title)
+                            cohort_title=cohort_title, keep_index=False)
         accuracy = round(classification_report.loc['accuracy', 'recall'], 2)
         recall = round(classification_report.loc['1.0', 'recall'], 2)
         precision = round(classification_report.loc['1.0', 'precision'], 2)
@@ -159,7 +159,7 @@ def classification_page():
 
         col5.dataframe(classification_report_2, use_container_width=True)
         add_download_button(position=col5, dataframe=classification_report_2, title='classification_report_2',
-                            cohort_title=cohort_title)
+                            cohort_title=cohort_title, keep_index=False)
         accuracy = round(classification_report_2.loc['accuracy', 'recall'], 2)
         recall = round(classification_report_2.loc['1.0', 'recall'], 2)
         precision = round(classification_report_2.loc['1.0', 'precision'], 2)

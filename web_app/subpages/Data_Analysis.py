@@ -58,7 +58,7 @@ def data_analysis_page():
         # st.markdown(hide_table_row_index, unsafe_allow_html=True)
         # st.table(data=overview_table)
         st.dataframe(data=overview_table.set_index(overview_table.columns[0]), use_container_width=True)
-        add_download_button(position=None, dataframe=overview_table, title='overview_table', cohort_title=cohort_title)
+        add_download_button(position=None, dataframe=overview_table, title='overview_table', cohort_title=cohort_title, keep_index=False)
         st.markdown('___')
 
         ## Deaths DF
@@ -70,7 +70,7 @@ def data_analysis_page():
         deaths_df = deaths_df.reset_index(drop=True)
         st.markdown("<h2 style='text-align: left; color: black;'>Mortality Overview</h2>", unsafe_allow_html=True)
         st.dataframe(data=deaths_df.set_index(deaths_df.columns[0]), use_container_width=True)
-        add_download_button(position=None, dataframe=deaths_df, title='deaths_df', cohort_title=cohort_title)
+        add_download_button(position=None, dataframe=deaths_df, title='deaths_df', cohort_title=cohort_title, keep_index=False)
         st.markdown('___')
 
         ## Correlation

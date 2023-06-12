@@ -98,7 +98,7 @@ def subgroup_analysis_page():
                                                   use_encoding=True,
                                                   save_to_file=False)
             col1.dataframe(subgroups_overview.set_index(subgroups_overview.columns[0]), use_container_width=True)
-            add_download_button(position=col1, dataframe=subgroups_overview, title='subgroups_overview_table', cohort_title=cohort_title)
+            add_download_button(position=col1, dataframe=subgroups_overview, title='subgroups_overview_table', cohort_title=cohort_title, keep_index=False)
 
             # Clustering
             if clustering_method == 'kmeans':
@@ -176,7 +176,7 @@ def subgroup_analysis_page():
                                                                      use_encoding=True,
                                                                      save_to_file=False)
             st.dataframe(feature_influence_df.set_index(feature_influence_df.columns[0]), use_container_width=True)
-            add_download_button(position=None, dataframe=feature_influence_df, title='clusters_overview_table', cohort_title=cohort_title)
+            add_download_button(position=None, dataframe=feature_influence_df, title='clusters_overview_table', cohort_title=cohort_title, keep_index=False)
             st.markdown('___')
 
 
@@ -250,7 +250,7 @@ def subgroup_analysis_page():
                 col1.write('')
                 col1.dataframe(fairness_report)
                 add_download_button(position=col1, dataframe=fairness_report,
-                                    title='fairness_report', cohort_title=cohort_title)
+                                    title='fairness_report', cohort_title=cohort_title, keep_index=False)
 
                 categories = fairness_report.index.values.tolist()[1:]
                 result = fairness_report['fairness_metrics'].to_list()[1:]
@@ -287,7 +287,7 @@ def subgroup_analysis_page():
                                                                                           save_to_file=False)
                 st.dataframe(classification_overview_table, use_container_width=True)
                 add_download_button(position=None, dataframe=classification_overview_table,
-                                    title='classification_overview_table', cohort_title=cohort_title)
+                                    title='classification_overview_table', cohort_title=cohort_title, keep_index=False)
             except AttributeError:
                 st.warning('Select protected attributes to conduct a Fairness Analysis.')
 
