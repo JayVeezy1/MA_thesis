@@ -110,7 +110,7 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
             if real_value == predicted_value:
                 true_positives += 1
 
-    # This does not work. Simply not enough cases if no TP, display warning in frontend
+    # Using Dummys does not work. Simply not enough cases if no TP, display warning in frontend
     # if true_positives == 0:
     #     # Adding one dummy TP, FP, FN, TN to the predictions for privileged class -> recall and precision can be calculated
     #     # TP
@@ -130,10 +130,14 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
     #     y_true[-4] = 0
     #     y_pred = np.append(y_pred, 0)
 
-    performance_obj = MetricFrame(metrics=performance_metrics,
+    try:
+        performance_obj = MetricFrame(metrics=performance_metrics,
                                y_true=y_true.to_numpy(),
                                y_pred=y_pred,
                                sensitive_features=selected_attribute_array)
+    except ValueError:
+        st.warning('Warning: ValueError occurred, because only one class available for fairness analysis.')
+        return None, None, None
 
     # Customize plots with ylim
     figure_object = performance_obj.by_group.plot(
@@ -180,12 +184,6 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
         # plt.show()
     # plt.close()
 
-    # todo future work: Check if these Extensions provide better Fairness Analysis approach or dashboards
-    # Extension 1: Check if 7.2.1 makes sense to plot ROC curve for groups https://afraenkel.github.io/fairness-book/content/07-score-functions.html
-    # Extension 2: Check if plotting accuracy with a metric depending on threshold (x-axis) can be done?
-    # This would be useful for threshold optimization, but can we even change threshold anywhere?
-    # https://github.com/Trusted-AI/AIF360/blob/master/examples/tutorial_medical_expenditure.ipynb follow this
-
     # New version for fairness metrics report:
     fairness_metrics = {'accuracy': accuracy_score,
                         'recall': recall_score,
@@ -203,7 +201,12 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
     group_report = fairness_obj.by_group
     group_report = group_report.transpose()
     temp_differences = group_report.diff(periods=-1, axis=1)
-    group_report['diff'] = temp_differences[0]      # add differences to unprivileged class (0) to group_report
+    try:
+        group_report['diff'] = temp_differences[0]      # add differences to unprivileged class (0) to group_report
+    except KeyError:
+        st.warning('Warning: KeyError occurred, because only one class available for fairness analysis.')
+        return None, None, None
+
     accuracy_parity = group_report.loc['accuracy', 'diff']
     recall_parity = group_report.loc['recall', 'diff']
     precision_parity = group_report.loc['precision', 'diff']
@@ -219,8 +222,9 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
     try:
         confusion_matrix_unprivileged = pd.DataFrame(group_report.loc['confusion_matrix', 0], columns=['predicted_0', 'predicted_1'])
         confusion_matrix_privileged = pd.DataFrame(group_report.loc['confusion_matrix', 1], columns=['predicted_0', 'predicted_1'])
-    except AttributeError as e:
-        print('Warning: AttributeError occurred, because only one class available for fairness analysis.', e)
+    except KeyError as e:
+        st.warning('Warning: KeyError occurred, because only one class available for fairness analysis.')
+        # print('Warning: KeyError occurred, because only one class available for fairness analysis.', e)
         return None, None, None
 
     tpr_overall, fpr_overall = get_rates_from_cm(confusion_matrix_overall)
@@ -253,6 +257,7 @@ def get_factorized_values(feature, privileged_values, factorization_df):
 
 def get_aif360_report(merged_test_data, selected_dependent_variable, selected_protected_attributes,
                       selected_privileged_classes, predicted_labels, attributes_string):
+    # Deprecated
     dataset = StandardDataset(df=merged_test_data,
                               label_name=selected_dependent_variable,
                               favorable_classes=[1],  # 'death' has to be used as 'favorable_class'
@@ -411,12 +416,35 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
     #     clean_privileged_values.append(value_with_number[1:])
 
     for i, feature in enumerate(protected_features):
-        if feature == 'gender' or feature == 'stroke_type':
+        if feature == 'gender':
             # do not refactorize for gender and stroke_type, they are not moved into separate columns when doing factorization
             factorized_values = get_factorized_values(feature=feature, privileged_values=privileged_values[i], factorization_df=factorization_df)
             selected_protected_attributes.append(feature)
             selected_privileged_classes.append(factorized_values)
-        elif feature in features_to_factorize and not (feature == 'gender' or feature == 'stroke_type'):
+            print('CHECK: ')
+            print(factorized_values)
+            # invert the original data for gender: both selections possible
+            if 0 in factorized_values and 1 in factorized_values:
+                x_test_basic.loc[x_test_basic['gender'] == 0, 'gender'] = 1  # set female = 1, makes all = 1
+            elif not 0 in factorized_values and 1 in factorized_values:
+                pass                                                           # no changes needed
+            elif 0 in factorized_values and not 1 in factorized_values:
+                x_test_basic['gender'] = x_test_basic['gender'].map(lambda x: 1 if x == 0 else 0)
+            else:
+                x_test_basic.loc[x_test_basic['gender'] == 1, 'gender'] = 0   # set male = 0, makes all = 0
+        elif feature == 'stroke_type':
+            factorized_values = get_factorized_values(feature=feature, privileged_values=privileged_values[i],
+                                                      factorization_df=factorization_df)
+            selected_protected_attributes.append(feature)
+            selected_privileged_classes.append(factorized_values)
+            # invert the original data for stroke: only one selection possible
+            if 0 in factorized_values:
+                x_test_basic['stroke_type'] = x_test_basic['stroke_type'].map(lambda x: 1 if x == 0 else 0)
+            elif 0.5 in factorized_values:  # for stroke also need to  transform 0.5 into the new '1'
+                x_test_basic['stroke_type'] = x_test_basic['stroke_type'].map(lambda x: 1 if x == 0.5 else 0)
+            elif 1 in factorized_values:
+                x_test_basic['stroke_type'] = x_test_basic['stroke_type'].map(lambda x: 1 if x == 1 else 0)
+        elif feature in features_to_factorize and not (feature == 'stroke_type' or feature == 'gender'):
             factorized_values = get_factorized_values(feature=feature, privileged_values=privileged_values[i], factorization_df=factorization_df)
             for value in factorized_values:
                 selected_protected_attributes.append(feature + f'_{value}')
@@ -468,8 +496,10 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
         performance_per_group_df = None
     else:
         temp_df = x_test_basic[selected_protected_attributes]
-        # check where all selected columns contain a 1
+        # check where ALL selected columns contain a 1
         all_ones_array = temp_df.apply(lambda x: all(x == 1), axis=1).astype(int)
+        print(temp_df)
+        print(all_ones_array)
         # temp_df['new_checking_column'] = all_ones_array.astype(int)
         performance_metrics_plot, performance_per_group_df, fairness_report = create_performance_metrics_plot(y_pred=predicted_labels,
                                         y_true=y_test_basic,

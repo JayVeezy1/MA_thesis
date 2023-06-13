@@ -6,7 +6,9 @@ import streamlit as st
 from step_1_setup_data.cache_IO import load_data_from_cache
 from step_3_data_analysis.correlations import plot_correlations, plot_pairplot
 from step_3_data_analysis.general_statistics import calculate_deaths_table, calculate_feature_overview_table
-from web_app.util import get_avg_cohort_cache, add_download_button, get_default_values, insert_feature_selectors
+from step_5_fairness.fairness_analysis import get_factorized_values
+from web_app.util import get_avg_cohort_cache, add_download_button, get_default_values, insert_feature_selectors, \
+    get_unfactorized_values, add_single_feature_filter
 
 
 def data_analysis_page():
@@ -38,12 +40,28 @@ def data_analysis_page():
         # Feature Selector
         ALL_FEATURES = list(selected_cohort.columns)
         selected_features = insert_feature_selectors(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable)
+        # Filter Selector
+        filtered_cohort = selected_cohort
+        checker_1 = st.checkbox(label='Optionally Filter the Dataset', value=False)
+        if checker_1:
+            st.write('Select categorical values to optionally filter the dataset for subgroups.')
+            selected_filter_features, selected_filter_values = add_single_feature_filter(selected_cohort, selected_features)
+
+            # Filter the cohort based on filter selections
+            factorization_df = pd.read_excel('./supplements/FACTORIZATION_TABLE.xlsx')
+            for i, filter_feature in enumerate(selected_filter_features):   # for-loop not optimal
+                values = get_factorized_values(feature=filter_feature,
+                                               privileged_values=selected_filter_values[i],
+                                               factorization_df=factorization_df)
+                if not len(values) < 1:         # no values selected, so no filtering
+                    filtered_cohort = filtered_cohort[filtered_cohort[filter_feature].isin(values)]
         st.markdown('___')
+
 
         ## General Statistics DF
         st.markdown("<h2 style='text-align: left; color: black;'>Features Overview</h2>", unsafe_allow_html=True)
         overview_table = calculate_feature_overview_table(use_this_function=True,  # True | False
-                                                          selected_cohort=selected_cohort,
+                                                          selected_cohort=filtered_cohort,      # todo: change this for all following
                                                           features_df=FEATURES_DF,
                                                           selected_features=selected_features,
                                                           cohort_title=cohort_title,
@@ -65,7 +83,7 @@ def data_analysis_page():
         deaths_df = calculate_deaths_table(use_this_function=True,
                                use_case_name='frontend',
                                cohort_title=cohort_title,
-                               selected_cohort=selected_cohort,
+                               selected_cohort=filtered_cohort,
                                save_to_file=False)
         deaths_df = deaths_df.reset_index(drop=True)
         st.markdown("<h2 style='text-align: left; color: black;'>Mortality Overview</h2>", unsafe_allow_html=True)
@@ -78,7 +96,7 @@ def data_analysis_page():
                                        use_plot_heatmap=False,
                                        use_plot_pairplot=False,
                                        cohort_title=cohort_title,
-                                       selected_cohort=selected_cohort,
+                                       selected_cohort=filtered_cohort,
                                        features_df=FEATURES_DF,
                                        selected_features=selected_features,
                                        selected_dependent_variable=selected_variable,
@@ -92,7 +110,7 @@ def data_analysis_page():
         col3.markdown("<h2 style='text-align: left; color: black;'>Feature Distribution</h2>", unsafe_allow_html=True)
         selected_features_pairplot = col3.multiselect(label='Select features', options=ALL_FEATURES, default=[selected_variable, 'oasis'], max_selections=3)
         pairplot = plot_pairplot(cohort_title=cohort_title,
-                      selected_cohort=selected_cohort,
+                      selected_cohort=filtered_cohort,
                       features_df=FEATURES_DF,
                       selected_features=selected_features_pairplot,
                       selected_dependent_variable=selected_variable,

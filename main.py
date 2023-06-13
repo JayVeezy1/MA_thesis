@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     # Step 1.3) Load all .csv files as a 'Patient' Object, use Pickle for Cache
     DELETE_CACHE = False
-    SELECT_SAVE_FILES = True
+    SELECT_SAVE_FILES = False
     cache_IO.load_data_from_cache(project_path=PROJECT_PATH, features_df=FEATURES_DF, use_case_name=USE_CASE_NAME,
                                   delete_existing_cache=DELETE_CACHE)
     ### Preprocessing
@@ -78,12 +78,6 @@ if __name__ == '__main__':
 
     ### Data Analysis
     # Step 3.1) General Statistics
-    general_statistics.calculate_deaths_table(use_this_function=False,  # True | False
-                                              selected_cohort=SELECTED_COHORT_preprocessed,
-                                              cohort_title=SELECTED_COHORT_TITLE,
-                                              use_case_name=USE_CASE_NAME,
-                                              save_to_file=SELECT_SAVE_FILES)
-
     general_statistics.calculate_feature_overview_table(use_this_function=False,  # True | False
                                                         selected_cohort=SELECTED_COHORT_preprocessed,
                                                         features_df=FEATURES_DF,
@@ -92,6 +86,12 @@ if __name__ == '__main__':
                                                         use_case_name=USE_CASE_NAME,
                                                         selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                                         save_to_file=SELECT_SAVE_FILES)
+
+    general_statistics.calculate_deaths_table(use_this_function=False,  # True | False
+                                              selected_cohort=SELECTED_COHORT_preprocessed,
+                                              cohort_title=SELECTED_COHORT_TITLE,
+                                              use_case_name=USE_CASE_NAME,
+                                              save_to_file=SELECT_SAVE_FILES)
 
     # Step 3.2) Correlation
     # Correlations

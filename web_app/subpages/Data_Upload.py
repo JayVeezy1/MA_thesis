@@ -34,6 +34,22 @@ def data_upload_page():
             file_df.to_csv(output_file, index=False)
     st.markdown('___')
 
+    ## Display Current Dataset
+    st.markdown("<h2 style='text-align: left; color: black;'>Current Raw Dataset</h2>", unsafe_allow_html=True)
+    PROJECT_PATH = './web_app/data_upload/'
+    FEATURES_DF = pd.read_excel('./supplements/FEATURE_PREPROCESSING_TABLE.xlsx')
+    try:
+        selected_cohort = get_avg_cohort_cache(project_path=PROJECT_PATH,
+                                           use_case_name='frontend',
+                                           features_df=FEATURES_DF,
+                                           selected_database='complete',
+                                           selected_stroke_type='all_stroke',
+                                           delete_existing_cache=False,
+                                           selected_patients=[])  # empty = all
+        st.dataframe(selected_cohort, use_container_width=True)
+    except ValueError as e:
+        st.warning('No dataset currently uploaded.')
+
     ## Delete Dataset
     st.markdown("<h2 style='text-align: left; color: black;'>Delete Dataset</h2>", unsafe_allow_html=True)
     col1, col2 = st.columns((0.1, 0.1))
@@ -42,6 +58,7 @@ def data_upload_page():
         file_path = './web_app/data_upload/exports/frontend/avg_patient_cohort.csv'
         if os.path.isfile(file_path):
             os.remove(file_path)
+            get_avg_cohort_cache.clear()
             st.markdown('File was successfully deleted.')
         else:
             st.markdown(f'No file exists in {file_path}')
@@ -64,7 +81,7 @@ def data_upload_page():
         get_classification_report.clear()
         get_classification_report_deeplearning.clear()
         get_DL_confusion_matrix.clear()
-        get_fairness_report.clear()
+        # get_fairness_report.clear()
 
         # Shapley
         get_shapely_explainer.clear()

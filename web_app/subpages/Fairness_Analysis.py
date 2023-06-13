@@ -5,7 +5,7 @@ import streamlit as st
 
 from step_5_fairness.fairness_analysis import get_fairness_report, plot_radar_fairness
 from web_app.util import get_avg_cohort_cache, add_download_button, get_unfactorized_values, get_default_values, \
-    insert_feature_selectors
+    insert_feature_selectors, add_single_feature_filter
 
 
 def fairness_page():
@@ -41,44 +41,12 @@ def fairness_page():
         selected_features = insert_feature_selectors(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable)
         st.markdown('___')
 
-
-        ## Fairness Selectors
+        ## Fairness Selectors (with filter features selector)
         st.markdown("<h2 style='text-align: left; color: black;'>Feature Selection</h2>",
-                      unsafe_allow_html=True)
+                    unsafe_allow_html=True)
         st.write('Select protected features/attributes and the related privileged values/classes.')
-        FEATURE_OPTIONS = ALL_FEATURES
-        selected_features_for_fairness = st.multiselect(label='Select features for fairness',
-                                                          options=FEATURE_OPTIONS,
-                                                          default=['ethnicity', 'gender'],
-                                                          max_selections=3)
-        for feature in selected_features_for_fairness:
-            if feature not in selected_features:
-                st.warning(f'Feature {feature} must also be selected at top for fairness analysis.')
-        if len(selected_features_for_fairness) == 3:
-            st.write('Maximum selection of protected features for fairness analysis reached.')
-
-        # Factorize categorical features
-        factorization_df = pd.read_excel(
-            './supplements/FACTORIZATION_TABLE.xlsx')  # columns: feature	unfactorized_value	factorized_value
-        features_to_factorize = pd.unique(factorization_df['feature']).tolist()
-
-        selected_privileged_values = []
-        for feature in selected_features_for_fairness:
-            available_values = selected_cohort[feature].unique()
-            if feature in features_to_factorize:
-                factorized_values = factorization_df.loc[factorization_df['feature'] == feature][
-                    'factorized_value'].to_list()  # might be helpful to display these in the label
-                available_values = get_unfactorized_values(feature, factorization_df)
-
-            protected_values_for_feature = st.multiselect(label=f'Select protected values for {feature}',
-                                                            options=available_values)
-            selected_privileged_values.append(protected_values_for_feature)
-            if len(protected_values_for_feature) < 1:
-                st.warning('Choose one value/class for each selected features.')
-            elif len(protected_values_for_feature) > 1:
-                st.warning('Warning: For most categorical features only a selection of one attribute is sensible.')
+        selected_features_for_fairness, selected_privileged_values = add_single_feature_filter(selected_cohort, selected_features)
         st.markdown('___')
-
 
         ## Select Classification Specific Parameters
         # Selection 1
@@ -197,5 +165,5 @@ def fairness_page():
             col2.pyplot(metrics_plot_2)
 
         except AttributeError:
-            st.warning('Select protected attributes to conduct a Fairness Analysis.')
+            st.warning('Select different protected attributes to conduct a Fairness Analysis.')
         st.markdown('___')

@@ -31,7 +31,7 @@ def preprocess_for_correlation(selected_cohort, features_df, selected_features: 
     # save dependent_variable in a df, remove from selected_features
     temp_selected_features = selected_features.copy()
     temp_selected_features.remove(selected_dependent_variable)
-    print(f'CHECK: {len(temp_selected_features)} features used for Correlation.')
+    # print(f'CHECK: {len(temp_selected_features)} features used for Correlation.')
     selected_cohort = selected_cohort[selected_features].fillna(0)
 
     return selected_cohort, selected_features
@@ -99,17 +99,29 @@ def get_categorical_corr(categorical_cohort, selected_dependent_variable):
     # Convert categorical columns to object columns (needed for associations package)
     categorical_cohort = categorical_cohort.apply(lambda x: x.astype("object") if x.dtype == "category" else x)
     # Estimate and generate Theil's U association plot
-    theils_u = associations(categorical_cohort, nom_nom_assoc='theil', plot=False)
-    plt.close()
-    # theils_u can contain two objects: ['ax'] is a plot, ['corr'] is a correlation matrix
-    death_corr = theils_u['corr'][selected_dependent_variable].round(2)
-    # death_corr.drop(selected_dependent_variable, inplace=True)          # not drop here, only in other two functions
-    death_corr = death_corr.rename('correlation')
+    try:
+        theils_u = associations(categorical_cohort, nom_nom_assoc='theil', plot=False)
+        plt.close()
+        # theils_u can contain two objects: ['ax'] is a plot, ['corr'] is a correlation matrix
+        death_corr = theils_u['corr'][selected_dependent_variable].round(2)
+        # death_corr.drop(selected_dependent_variable, inplace=True)          # not drop here, only in other two functions
+        death_corr = death_corr.rename('correlation')
+    except ValueError as e:
+        columns = categorical_cohort.columns.to_list()
+        temp_corr = pd.DataFrame(columns=columns)
+        for feature in columns:
+            temp_corr.loc[0, feature] = -1
+        death_corr = temp_corr.transpose().squeeze()     # squeeze = to_series
+
     # Significance: Chi-squared test on a contingency table per feature
     validity_df = pd.DataFrame()
     for feature in categorical_cohort.columns:
         contingency_tab = pd.crosstab(categorical_cohort[feature], categorical_cohort[selected_dependent_variable])
-        c, p_val, dof, expected = chi2_contingency(contingency_tab)  # c = chi-squared test statistic, not needed
+        try:
+            c, p_val, dof, expected = chi2_contingency(contingency_tab)  # c = chi-squared test statistic, not needed
+        except ValueError as e:
+            print(e)
+            c, p_val, dof, expected = -1, -1, -1, -1
         validity_df[feature] = [round(p_val, 3)]
     validity_df = validity_df.rename({0: 'p_value'}).transpose()
 
@@ -152,7 +164,11 @@ def get_binary_corr(binary_cohort, selected_dependent_variable):
     validity_df = pd.DataFrame()
     for feature in binary_cohort.columns:
         contingency_tab = pd.crosstab(binary_cohort[feature], binary_cohort[selected_dependent_variable])
-        c, p_val, dof, expected = chi2_contingency(contingency_tab)  # c = chi-squared test statistic, not needed
+        try:
+            c, p_val, dof, expected = chi2_contingency(contingency_tab)  # c = chi-squared test statistic, not needed
+        except ValueError as e:
+            print(e)
+            c, p_val, dof, expected = -1, -1, -1, -1
         validity_df[feature] = [round(p_val, 3)]
     validity_df.drop(columns=selected_dependent_variable, inplace=True)
     validity_df = validity_df.rename({0: 'p_value'}).transpose()

@@ -104,7 +104,8 @@ def calculate_deaths_table(use_this_function: False, selected_cohort, cohort_tit
             deaths_df.to_csv(output_file, index=False)
             print(f'STATUS: deaths_overview_table was saved to {filename_string}')
     else:
-        print(deaths_df.to_string())
+        pass
+        # print(deaths_df.to_string())
 
     return deaths_df
 

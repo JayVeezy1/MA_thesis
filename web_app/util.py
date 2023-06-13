@@ -2,6 +2,7 @@ import os
 import re
 import uuid
 
+import pandas as pd
 import streamlit as st
 
 from objects.patients import Patient
@@ -131,6 +132,7 @@ def get_preselection_two():
 
 
 def insert_feature_selectors(ALL_FEATURES, ALL_DEPENDENT_VARIABLES, selected_variable):
+    st.markdown('___')
     col1, col2, col3 = st.columns((0.25, 0.25, 0.5))
 
     # parameter on_change would be useful to set checker_2=False and reset previous default_values
@@ -228,6 +230,48 @@ def add_download_button(position, dataframe, title, cohort_title, keep_index: Fa
         position.download_button(label="Download the table", data=csv_table,
                              file_name=f'{cohort_title}_{title}.csv', mime="text/csv")  # , key='download-csv')
 
+def add_single_feature_filter(selected_cohort, selected_features):
+    default_features = []
+    if 'ethnicity' in selected_features:
+        default_features.append('ethnicity')
+    if 'gender' in selected_features:
+        default_features.append('gender')
+
+    selected_features_for_fairness = st.multiselect(label='Select features',
+                                                    options=selected_features,
+                                                    default=default_features,
+                                                    max_selections=3)
+    for feature in selected_features_for_fairness:
+        if feature not in selected_features:
+            st.warning(f'Feature {feature} must also be selected at top.')
+    if len(selected_features_for_fairness) == 3:
+        st.write('Maximum selection of features reached.')
+
+    # Factorize categorical features
+    factorization_df = pd.read_excel(
+        './supplements/FACTORIZATION_TABLE.xlsx')  # columns: feature	unfactorized_value	factorized_value
+    features_to_factorize = pd.unique(factorization_df['feature']).tolist()
+
+    selected_privileged_values = []
+    for feature in selected_features_for_fairness:
+        available_values = selected_cohort[feature].unique()
+        if feature in features_to_factorize:
+            factorized_values = factorization_df.loc[factorization_df['feature'] == feature][
+                'factorized_value'].to_list()  # might be helpful to display these in the label
+            available_values = get_unfactorized_values(feature, factorization_df)
+
+        protected_values_for_feature = st.multiselect(label=f'Select protected values for {feature}',
+                                                      options=available_values)
+        selected_privileged_values.append(protected_values_for_feature)
+        if len(protected_values_for_feature) < 1:
+            st.warning('Choose one value/class for each selected features.')
+        elif len(protected_values_for_feature) > 1:
+            st.warning('Warning: For most categorical features only a selection of one attribute is sensible.')
+
+    selected_filter_features = selected_features_for_fairness
+    selected_filter_values = selected_privileged_values
+
+    return selected_filter_features, selected_filter_values
 
 def get_unfactorized_values(feature, factorization_df):
     unfactorized_values = []
