@@ -136,8 +136,8 @@ def fairness_page():
 
             # Plot Fairness Radar combined
             categories = fairness_report_2.index.values.tolist()[1:]
-            result_1 = fairness_report['fairness_metrics'].to_list()[1:]
-            result_2 = fairness_report_2['fairness_metrics'].to_list()[1:]
+            result_1 = fairness_report['Values'].to_list()[1:]
+            result_2 = fairness_report_2['Values'].to_list()[1:]
             fairness_radar_2 = plot_radar_fairness(categories=categories, list_of_results=[result_1, result_2])
             col2.plotly_chart(figure_or_data=fairness_radar_2, use_container_width=True)
 
