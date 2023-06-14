@@ -13,7 +13,7 @@ def get_one_hot_encoding(selected_cohort, categorical_features):
         selected_cohort[items] = onehotarray
         selected_cohort.drop(columns=feature, inplace=True)  # remove original column
 
-    print('CHECK: count of selected_cohort features after encoding:', len(selected_cohort.columns))
+    # print('CHECK: count of selected_cohort features after encoding:', len(selected_cohort.columns))
     # print('CHECK: selected_cohort features after encoding:', selected_cohort.columns)
 
     return selected_cohort

@@ -248,9 +248,9 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
     entropy_index_privileged = generalized_entropy_error(y_true=y_true_privileged, y_pred=y_pred_privileged, alpha=1, pos_label=1)        # using Theil-Index for Entropy Metric
     entropy_diff = entropy_index_unprivileged - entropy_index_privileged
 
-    print('CHECK: ')
-    print(entropy_index_privileged)
-    print(entropy_index_unprivileged)
+    # print('CHECK Entropy: ')
+    # print(entropy_index_privileged)
+    # print(entropy_index_unprivileged)
     fairness_report.loc['Entropy Difference'] = round(entropy_diff, 3)
     fairness_report.index.names = ['Metrics']
 
@@ -392,7 +392,7 @@ def get_aif360_report(merged_test_data, selected_dependent_variable, selected_pr
     return report
 
 
-@st.cache_data
+# @st.cache_data
 def get_fairness_report(use_this_function: False, selected_cohort, cohort_title: str, features_df,
                         selected_features: list, selected_dependent_variable: str, classification_method: str,
                         sampling_method: str, use_case_name, save_to_file, plot_performance_metrics: False,
@@ -434,8 +434,7 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
             factorized_values = get_factorized_values(feature=feature, privileged_values=privileged_values[i], factorization_df=factorization_df)
             selected_protected_attributes.append(feature)
             selected_privileged_classes.append(factorized_values)
-            print('CHECK: ')
-            print(factorized_values)
+
             # invert the original data for gender: both selections possible
             if 0 in factorized_values and 1 in factorized_values:
                 x_test_basic.loc[x_test_basic['gender'] == 0, 'gender'] = 1  # set female = 1, makes all = 1
@@ -464,11 +463,27 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
                 selected_privileged_classes.append([1])
                 features_no_need_title_value.append(feature + f'_{value}')
         elif feature == 'cluster':
+            print('CHECK: reached cluster')
             selected_protected_attributes.append(feature)
-            selected_privileged_classes.append(privileged_values)
+            for value in privileged_values:
+                selected_privileged_classes.append(value)
+
+            # invert the clusters column from cluster numbers to only '1' at selected cluster
+            # if 0 in factorized_values and 1 in factorized_values:
+            #     x_test_basic.loc[x_test_basic['gender'] == 0, 'gender'] = 1  # set female = 1, makes all = 1
+            # elif not 0 in factorized_values and 1 in factorized_values:
+            #     pass  # no changes needed
+            # elif 0 in factorized_values and not 1 in factorized_values:
+            #     x_test_basic['gender'] = x_test_basic['gender'].map(lambda x: 1 if x == 0 else 0)
+            # else:
+            #     x_test_basic.loc[x_test_basic['gender'] == 1, 'gender'] = 0  # set male = 0, makes all = 0
+
         else:
             selected_protected_attributes.append(feature)
             selected_privileged_classes.append(privileged_values[i])
+
+    print(selected_protected_attributes)
+    print(selected_privileged_classes)
 
     # Create attributes_string for title
     attributes_string = ''
@@ -509,9 +524,15 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
         performance_per_group_df = None
     else:
         temp_df = x_test_basic[selected_protected_attributes]
+
+        # todo: error for clusters comes from here. Cluster column must first be transformed
+
         # check where ALL selected columns contain a 1
         all_ones_array = temp_df.apply(lambda x: all(x == 1), axis=1).astype(int)
+
+        print('CHECK temp_df: ')
         print(temp_df)
+        print('CHECK all ones array: ')
         print(all_ones_array)
         # temp_df['new_checking_column'] = all_ones_array.astype(int)
         performance_metrics_plot, performance_per_group_df, fairness_report = create_performance_metrics_plot(y_pred=predicted_labels,

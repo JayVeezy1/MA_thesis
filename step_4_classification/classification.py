@@ -12,6 +12,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve, make_scorer, \
     accuracy_score, recall_score, average_precision_score, PrecisionRecallDisplay
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 from sklearn.tree import plot_tree
 from sklearn.model_selection import GridSearchCV
 from imblearn.over_sampling import SMOTE, RandomOverSampler, SMOTENC
@@ -211,6 +212,12 @@ def split_classification_data(selected_cohort, cohort_title: str, features_df,
     if (
             classification_method == 'RandomForest' or classification_method == 'RandomForest_with_gridsearch') and use_grid_search:
         clf = grid_search_optimal_RF(clf, x_train_final, y_train_final, verbose)
+
+    # sometimes labels for XGBOOST have to be 'cleaned'
+    # from https://stackoverflow.com/questions/71996617/invalid-classes-inferred-from-unique-values-of-y-expected-0-1-2-3-4-5-got
+    if classification_method == 'XGBoost':
+        le = LabelEncoder()
+        y_train_final = le.fit_transform(y_train_final)
 
     # this is the training step, prediction will be inside the Classification Report
     clf.fit(X=x_train_final, y=y_train_final)

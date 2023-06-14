@@ -61,20 +61,13 @@ def data_analysis_page():
         ## General Statistics DF
         st.markdown("<h2 style='text-align: left; color: black;'>Features Overview</h2>", unsafe_allow_html=True)
         overview_table = calculate_feature_overview_table(use_this_function=True,  # True | False
-                                                          selected_cohort=filtered_cohort,      # todo: change this for all following
+                                                          selected_cohort=filtered_cohort,
                                                           features_df=FEATURES_DF,
                                                           selected_features=selected_features,
                                                           cohort_title=cohort_title,
                                                           use_case_name='frontend',
                                                           selected_dependent_variable=selected_variable,
                                                           save_to_file=False)
-        # # CSS to inject markdown, this removes index column from table
-        # hide_table_row_index = """ <style>
-        #                            thead tr th:first-child {display:none}
-        #                            tbody th {display:none}
-        #                            </style> """
-        # st.markdown(hide_table_row_index, unsafe_allow_html=True)
-        # st.table(data=overview_table)
         st.dataframe(data=overview_table.set_index(overview_table.columns[0]), use_container_width=True)
         add_download_button(position=None, dataframe=overview_table, title='overview_table', cohort_title=cohort_title, keep_index=False)
         st.markdown('___')

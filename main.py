@@ -69,7 +69,8 @@ if __name__ == '__main__':
     print('STATUS: Preprocessing finished.\n')
 
 
-    # todo text: update + interpret fairness and subgroup chapter
+    # todo text: update subgroup chapter
+    ## Check error with fairness measure calculation for cluster 8
 
     # todo code: add SHAPley values to classification page
     ## probably choose different explainer objects depending on selected prediction model

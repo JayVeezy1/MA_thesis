@@ -107,7 +107,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
                                            use_encoding=use_encoding,
                                            verbose=False)
 
-        # get total_auc_score for total set
+    # get total_auc_score for total set
     total_auc_score, auroc_plot, auc_prc_score, auc_prc_plot = get_auc_score(use_this_function=True,  # True | False
                                                    classification_method=classification_method,
                                                    sampling_method=sampling_method,  # SELECTED_SAMPLING_METHOD
@@ -137,6 +137,7 @@ def compare_classification_models_on_clusters(use_this_function, use_case_name, 
 
     total_count = len(selected_cohort['icustay_id'].to_list())
     total_deaths = selected_cohort.loc[selected_cohort[dependent_variable] == 1, dependent_variable].count()
+    # todo future work: ERROR this calculation does not work yet for complete_set, should be independent of selected cluster count
     current_settings = pd.DataFrame([{'dependent_variable': dependent_variable,
                                       'classification_method': classification_method,
                                       'cluster': 'complete_set',
