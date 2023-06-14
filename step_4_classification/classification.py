@@ -60,7 +60,7 @@ def preprocess_for_classification(selected_cohort, features_df, selected_feature
     return selected_cohort  # dependent_variable will be needed and then removed outside
 
 
-def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_train, basic_y_test, cohort_title,
+def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_train, basic_y_test, cohort_title, test_size,
                      verbose: True):
     if sampling_method == 'no_sampling':  # no over/undersampling
         x_train_final = basic_x_train
@@ -83,7 +83,7 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
                 ros = RandomOverSampler(random_state=1321)
                 x_res, y_res = ros.fit_resample(basic_x_train, basic_y_train)
                 new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(x_res, y_res,
-                                                                                    test_size=0.2,
+                                                                                    test_size=test_size,
                                                                                     random_state=1321)
                 x_train_final = new_x_train
                 y_train_final = new_y_train
@@ -111,7 +111,7 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
             try:
                 smote_x_resampled, smote_y_resampled = smote.fit_resample(basic_x_train, basic_y_train)
                 new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(smote_x_resampled, smote_y_resampled,
-                                                                                    test_size=0.2,
+                                                                                    test_size=test_size,
                                                                                     random_state=1321)
                 x_train_final = new_x_train
                 y_train_final = new_y_train
@@ -143,7 +143,7 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
             nearmiss_x_resampled, nearmiss_y_resampled = nearmiss.fit_resample(basic_x_train, basic_y_train)
             new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(nearmiss_x_resampled,
                                                                                 nearmiss_y_resampled,
-                                                                                test_size=0.2, random_state=1321)
+                                                                                test_size=test_size, random_state=1321)
             clf.fit(X=new_x_train, y=new_y_train)
 
             # Choose best recall of all nearmiss versions
@@ -168,6 +168,7 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
 def split_classification_data(selected_cohort, cohort_title: str, features_df,
                               selected_features: list,
                               selected_dependent_variable: str, classification_method: str, sampling_method: str,
+                              test_size: int,
                               use_grid_search: False,
                               verbose: True):
     # Classification/Prediction on avg_patient_cohort
@@ -193,7 +194,7 @@ def split_classification_data(selected_cohort, cohort_title: str, features_df,
 
     # Split training/test-data
     x_train_basic, x_test_basic, y_train_basic, y_test_basic = train_test_split(avg_df_filtered, death_df,
-                                                                                test_size=0.2, random_state=1321)
+                                                                                test_size=test_size, random_state=1321)
 
     # If selected, get over-/under-sampled data
     try:
@@ -204,6 +205,7 @@ def split_classification_data(selected_cohort, cohort_title: str, features_df,
                                                                                                     y_train_basic,
                                                                                                     y_test_basic,
                                                                                                     cohort_title,
+                                                                                                    test_size,
                                                                                                     verbose)
     except TypeError as e:
         return None
@@ -243,7 +245,7 @@ def save_plot_to_cache(plot_name, classification_method, cohort_title, sampling_
     plt.savefig(filename)
 
 def get_shapely_relevance(use_this_function, selected_feature, classification_method, sampling_method, selected_cohort, cohort_title,
-                          use_case_name, features_df, selected_features, selected_dependent_variable, show_plot,
+                          use_case_name, features_df, selected_features, selected_dependent_variable, show_plot, test_size,
                           use_grid_search, verbose, save_to_cache, save_to_file):
     # calculate the CM, return: CM as dataframe
     if not use_this_function:
@@ -255,7 +257,7 @@ def get_shapely_relevance(use_this_function, selected_feature, classification_me
     # get_classification_basics
     clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
         selected_cohort, cohort_title, features_df, selected_features,
-        selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
+        selected_dependent_variable, classification_method, sampling_method, test_size, use_grid_search, verbose)
 
     # Create Shapely Explainer Object
     model = clf                         # the already fitted clf
@@ -352,7 +354,7 @@ def get_shapely_relevance(use_this_function, selected_feature, classification_me
 def get_confusion_matrix(use_this_function: False, selected_cohort, cohort_title: str,
                          features_df,
                          selected_features: list, selected_dependent_variable: str, classification_method: str,
-                         sampling_method: str, use_case_name, save_to_file, use_grid_search, verbose: True):
+                         sampling_method: str, use_case_name, save_to_file, test_size, use_grid_search, verbose: True):
     # calculate the CM, return: CM as dataframe
     if not use_this_function:
         return None
@@ -360,13 +362,13 @@ def get_confusion_matrix(use_this_function: False, selected_cohort, cohort_title
     if classification_method == 'deeplearning_sequential':
         cm_df = get_DL_confusion_matrix(selected_cohort, cohort_title, features_df,
                                         selected_features, selected_dependent_variable, classification_method,
-                                        sampling_method, use_case_name, save_to_file, verbose)
+                                        sampling_method, use_case_name, test_size, save_to_file, verbose)
         return cm_df
 
     # get_classification_basics
     clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
         selected_cohort, cohort_title, features_df, selected_features,
-        selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
+        selected_dependent_variable, classification_method, sampling_method, test_size, use_grid_search, verbose)
 
     # Get CM
     cm: ndarray = confusion_matrix(y_test_basic, clf.predict(x_test_basic))
@@ -456,7 +458,7 @@ def get_classification_report(use_this_function: False, display_confusion_matrix
                               cohort_title: str,
                               features_df,
                               selected_features: list, selected_dependent_variable: str, classification_method: str,
-                              sampling_method: str, use_case_name, save_to_file, use_grid_search: False, verbose: True):
+                              sampling_method: str, use_case_name, save_to_file, test_size, use_grid_search: False, verbose: True):
     # calculate the CM and return the corresponding ClassificationReport
     if not use_this_function:
         return None
@@ -472,12 +474,13 @@ def get_classification_report(use_this_function: False, display_confusion_matrix
                                   selected_features=selected_features,
                                   selected_dependent_variable=selected_dependent_variable,
                                   use_grid_search=use_grid_search,
+                                  test_size=test_size,
                                   verbose=verbose,
                                   save_to_file=save_to_file)
     # get_classification_basics
     clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
         selected_cohort, cohort_title, features_df, selected_features,
-        selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
+        selected_dependent_variable, classification_method, sampling_method, test_size, use_grid_search, verbose)
 
     y_pred = clf.predict(x_test_basic)
     report_dict = classification_report(y_test_basic, y_pred, output_dict=True)
@@ -499,7 +502,8 @@ def get_classification_report(use_this_function: False, display_confusion_matrix
 
 def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, features_df,
                   selected_features: list, selected_dependent_variable: str, classification_method: str,
-                  sampling_method: str, use_case_name, show_plot: False, save_to_file: False, use_grid_search: False,
+                  sampling_method: str, use_case_name, show_plot: False, save_to_file: False, test_size: float,
+                  use_grid_search: False,
                   verbose: True):
     # calculate & plot the AUROC, return: auc_score
     # also calculate & plot AUPRC and return: auc_prc_score
@@ -513,6 +517,7 @@ def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, 
                                                     classification_method=classification_method,
                                                     sampling_method=sampling_method,
                                                     show_plot=show_plot, use_case_name=use_case_name,
+                                                    test_size=test_size,
                                                     save_to_file=save_to_file,
                                                     verbose=verbose)
 
@@ -523,7 +528,7 @@ def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, 
         selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=features_df,
         selected_features=selected_features,
         selected_dependent_variable=selected_dependent_variable, classification_method=classification_method,
-        sampling_method=sampling_method, use_grid_search=use_grid_search, verbose=verbose)
+        sampling_method=sampling_method, test_size=test_size, use_grid_search=use_grid_search, verbose=verbose)
 
     # Calculate predictions for x_test
     y_pred = clf.predict_proba(x_test_basic)  # Prediction probabilities (= estimated values of prediction)
@@ -663,7 +668,7 @@ def get_precision(cm_df):
 
 def compare_classification_models_on_cohort(use_this_function, use_case_name, features_df, selected_features,
                                             sampling_method, all_cohorts_with_titles, all_classification_methods,
-                                            all_dependent_variables, save_to_file):
+                                            all_dependent_variables, test_size, save_to_file):
     # calculate & plot the AUROC, return: auc_score
     if not use_this_function:
         return None
@@ -692,6 +697,7 @@ def compare_classification_models_on_cohort(use_this_function, use_case_name, fe
                                                          selected_dependent_variable=dependent_variable,
                                                          show_plot=False,
                                                          verbose=False,
+                                                         test_size=test_size,
                                                          use_grid_search=use_grid_search,
                                                          save_to_file=False)
                 cm_df = get_confusion_matrix(use_this_function=True,  # True | False
@@ -703,6 +709,7 @@ def compare_classification_models_on_cohort(use_this_function, use_case_name, fe
                                              features_df=features_df,
                                              selected_features=selected_features,
                                              selected_dependent_variable=dependent_variable,
+                                             test_size=test_size,
                                              use_grid_search=use_grid_search,
                                              verbose=False,
                                              save_to_file=False)
@@ -773,7 +780,7 @@ def grid_search_optimal_RF(clf, x_train_final, y_train_final, verbose: False):
 
 
 def plot_random_forest(use_this_function, classification_method, sampling_method, selected_cohort, cohort_title,
-                       use_case_name, features_df, selected_features, selected_dependent_variable, show_plot, verbose,
+                       use_case_name, features_df, selected_features, selected_dependent_variable, show_plot, verbose, test_size,
                        use_grid_search, save_to_file):
     # Calculate GridSearchCV to find optimal RF setting, then plot the RF for feature importance
     if not use_this_function:
@@ -785,7 +792,7 @@ def plot_random_forest(use_this_function, classification_method, sampling_method
     clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
         selected_cohort, cohort_title, features_df, selected_features, selected_dependent_variable,
         classification_method,
-        sampling_method, use_grid_search, verbose)
+        sampling_method, test_size, use_grid_search, verbose)
 
     # Plot optimal RF
     plt.figure(figsize=(10, 8), dpi=900)  # figsize=(40, 20) makes plot too large
@@ -813,7 +820,7 @@ def plot_random_forest(use_this_function, classification_method, sampling_method
 
 def get_cohort_classified(use_this_function, project_path, classification_method, sampling_method,
                           selected_cohort, cohort_title, use_case_name, features_df, selected_features,
-                          selected_dependent_variable, use_grid_search, verbose, save_to_file):
+                          selected_dependent_variable, test_size, use_grid_search, verbose, save_to_file):
     # calculate the CM and return the corresponding ClassificationReport
     if not use_this_function:
         return None
@@ -821,7 +828,7 @@ def get_cohort_classified(use_this_function, project_path, classification_method
     # get_classification_basics
     clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
         selected_cohort, cohort_title, features_df, selected_features,
-        selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
+        selected_dependent_variable, classification_method, sampling_method, test_size, use_grid_search, verbose)
 
     # Create concatenated classified_cohort
     y_pred: ndarray = clf.predict(x_test_basic)  # do not predict on oversampled data, only train

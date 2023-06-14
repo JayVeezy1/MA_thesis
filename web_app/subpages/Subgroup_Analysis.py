@@ -180,14 +180,17 @@ def subgroup_analysis_page():
 
 
             ## Fairness Report and Performance Metrics Plot
-            col1, col2 = st.columns((0.5, 0.5))
-            col1.markdown("<h2 style='text-align: left; color: black;'>Subgroup Fairness Analysis</h2>", unsafe_allow_html=True)
+            st.markdown("<h2 style='text-align: left; color: black;'>Subgroup Fairness Analysis</h2>", unsafe_allow_html=True)
+            col1, col2, col3, col4 = st.columns((0.25, 0.25, 0.25, 0.25))
+
             ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost',
                                                 'deeplearning_sequential']
             classification_method = col1.selectbox(label='Select classification method',
                                                    options=ALL_CLASSIFICATION_METHODS)
             ALL_SAMPLING_METHODS = ['no_sampling', 'oversampling']  # undersampling not useful
-            sampling_method = col1.selectbox(label='Select sampling method', options=ALL_SAMPLING_METHODS)
+            sampling_method = col2.selectbox(label='Select sampling method', options=ALL_SAMPLING_METHODS)
+            size_options = [0.20, 0.15, 0.25, 0.30, 0.35, 0.40]
+            test_size = col3.selectbox(label='Select test data percentage', options=size_options)
             if classification_method == 'RandomForest_with_gridsearch':
                 use_grid_search = True
             else:
@@ -196,112 +199,108 @@ def subgroup_analysis_page():
             # Select a Cluster to use as Subgroup for Fairness Analysis
             selected_privileged_clusters = []
             available_values = range(0, selected_cluster_count)
-            protected_values_for_feature = col1.multiselect(label=f'Select privileged clusters for {clustering_method} with {selected_cluster_count} clusters',
+            protected_values_for_feature = col4.multiselect(label=f'Select privileged clusters for {clustering_method} with {selected_cluster_count} clusters',
                                                           options=available_values)
             selected_privileged_clusters.append(protected_values_for_feature)
             if len(protected_values_for_feature) < 1:
-                col1.warning('Choose one value/class for each selected features.')
-            elif len(protected_values_for_feature) > 1:
-                col1.warning('Warning: For most categorical features only a selection of one attribute is sensible.')
-
-            # add clustering result to the selected_cohort as a new feature
-            cohort_with_clusters = add_clustering_to_cohort(selected_cohort=selected_cohort,
-                                                            cohort_title=cohort_title,
-                                                            features_df=FEATURES_DF,
-                                                            selected_features=selected_features,
-                                                            selected_dependent_variable=selected_variable,
-                                                            selected_cluster_count=selected_cluster_count,
-                                                            clustering_method=clustering_method,
-                                                            use_encoding=True)
-
-            st.write(selected_features)
-            st.write(selected_variable)
-            st.write(classification_method)
-            st.write(sampling_method)
-            # TODO: check error of this calculation
-            fairness_report, metrics_plot, metrics_per_group_df, attributes_string = get_fairness_report(use_this_function=True,
-                                                                selected_cohort=cohort_with_clusters,
+                st.warning('Choose one value/class for each selected features.')
+            else:
+                # add clustering result to the selected_cohort as a new feature
+                cohort_with_clusters = add_clustering_to_cohort(selected_cohort=selected_cohort,
                                                                 cohort_title=cohort_title,
                                                                 features_df=FEATURES_DF,
                                                                 selected_features=selected_features,
                                                                 selected_dependent_variable=selected_variable,
-                                                                classification_method=classification_method,
-                                                                sampling_method=sampling_method,
-                                                                use_case_name='frontend',
-                                                                save_to_file=False,
-                                                                plot_performance_metrics=False,
-                                                                use_grid_search=use_grid_search,
-                                                                verbose=False,
-                                                                protected_features=['cluster'],
-                                                                privileged_values=selected_privileged_clusters)
-            # Warning if values not reliable
-            try:
-                recall_privileged_1 = metrics_per_group_df.transpose().loc[1, 'recall']
-                precision_privileged_1 = metrics_per_group_df.transpose().loc[1, 'precision']
-                if recall_privileged_1 == 0 or recall_privileged_1 == 1 or precision_privileged_1 == 0 or precision_privileged_1 == 1:
-                    col1.write('Warning: Recall and Precision values can not be calculated reliably. '
-                             'True Positives may be 0 because no enough cases available for classification. '
-                             'It is recommended to select a larger privileged group.')
-            except AttributeError as e:
-                st.warning(e)
+                                                                selected_cluster_count=selected_cluster_count,
+                                                                clustering_method=clustering_method,
+                                                                use_encoding=True)
+                fairness_report, metrics_plot, metrics_per_group_df, attributes_string = get_fairness_report(use_this_function=True,
+                                                                    selected_cohort=cohort_with_clusters,
+                                                                    cohort_title=cohort_title,
+                                                                    features_df=FEATURES_DF,
+                                                                    selected_features=selected_features,
+                                                                    selected_dependent_variable=selected_variable,
+                                                                    classification_method=classification_method,
+                                                                    sampling_method=sampling_method,
+                                                                    use_case_name='frontend',
+                                                                    save_to_file=False,
+                                                                    plot_performance_metrics=False,
+                                                                    test_size=test_size,
+                                                                    use_grid_search=use_grid_search,
+                                                                    verbose=False,
+                                                                    protected_features=['cluster'],
+                                                                    privileged_values=selected_privileged_clusters)
+                # todo: add a warning of count of privileged class < 50 -> dummys were inserted, metrics not reliable
+                ## thats also the reason why there are 535 instances now
 
-            st.markdown('___')
+                # Warning if values not reliable
+                try:
+                    recall_privileged_1 = metrics_per_group_df.transpose().loc[1, 'recall']
+                    precision_privileged_1 = metrics_per_group_df.transpose().loc[1, 'precision']
+                    if recall_privileged_1 == 0 or recall_privileged_1 == 1 or precision_privileged_1 == 0 or precision_privileged_1 == 1:
+                        st.write('Warning: Recall and Precision values can not be calculated reliably. '
+                                 'True Positives may be 0 because no enough cases available for classification. '
+                                 'It is recommended to select a larger privileged group.')
+                except AttributeError as e:
+                    # this happens when metrics_per_group_df=None returned, and .transpose() is not possible
+                    # col1.write('Warning: Recall and Precision values can not be calculated reliably. '
+                    #            'True Positives may be 0 because no enough cases available for classification. '
+                    #            'It is recommended to select a larger privileged group.')
+                    st.warning('Warning: ValueError occurred, because only one class available for fairness analysis.')
 
-            # Display Fairness Analysis
-            try:
-                col1, col2, col3, col4 = st.columns((0.2, 0.3, 0.05, 0.45))
-                col1.markdown("<h2 style='text-align: left; color: black;'>Fairness Metrics</h2>",
-                              unsafe_allow_html=True)
-
-                # Plot Fairness Report + Radar
-                col1.write('')
-                col1.dataframe(fairness_report)
-                add_download_button(position=col1, dataframe=fairness_report,
-                                    title='fairness_report', cohort_title=cohort_title, keep_index=False)
-
-                categories = fairness_report.index.values.tolist()[1:]
-                result = fairness_report['Values'].to_list()[1:]
-                fairness_radar = plot_radar_fairness(categories=categories, list_of_results=[result])
-                col2.plotly_chart(figure_or_data=fairness_radar, use_container_width=True)
-
-                # Plot Subgroups + Table
-                col4.markdown("<h2 style='text-align: left; color: black;'>Subgroup Comparison</h2>",
-                              unsafe_allow_html=True)
-                col4.pyplot(metrics_plot)
-                col4.dataframe(metrics_per_group_df.transpose())
-                add_download_button(position=col4, dataframe=metrics_per_group_df.transpose(),
-                                    title='metrics_per_group1', cohort_title=cohort_title, keep_index=False)
-                col4.write('Class 1 is made up of the selected protected features and their privileged attributes.')
                 st.markdown('___')
 
-                ## Plot Classification per Cluster Table
-                # This overview table does not work, complete_set values should be independent of selected cluster count
-                # st.markdown("<h2 style='text-align: left; color: black;'>Classification Metrics per Cluster</h2>", unsafe_allow_html=True)
-                # st.write('The comparison of prediction metrics across clusters can be an additional indicator for a fairness analysis.')
-#
-                # classification_overview_table = compare_classification_models_on_clusters(use_this_function=True,
-                #                                                                           use_case_name='frontend',
-                #                                                                           features_df=FEATURES_DF,
-                #                                                                           selected_features=selected_features,
-                #                                                                           selected_cohort=selected_cohort,
-                #                                                                           classification_method=classification_method,
-                #                                                                           sampling_method=sampling_method,
-                #                                                                           clustering_method=clustering_method,
-                #                                                                           cohort_title=cohort_title,
-                #                                                                           dependent_variable=selected_variable,
-                #                                                                           selected_cluster_count=selected_cluster_count,
-                #                                                                           check_sh_score=False,
-                #                                                                           use_grid_search=use_grid_search,
-                #                                                                           use_encoding=True,
-                #                                                                           save_to_file=False)
-                # st.dataframe(classification_overview_table, use_container_width=True)
-                # add_download_button(position=None, dataframe=classification_overview_table,
-                #                     title='classification_overview_table', cohort_title=cohort_title, keep_index=False)
-            except AttributeError:
-                st.warning('Select protected attributes to conduct a Fairness Analysis.')
+                # Display Fairness Analysis
+                try:
+                    col1, col2, col3, col4 = st.columns((0.2, 0.3, 0.05, 0.45))
+                    col1.markdown("<h2 style='text-align: left; color: black;'>Fairness Metrics</h2>",
+                                  unsafe_allow_html=True)
 
-            st.markdown('___')
+                    # Plot Fairness Report + Radar
+                    col1.write('')
+                    col1.dataframe(fairness_report)
+                    add_download_button(position=col1, dataframe=fairness_report,
+                                        title='fairness_report', cohort_title=cohort_title, keep_index=False)
 
+                    categories = fairness_report.index.values.tolist()[1:]
+                    result = fairness_report['Values'].to_list()[1:]
+                    fairness_radar = plot_radar_fairness(categories=categories, list_of_results=[result])
+                    col2.plotly_chart(figure_or_data=fairness_radar, use_container_width=True)
+
+                    # Plot Subgroups + Table
+                    col4.markdown("<h2 style='text-align: left; color: black;'>Subgroup Comparison</h2>",
+                                  unsafe_allow_html=True)
+                    col4.pyplot(metrics_plot)
+                    col4.dataframe(metrics_per_group_df.transpose())
+                    add_download_button(position=col4, dataframe=metrics_per_group_df.transpose(),
+                                        title='metrics_per_group1', cohort_title=cohort_title, keep_index=False)
+                    col4.write('Class 1 is made up of the selected protected features and their privileged attributes.')
+
+                    ## Plot Classification per Cluster Table
+                    # This overview table does not work, complete_set values should be independent of selected cluster count
+                    # st.markdown("<h2 style='text-align: left; color: black;'>Classification Metrics per Cluster</h2>", unsafe_allow_html=True)
+                    # st.write('The comparison of prediction metrics across clusters can be an additional indicator for a fairness analysis.')
+                    # classification_overview_table = compare_classification_models_on_clusters(use_this_function=True,
+                    #                                                                           use_case_name='frontend',
+                    #                                                                           features_df=FEATURES_DF,
+                    #                                                                           selected_features=selected_features,
+                    #                                                                           selected_cohort=selected_cohort,
+                    #                                                                           classification_method=classification_method,
+                    #                                                                           sampling_method=sampling_method,
+                    #                                                                           clustering_method=clustering_method,
+                    #                                                                           cohort_title=cohort_title,
+                    #                                                                           dependent_variable=selected_variable,
+                    #                                                                           selected_cluster_count=selected_cluster_count,
+                    #                                                                           check_sh_score=False,
+                    #                                                                           use_grid_search=use_grid_search,
+                    #                                                                           use_encoding=True,
+                    #                                                                           save_to_file=False)
+                    # st.dataframe(classification_overview_table, use_container_width=True)
+                    # add_download_button(position=None, dataframe=classification_overview_table,
+                    #                     title='classification_overview_table', cohort_title=cohort_title, keep_index=False)
+                except AttributeError:
+                    st.warning('Select protected attributes to conduct a Fairness Analysis.')
+                st.markdown('___')
         else:
             st.warning('Clusters overview tables only available for clustering methods with preselected cluster count (kmeans and kprototype).')
             st.markdown('___')

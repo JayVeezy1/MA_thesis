@@ -88,57 +88,57 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
                                     save_to_file: False):
     # Use fairlearn MetricFrame to directly plot selected metrics https://fairlearn.org/v0.8/user_guide/assessment/plotting.html
     performance_metrics = {'accuracy': accuracy_score,
-               'recall': recall_score,
-               'precision': precision_score,
-               'auroc score': roc_auc_score,
-               'selection rate': selection_rate,
-               'count': count}
+                           'recall': recall_score,
+                           'precision': precision_score,
+                           'auroc score': roc_auc_score,
+                           'selection rate': selection_rate,
+                           'count': count}
 
-    # if selection too small, privileged class has no death cases, recall and precision = 0
-    # must be calculated manually and with dummy, otherwise no useful metrics
-    # add dummy values if privileged class has no TP
     y_pred_privileged = y_pred[selected_attribute_array[selected_attribute_array == 1]]
     y_true_privileged = y_true[selected_attribute_array[selected_attribute_array == 1].index].to_numpy()
     y_pred_unprivileged = y_pred[selected_attribute_array[selected_attribute_array == 0]]
     y_true_unprivileged = y_true[selected_attribute_array[selected_attribute_array == 0].index].to_numpy()
 
-    # For loop not ideal when working with arrays, but works
+    # todo future research: clusters are simply too small dummys have too strong influence on them
+    ## any other way to calculate recall even if no TP?
+    # Problem: Using Dummys does not work. Simply not enough cases if no TP, display warning in frontend
+    # Idea: if selection too small, privileged class has no death cases, recall and precision = 0
+    ## must be calculated manually and with dummy, otherwise no useful metrics
+    ## add dummy values if privileged class has no TP
+    ## For loop not ideal when working with arrays, but works
     # maybe better: np.count_nonzero(y_pred_privileged == y_true_privileged)
-
     true_positives = 0
     for i, real_value in enumerate(y_true_privileged):
         if real_value == 1:
             predicted_value = y_pred_privileged[i]
             if real_value == predicted_value:
                 true_positives += 1
-
-    # Using Dummys does not work. Simply not enough cases if no TP, display warning in frontend
-    # if true_positives == 0:
-    #     # Adding one dummy TP, FP, FN, TN to the predictions for privileged class -> recall and precision can be calculated
-    #     # TP
-    #     selected_attribute_array[-1] = 1
-    #     y_true[-1] = 1
-    #     y_pred = np.append(y_pred, 1)
-    #     # FP
-    #     selected_attribute_array[-2] = 1
-    #     y_true[-2] = 0
-    #     y_pred = np.append(y_pred, 1)
-    #     # FN
-    #     selected_attribute_array[-3] = 1
-    #     y_true[-3] = 1
-    #     y_pred = np.append(y_pred, 0)
-    #     # TN
-    #     selected_attribute_array[-4] = 1
-    #     y_true[-4] = 0
-    #     y_pred = np.append(y_pred, 0)
+    if true_positives == 0:
+        # Adding one dummy TP, FP, FN, TN to the predictions for privileged class -> recall and precision can be calculated
+        # TP
+        selected_attribute_array[-1] = 1
+        y_true[-1] = 1
+        y_pred = np.append(y_pred, 1)
+        # FP
+        selected_attribute_array[-2] = 1
+        y_true[-2] = 0
+        y_pred = np.append(y_pred, 1)
+        # FN
+        selected_attribute_array[-3] = 1
+        y_true[-3] = 1
+        y_pred = np.append(y_pred, 0)
+        # TN
+        selected_attribute_array[-4] = 1
+        y_true[-4] = 0
+        y_pred = np.append(y_pred, 0)
 
     try:
         performance_obj = MetricFrame(metrics=performance_metrics,
-                               y_true=y_true.to_numpy(),
-                               y_pred=y_pred,
-                               sensitive_features=selected_attribute_array)
+                                       y_true=y_true.to_numpy(),
+                                       y_pred=y_pred,
+                                       sensitive_features=selected_attribute_array)
     except ValueError:
-        st.warning('Warning: ValueError occurred, because only one class available for fairness analysis.')
+        # st.warning('Warning: ValueError occurred, because only one class available for fairness analysis.')
         return None, None, None
 
     # Customize plots with ylim
@@ -206,7 +206,7 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
     try:
         group_report['diff'] = temp_differences[0]      # add differences to unprivileged class (0) to group_report
     except KeyError:
-        st.warning('Warning: KeyError occurred, because only one class available for fairness analysis.')
+        # st.warning('Warning: KeyError occurred, because only one class available for fairness analysis.')
         return None, None, None
 
     accuracy_parity = group_report.loc['accuracy', 'diff']
@@ -225,8 +225,7 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
         confusion_matrix_unprivileged = pd.DataFrame(group_report.loc['confusion_matrix', 0], columns=['predicted_0', 'predicted_1'])
         confusion_matrix_privileged = pd.DataFrame(group_report.loc['confusion_matrix', 1], columns=['predicted_0', 'predicted_1'])
     except KeyError as e:
-        st.warning('Warning: KeyError occurred, because only one class available for fairness analysis.')
-        # print('Warning: KeyError occurred, because only one class available for fairness analysis.', e)
+        # st.warning('Warning: KeyError occurred, because only one class available for fairness analysis.')
         return None, None, None
 
     tpr_overall, fpr_overall = get_rates_from_cm(confusion_matrix_overall)
@@ -396,7 +395,7 @@ def get_aif360_report(merged_test_data, selected_dependent_variable, selected_pr
 def get_fairness_report(use_this_function: False, selected_cohort, cohort_title: str, features_df,
                         selected_features: list, selected_dependent_variable: str, classification_method: str,
                         sampling_method: str, use_case_name, save_to_file, plot_performance_metrics: False,
-                        use_grid_search: False, verbose: True, protected_features, privileged_values):
+                        test_size, use_grid_search: False, verbose: True, protected_features, privileged_values):
     # calculate fairness metrics and return fairness-report
     if not use_this_function:
         return None, None, None, None
@@ -406,7 +405,7 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
         x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data_DL(
             selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=features_df,
             selected_features=selected_features,
-            selected_dependent_variable=selected_dependent_variable,
+            selected_dependent_variable=selected_dependent_variable, test_size=test_size,
             sampling_method=sampling_method, verbose=verbose)
         model, history = get_sequential_model(x_train_final=x_train_final, y_train_final=y_train_final)
         predicted_labels = model.predict(x=x_test_basic, batch_size=128).round()
@@ -414,7 +413,7 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
     else:
         clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
             selected_cohort, cohort_title, features_df, selected_features,
-            selected_dependent_variable, classification_method, sampling_method, use_grid_search, verbose)
+            selected_dependent_variable, classification_method, sampling_method, test_size, use_grid_search, verbose)
         predicted_labels = clf.predict(x_test_basic)
 
     # 1) select unprivileged_groups and their respective values/classes | would have probably been better built with dict structure
@@ -463,27 +462,12 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
                 selected_privileged_classes.append([1])
                 features_no_need_title_value.append(feature + f'_{value}')
         elif feature == 'cluster':
-            print('CHECK: reached cluster')
             selected_protected_attributes.append(feature)
             for value in privileged_values:
                 selected_privileged_classes.append(value)
-
-            # invert the clusters column from cluster numbers to only '1' at selected cluster
-            # if 0 in factorized_values and 1 in factorized_values:
-            #     x_test_basic.loc[x_test_basic['gender'] == 0, 'gender'] = 1  # set female = 1, makes all = 1
-            # elif not 0 in factorized_values and 1 in factorized_values:
-            #     pass  # no changes needed
-            # elif 0 in factorized_values and not 1 in factorized_values:
-            #     x_test_basic['gender'] = x_test_basic['gender'].map(lambda x: 1 if x == 0 else 0)
-            # else:
-            #     x_test_basic.loc[x_test_basic['gender'] == 1, 'gender'] = 0  # set male = 0, makes all = 0
-
         else:
             selected_protected_attributes.append(feature)
             selected_privileged_classes.append(privileged_values[i])
-
-    print(selected_protected_attributes)
-    print(selected_privileged_classes)
 
     # Create attributes_string for title
     attributes_string = ''
@@ -523,18 +507,17 @@ def get_fairness_report(use_this_function: False, selected_cohort, cohort_title:
         performance_metrics_plot = None
         performance_per_group_df = None
     else:
-        temp_df = x_test_basic[selected_protected_attributes]
+        if selected_protected_attributes[0] == 'cluster':
+            # invert the clusters column from cluster numbers to only '1' at selected cluster
+            temp_series = x_test_basic[selected_protected_attributes].squeeze() # should only be one column to series
+            temp_df = temp_series.isin(selected_privileged_classes[0]).astype(int).to_frame()
+        else:
+            temp_df = x_test_basic[selected_protected_attributes]
 
-        # todo: error for clusters comes from here. Cluster column must first be transformed
-
-        # check where ALL selected columns contain a 1
+        # Set 1 where ALL combined selected columns contain a 1
         all_ones_array = temp_df.apply(lambda x: all(x == 1), axis=1).astype(int)
-
-        print('CHECK temp_df: ')
-        print(temp_df)
-        print('CHECK all ones array: ')
-        print(all_ones_array)
-        # temp_df['new_checking_column'] = all_ones_array.astype(int)
+        # print('CHECK all ones array: ')
+        # print(all_ones_array)
         performance_metrics_plot, performance_per_group_df, fairness_report = create_performance_metrics_plot(y_pred=predicted_labels,
                                         y_true=y_test_basic,
                                         selected_attribute_array=all_ones_array,

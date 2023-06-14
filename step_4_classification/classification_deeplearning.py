@@ -55,11 +55,11 @@ def preprocess_for_classification_DL(selected_cohort, features_df, selected_feat
 
 def get_DL_auc_score(selected_cohort, cohort_title, features_df,
                      selected_features, selected_dependent_variable, classification_method,
-                     sampling_method, use_case_name, show_plot, save_to_file, verbose):
+                     sampling_method, use_case_name, show_plot, test_size, save_to_file, verbose):
     # split_classification_data
     x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data_DL(
         selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=features_df,
-        selected_features=selected_features, selected_dependent_variable=selected_dependent_variable,
+        selected_features=selected_features, selected_dependent_variable=selected_dependent_variable, test_size=test_size,
         sampling_method=sampling_method, verbose=verbose)
 
     model, history = get_sequential_model(x_train_final=x_train_final, y_train_final=y_train_final)
@@ -235,12 +235,12 @@ def plot_DL_confusion_matrix(cm, cohort_title, classification_method, sampling_t
 # get DL from raw data
 @st.cache_data
 def get_DL_confusion_matrix(selected_cohort, cohort_title, features_df, selected_features, selected_dependent_variable,
-                            classification_method, sampling_method, use_case_name, save_to_file, verbose):
+                            classification_method, sampling_method, use_case_name, test_size, save_to_file, verbose):
     # get_classification_basics
     x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data_DL(
         selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=features_df,
         selected_features=selected_features,
-        selected_dependent_variable=selected_dependent_variable,
+        selected_dependent_variable=selected_dependent_variable, test_size=test_size,
         sampling_method=sampling_method, verbose=verbose)
 
     model, history = get_sequential_model(x_train_final=x_train_final, y_train_final=y_train_final)
@@ -286,7 +286,7 @@ def get_sequential_model(x_train_final, y_train_final):
 @st.cache_data
 def get_classification_report_deeplearning(use_this_function, sampling_method, selected_cohort, cohort_title,
                                            use_case_name, features_df,
-                                           selected_features, selected_dependent_variable, verbose,
+                                           selected_features, selected_dependent_variable, test_size, verbose,
                                            save_to_file):
     # calculate the CM and return the corresponding ClassificationReport
     if not use_this_function:
@@ -299,7 +299,7 @@ def get_classification_report_deeplearning(use_this_function, sampling_method, s
     x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data_DL(
         selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=features_df,
         selected_features=selected_features,
-        selected_dependent_variable=selected_dependent_variable,
+        selected_dependent_variable=selected_dependent_variable, test_size=test_size,
         sampling_method=sampling_method, verbose=verbose)
 
     model, history = get_sequential_model(x_train_final=x_train_final, y_train_final=y_train_final)
@@ -361,7 +361,7 @@ def get_classification_report_deeplearning(use_this_function, sampling_method, s
 
 
 def split_classification_data_DL(selected_cohort, cohort_title: str, features_df,
-                                 selected_features: list, selected_dependent_variable: str, sampling_method: str,
+                                 selected_features: list, selected_dependent_variable: str, sampling_method: str, test_size: int,
                                  verbose: True):
     # Classification/Prediction on avg_patient_cohort
     # Cleanup & filtering
@@ -374,7 +374,7 @@ def split_classification_data_DL(selected_cohort, cohort_title: str, features_df
 
     # Split training/test-data
     x_train_basic, x_test_basic, y_train_basic, y_test_basic = train_test_split(avg_df_filtered, death_df,
-                                                                                test_size=0.2, random_state=1321)
+                                                                                test_size=test_size, random_state=1321)
 
     # If selected, get over-/under-sampled data
     try:
@@ -384,6 +384,7 @@ def split_classification_data_DL(selected_cohort, cohort_title: str, features_df
                                                                                                        y_train_basic,
                                                                                                        y_test_basic,
                                                                                                        cohort_title,
+                                                                                                       test_size,
                                                                                                        verbose)
     except TypeError as e:
         return None
@@ -391,7 +392,7 @@ def split_classification_data_DL(selected_cohort, cohort_title: str, features_df
     return x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic
 
 
-def get_sampled_data_DL(sampling_method, basic_x_train, basic_x_test, basic_y_train, basic_y_test, cohort_title,
+def get_sampled_data_DL(sampling_method, basic_x_train, basic_x_test, basic_y_train, basic_y_test, cohort_title, test_size,
                         verbose: True):
     if sampling_method == 'no_sampling':  # no over/undersampling
         x_train_final = basic_x_train
@@ -412,7 +413,7 @@ def get_sampled_data_DL(sampling_method, basic_x_train, basic_x_test, basic_y_tr
             ros = RandomOverSampler(random_state=1321)
             x_res, y_res = ros.fit_resample(basic_x_train, basic_y_train)
             new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(x_res, y_res,
-                                                                                test_size=0.2,
+                                                                                test_size=test_size,
                                                                                 random_state=1321)
             x_train_final = new_x_train
             y_train_final = new_y_train
@@ -423,7 +424,7 @@ def get_sampled_data_DL(sampling_method, basic_x_train, basic_x_test, basic_y_tr
             smote = SMOTE(random_state=1321)
             smote_x_resampled, smote_y_resampled = smote.fit_resample(basic_x_train, basic_y_train)
             new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(smote_x_resampled, smote_y_resampled,
-                                                                                test_size=0.2,
+                                                                                test_size=test_size,
                                                                                 random_state=1321)
             x_train_final = new_x_train
             y_train_final = new_y_train

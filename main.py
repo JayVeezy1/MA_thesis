@@ -186,6 +186,7 @@ if __name__ == '__main__':
     USE_GRIDSEARCH = True
     SELECTED_SAMPLING_METHOD = 'oversampling'  # options: no_sampling | oversampling | undersampling   -> estimation: oversampling > no_sampling > undersampling (very bad results)
     ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost', 'deeplearning_sequential']
+    TEST_SIZE_STANDARD = 0.2
     # Classification Report
     report = classification.get_classification_report(use_this_function=False,  # True | False
                                                       display_confusion_matrix=True,  # option for CM
@@ -197,6 +198,7 @@ if __name__ == '__main__':
                                                       features_df=FEATURES_DF,
                                                       selected_features=SELECTED_FEATURES,
                                                       selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                      test_size=TEST_SIZE_STANDARD,
                                                       use_grid_search=USE_GRIDSEARCH,
                                                       verbose=True,
                                                       save_to_file=SELECT_SAVE_FILES)
@@ -211,6 +213,7 @@ if __name__ == '__main__':
                                                             selected_features=SELECTED_FEATURES,
                                                             selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                                             show_plot=True,
+                                                            test_size=TEST_SIZE_STANDARD,
                                                             use_grid_search=USE_GRIDSEARCH,
                                                             verbose=True,
                                                             save_to_file=SELECT_SAVE_FILES)
@@ -226,6 +229,7 @@ if __name__ == '__main__':
                                                     selected_features=SELECTED_FEATURES,
                                                     selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                                     show_plot=True,
+                                                    test_size=TEST_SIZE_STANDARD,
                                                     use_grid_search=USE_GRIDSEARCH,
                                                     verbose=True,
                                                     save_to_file=SELECT_SAVE_FILES)
@@ -240,6 +244,7 @@ if __name__ == '__main__':
                                                                                    features_df=FEATURES_DF,
                                                                                    selected_features=SELECTED_FEATURES,
                                                                                    selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
+                                                                                   test_size=TEST_SIZE_STANDARD,
                                                                                    verbose=True,
                                                                                    save_to_file=SELECT_SAVE_FILES)
 
@@ -252,6 +257,7 @@ if __name__ == '__main__':
                                                            all_cohorts_with_titles=ALL_COHORTS_WITH_TITLES,
                                                            all_classification_methods=ALL_CLASSIFICATION_METHODS,
                                                            all_dependent_variables=ALL_DEPENDENT_VARIABLES,
+                                                           test_size=TEST_SIZE_STANDARD,
                                                            save_to_file=SELECT_SAVE_FILES)
 
     # Step 4.4) Shapley Feature Relevance
@@ -266,6 +272,7 @@ if __name__ == '__main__':
                                          selected_features=SELECTED_FEATURES,
                                          selected_dependent_variable=SELECTED_DEPENDENT_VARIABLE,
                                          show_plot=True,
+                                         test_size=TEST_SIZE_STANDARD,
                                          use_grid_search=USE_GRIDSEARCH,
                                          verbose=True,
                                          save_to_cache=False,
@@ -288,6 +295,7 @@ if __name__ == '__main__':
                                           verbose=True,
                                           protected_features=PROTECTED_FEATURES,
                                           privileged_values=PRIVILEGED_VALUES,
+                                          test_size=TEST_SIZE_STANDARD,
                                           use_grid_search=USE_GRIDSEARCH,
                                           save_to_file=SELECT_SAVE_FILES)
 

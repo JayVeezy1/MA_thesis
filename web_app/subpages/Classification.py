@@ -57,13 +57,16 @@ def classification_page():
         col1, col2, col5 = st.columns((0.475, 0.05, 0.475))
         col1.markdown("<h2 style='text-align: left; color: black;'>Classification Method 1</h2>",
                       unsafe_allow_html=True)
-        col3, col4 = col1.columns((0.5, 0.5))
+        col3, col4, col6 = col1.columns((0.3, 0.3, 0.3))
         ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost',
                                             'deeplearning_sequential']
         classification_method = col3.selectbox(label='Select classification method 1',
                                                options=ALL_CLASSIFICATION_METHODS)
         ALL_SAMPLING_METHODS = ['no_sampling', 'oversampling']  # undersampling not useful
         sampling_method = col4.selectbox(label='Select sampling method 1', options=ALL_SAMPLING_METHODS)
+        size_options = [0.20, 0.15, 0.25, 0.30, 0.35, 0.40]
+        test_size1 = col6.selectbox(label='Select test data percentage 1', options=size_options) # , default=0.20)
+
         if classification_method == 'RandomForest_with_gridsearch':
             use_grid_search_1 = True
         else:
@@ -73,10 +76,12 @@ def classification_page():
         col5.markdown("<h2 style='text-align: left; color: black;'>Classification Method  2</h2>",
                       unsafe_allow_html=True)
         # Select Classification Specific Parameters
-        col3, col4 = col5.columns((0.5, 0.5))
+        col3, col4, col6 = col5.columns((0.3, 0.3, 0.3))
         classification_method_2 = col3.selectbox(label='Select classification method 2',
                                                  options=ALL_CLASSIFICATION_METHODS)
         sampling_method_2 = col4.selectbox(label='Select sampling method 2', options=ALL_SAMPLING_METHODS)
+        test_size2 = col6.selectbox(label='Select test data percentage 2', options=size_options) # , default=0.20)
+
         if classification_method == 'RandomForest_with_gridsearch':
             use_grid_search_2 = True
         else:
@@ -96,6 +101,7 @@ def classification_page():
                                                                            features_df=FEATURES_DF,
                                                                            selected_features=selected_features,
                                                                            selected_dependent_variable=selected_variable,
+                                                                           test_size=test_size1,
                                                                            verbose=False,
                                                                            save_to_file=False)
 
@@ -110,6 +116,7 @@ def classification_page():
                                                               features_df=FEATURES_DF,
                                                               selected_features=selected_features,
                                                               selected_dependent_variable=selected_variable,
+                                                              test_size=test_size1,
                                                               use_grid_search=use_grid_search_1,
                                                               verbose=False,
                                                               save_to_file=False)
@@ -133,6 +140,7 @@ def classification_page():
                                                                              features_df=FEATURES_DF,
                                                                              selected_features=selected_features,
                                                                              selected_dependent_variable=selected_variable,
+                                                                             test_size=test_size2,
                                                                              verbose=False,
                                                                              save_to_file=False)
 
@@ -147,6 +155,7 @@ def classification_page():
                                                                 features_df=FEATURES_DF,
                                                                 selected_features=selected_features,
                                                                 selected_dependent_variable=selected_variable,
+                                                                test_size=test_size2,
                                                                 use_grid_search=use_grid_search_2,
                                                                 verbose=False,
                                                                 save_to_file=False)
@@ -180,6 +189,7 @@ def classification_page():
                                           features_df=FEATURES_DF,
                                           selected_features=selected_features,
                                           selected_dependent_variable=selected_variable,
+                                          test_size=test_size1,
                                           verbose=False,
                                           save_to_file=False)
         else:
@@ -192,6 +202,7 @@ def classification_page():
                                           features_df=FEATURES_DF,
                                           selected_features=selected_features,
                                           selected_dependent_variable=selected_variable,
+                                          test_size=test_size1,
                                           use_grid_search=use_grid_search_1,
                                           verbose=False,
                                           save_to_file=False)
@@ -254,6 +265,7 @@ def classification_page():
                                             features_df=FEATURES_DF,
                                             selected_features=selected_features,
                                             selected_dependent_variable=selected_variable,
+                                            test_size=test_size2,
                                             verbose=False,
                                             save_to_file=False)
         else:
@@ -266,6 +278,7 @@ def classification_page():
                                          features_df=FEATURES_DF,
                                          selected_features=selected_features,
                                          selected_dependent_variable=selected_variable,
+                                         test_size=test_size2,
                                          use_grid_search=use_grid_search_1,
                                          verbose=False,
                                          save_to_file=False)
@@ -326,6 +339,7 @@ def classification_page():
                                                                     selected_features=selected_features,
                                                                     selected_dependent_variable=selected_variable,
                                                                     show_plot=False,
+                                                                    test_size=test_size1,
                                                                     use_grid_search=use_grid_search_1,
                                                                     verbose=False,
                                                                     save_to_file=False)
@@ -358,6 +372,7 @@ def classification_page():
                                                                                    selected_features=selected_features,
                                                                                    selected_dependent_variable=selected_variable,
                                                                                    show_plot=False,
+                                                                                   test_size=test_size2,
                                                                                    use_grid_search=use_grid_search_2,
                                                                                    verbose=False,
                                                                                    save_to_file=False)
@@ -413,6 +428,7 @@ def classification_page():
                                                                 selected_dependent_variable=selected_variable,
                                                                 show_plot=False,
                                                                 use_grid_search=use_grid_search_1,
+                                                                test_size=test_size1,
                                                                 verbose=False,
                                                                 save_to_cache=True,
                                                                 save_to_file=False)

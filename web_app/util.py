@@ -232,13 +232,13 @@ def add_download_button(position, dataframe, title, cohort_title, keep_index: Fa
                              file_name=f'{cohort_title}_{title}.csv', mime="text/csv")  # , key='download-csv')
 
 def add_single_feature_filter(selected_cohort, selected_features):
-    st.write(selected_features)
+    # st.write(selected_features)
     all_features = selected_cohort.columns.to_list()
     selected_features_for_fairness = st.multiselect(label='Select features',
                                                     options=all_features,
                                                     # default=[],
                                                     max_selections=3)
-    st.write(selected_features_for_fairness)
+    # st.write(selected_features_for_fairness)
     for feature in selected_features_for_fairness:
         if feature not in selected_features:
             st.warning(f'Feature {feature} must also be selected at top.')
