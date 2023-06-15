@@ -230,23 +230,28 @@ def subgroup_analysis_page():
                                                                     verbose=False,
                                                                     protected_features=['cluster'],
                                                                     privileged_values=selected_privileged_clusters)
-                # todo: add a warning of count of privileged class < 50 -> dummys were inserted, metrics not reliable
-                ## thats also the reason why there are 535 instances now
 
                 # Warning if values not reliable
                 try:
+                    # 1. check: were dummys inserted?
+                    count_privileged = metrics_per_group_df.loc['count', 1]
+                    count_unprivileged = metrics_per_group_df.loc['count', 0]
+                    if count_privileged < 100 or count_unprivileged < 100:
+                        st.warning('Warning: Following performance metrics are NOT reliable because privileged or unprivileged class sizes are below 100. '
+                                   'Dummy predictions were inserted to create at least one true positive, false positive, true negative and false negative.')
+
+                        # Dummy solution is not good because metrics are wrong. Any other option possible?
+
+                    # 2. check: is recall or precision definitely unrealistic
                     recall_privileged_1 = metrics_per_group_df.transpose().loc[1, 'recall']
                     precision_privileged_1 = metrics_per_group_df.transpose().loc[1, 'precision']
                     if recall_privileged_1 == 0 or recall_privileged_1 == 1 or precision_privileged_1 == 0 or precision_privileged_1 == 1:
-                        st.write('Warning: Recall and Precision values can not be calculated reliably. '
+                        st.warning('Warning: Recall and Precision values were not calculated reliably. '
                                  'True Positives may be 0 because no enough cases available for classification. '
                                  'It is recommended to select a larger privileged group.')
                 except AttributeError as e:
-                    # this happens when metrics_per_group_df=None returned, and .transpose() is not possible
-                    # col1.write('Warning: Recall and Precision values can not be calculated reliably. '
-                    #            'True Positives may be 0 because no enough cases available for classification. '
-                    #            'It is recommended to select a larger privileged group.')
-                    st.warning('Warning: ValueError occurred, because only one class available for fairness analysis.')
+                    # 3. check: this happens when metrics_per_group_df=None returned, and .transpose() is not possible
+                    st.warning('Warning: ValueError occurred, because only one class available for fairness analysis. Metrics were not calculated')
 
                 st.markdown('___')
 

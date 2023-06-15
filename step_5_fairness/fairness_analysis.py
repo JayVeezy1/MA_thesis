@@ -94,52 +94,55 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
                            'selection rate': selection_rate,
                            'count': count}
 
+    # Get CM counts per class
     y_pred_privileged = y_pred[selected_attribute_array[selected_attribute_array == 1]]
     y_true_privileged = y_true[selected_attribute_array[selected_attribute_array == 1].index].to_numpy()
     y_pred_unprivileged = y_pred[selected_attribute_array[selected_attribute_array == 0]]
     y_true_unprivileged = y_true[selected_attribute_array[selected_attribute_array == 0].index].to_numpy()
 
-    # todo future research: clusters are simply too small dummys have too strong influence on them
-    ## any other way to calculate recall even if no TP?
-    # Problem: Using Dummys does not work. Simply not enough cases if no TP, display warning in frontend
-    # Idea: if selection too small, privileged class has no death cases, recall and precision = 0
-    ## must be calculated manually and with dummy, otherwise no useful metrics
-    ## add dummy values if privileged class has no TP
-    ## For loop not ideal when working with arrays, but works
-    # maybe better: np.count_nonzero(y_pred_privileged == y_true_privileged)
-    true_positives = 0
-    for i, real_value in enumerate(y_true_privileged):
-        if real_value == 1:
-            predicted_value = y_pred_privileged[i]
-            if real_value == predicted_value:
-                true_positives += 1
-    if true_positives == 0:
-        # Adding one dummy TP, FP, FN, TN to the predictions for privileged class -> recall and precision can be calculated
-        # TP
-        selected_attribute_array[-1] = 1
-        y_true[-1] = 1
-        y_pred = np.append(y_pred, 1)
-        # FP
-        selected_attribute_array[-2] = 1
-        y_true[-2] = 0
-        y_pred = np.append(y_pred, 1)
-        # FN
-        selected_attribute_array[-3] = 1
-        y_true[-3] = 1
-        y_pred = np.append(y_pred, 0)
-        # TN
-        selected_attribute_array[-4] = 1
-        y_true[-4] = 0
-        y_pred = np.append(y_pred, 0)
+    # Adding Dummys if classes too small: probably privileged class has no or only death cases, recall and precision = 0
+    # Problem: Using Dummys influences metrics too much. Simply not enough cases if no TP, warning is showed in frontend
+    # todo future research: clusters are simply too small dummys have too strong influence on them. Any other way to calculate recall even if no TP?
+    if len(y_true_privileged) < 100 or len(y_true_unprivileged) < 100:    # true values = actual size of class
+        ## For loop not ideal when working with arrays, but works
+        # maybe better: np.count_nonzero(y_pred_privileged == y_true_privileged)
+        true_positives = 0
+        for i, real_value in enumerate(y_true_privileged):
+            if real_value == 1:
+                predicted_value = y_pred_privileged[i]
+                if real_value == predicted_value:
+                    true_positives += 1
+        if true_positives == 0:
+            # Adding one dummy TP, FP, FN, TN to the predictions for privileged class -> recall and precision can be calculated
+            # TP
+            selected_attribute_array[-1] = 1
+            y_true[-1] = 1
+            y_pred = np.append(y_pred, 1)
+            # FP
+            selected_attribute_array[-2] = 1
+            y_true[-2] = 0
+            y_pred = np.append(y_pred, 1)
+            # FN
+            selected_attribute_array[-3] = 1
+            y_true[-3] = 1
+            y_pred = np.append(y_pred, 0)
+            # TN
+            selected_attribute_array[-4] = 1
+            y_true[-4] = 0
+            y_pred = np.append(y_pred, 0)
 
+    # Get the MetricFrame object
     try:
         performance_obj = MetricFrame(metrics=performance_metrics,
                                        y_true=y_true.to_numpy(),
                                        y_pred=y_pred,
                                        sensitive_features=selected_attribute_array)
+        metrics_per_group_df = performance_obj.by_group
     except ValueError:
         # st.warning('Warning: ValueError occurred, because only one class available for fairness analysis.')
+        # This should not happen anymore because dummys were added if class too small
         return None, None, None
+
 
     # Customize plots with ylim
     figure_object = performance_obj.by_group.plot(
