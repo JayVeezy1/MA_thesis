@@ -261,7 +261,7 @@ if __name__ == '__main__':
                                                            save_to_file=SELECT_SAVE_FILES)
 
     # Step 4.4) Shapley Feature Relevance
-    classification.get_shapely_relevance(use_this_function=False,
+    classification.get_shapely_values(use_this_function=False,
                                          selected_feature='oasis',      # ethnicity_1
                                          classification_method=SELECTED_CLASSIFICATION_METHOD,
                                          sampling_method=SELECTED_SAMPLING_METHOD,

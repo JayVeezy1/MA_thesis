@@ -10,7 +10,7 @@ import seaborn as sn
 from matplotlib import pyplot as plt
 
 from step_4_classification.classification import get_classification_report, get_confusion_matrix, get_auc_score, \
-    get_shapely_relevance
+    get_shapely_values
 from step_4_classification.classification_deeplearning import get_classification_report_deeplearning, \
     get_DL_confusion_matrix
 from web_app.util import get_avg_cohort_cache, add_download_button, get_default_values, get_preselection_one, \
@@ -416,7 +416,7 @@ def classification_page():
 
         # Calculate Shapleys if Button pressed
         if st.button('Start Shapley Calculation'):
-            shap_values, sampling_title = get_shapely_relevance(use_this_function=True,  # True | False
+            shap_values, sampling_title = get_shapely_values(use_this_function=True,  # True | False
                                                                 selected_feature=selected_shap_feature,
                                                                 classification_method=classification_method,
                                                                 sampling_method=sampling_method,
@@ -441,6 +441,16 @@ def classification_page():
             single_value_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
             col1.image(single_value_plot)
 
+            # plot_name = 'scatter'
+            # filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
+            # shap_scatter_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
+            # col1.image(shap_scatter_plot)
+
+            # plot_name = 'dependence'
+            # filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
+            # shap_dependence_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
+            # col1.image(single_value_plot)
+
             # plot_name = 'waterfall'
             # filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
             # waterfall_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
@@ -451,6 +461,6 @@ def classification_page():
             # beeswarm_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
             # col2.image(beeswarm_plot)
         else:
-            st.write('Calculation can take up to 1 minute.')
+            st.write('Shapley calculation can take up to 1 minute.')
 
         st.markdown('___')

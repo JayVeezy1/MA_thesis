@@ -3,7 +3,8 @@ import os
 import pandas as pd
 import streamlit as st
 from web_app.util import get_avg_cohort_cache
-from step_4_classification.classification import get_classification_report, get_confusion_matrix, get_shapely_explainer
+from step_4_classification.classification import get_classification_report, get_confusion_matrix, get_shapely_explainer, \
+    get_shapely_values
 from step_4_classification.classification_deeplearning import get_classification_report_deeplearning, \
     get_DL_confusion_matrix
 from step_3_data_analysis.clustering import calculate_cluster_kmeans, preprocess_for_clustering, \
@@ -85,6 +86,7 @@ def data_upload_page():
 
         # Shapley
         get_shapely_explainer.clear()
+        get_shapely_values.clear()
 
         # Clustering
         calculate_cluster_kmeans.clear()
