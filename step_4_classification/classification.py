@@ -168,7 +168,7 @@ def get_sampled_data(clf, sampling_method, basic_x_train, basic_x_test, basic_y_
 def split_classification_data(selected_cohort, cohort_title: str, features_df,
                               selected_features: list,
                               selected_dependent_variable: str, classification_method: str, sampling_method: str,
-                              test_size: int,
+                              test_size: float,
                               use_grid_search: False,
                               verbose: True):
     # Classification/Prediction on avg_patient_cohort
@@ -237,24 +237,27 @@ def save_plot_to_file(plot_name, use_case_name, classification_method, cohort_ti
     current_time = datetime.datetime.now().strftime("%H_%M_%S")
     filename = f'./output/{use_case_name}/classification/shapley/{plot_name}_{selected_feature}_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png'
     plt.savefig(filename, dpi=600)
-    print(f'STATUS: Plot was saved to {filename}')
+    print(f'STATUS: Plot  {plot_name} was saved to {filename}')
 
 
 def save_plot_to_cache(plot_name, classification_method, cohort_title, sampling_title, selected_feature):
     filename = f'./web_app/data_upload/temp/{plot_name}_{selected_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
-    plt.savefig(filename)
+    plt.savefig(filename, dpi=600)
+    print(f'STATUS: Plot {plot_name} was saved to {filename}')
+
 
 
 def plot_shapley_single_value(explainer, x_test_final, use_case_name, classification_method, cohort_title, sampling_title,
                            selected_feature, save_to_cache, save_to_file, show_plot):
     single_shap_value = explainer(x_test_final.sample(n=1), check_additivity=False)
     shap.summary_plot(single_shap_value, feature_names=x_test_final.columns, plot_type='bar', show=False,
-                      plot_size='auto',
-                      title=f'Single Value Shapley Plot for {use_case_name}, {classification_method} on {cohort_title}')
+                      plot_size='auto') # , title=)
+    # TODO: title does not work for this
+    plt.title(f'Single Value Shapley Plot for {use_case_name}, {classification_method} on {cohort_title}', wrap=True)
     # plt.title(f'Single Value Shapley Plot for {use_case_name}, {classification_method} on {cohort_title}', wrap=True)
     if save_to_cache:
-        save_plot_to_cache(plot_name='single_shap', classification_method=classification_method,
-                           cohort_title=cohort_title,
+        save_plot_to_cache(plot_name='single_shap',
+                           classification_method=classification_method, cohort_title=cohort_title,
                            sampling_title=sampling_title, selected_feature=selected_feature)
     if save_to_file:
         save_plot_to_file(plot_name='single_shap', use_case_name=use_case_name,
@@ -264,13 +267,15 @@ def plot_shapley_single_value(explainer, x_test_final, use_case_name, classifica
         plt.show()
     plt.close()
 
+    return None
+
 
 def plot_shapley_scatter(explainer, shap_values, x_test_final, use_case_name, classification_method, cohort_title, sampling_title,
                          selected_feature, save_to_cache, save_to_file, show_plot):
-    fig, ax_1 = plt.subplots()
+    # fig, ax_1 = plt.subplots()
     shap.plots.scatter(shap_values=shap_values[:, selected_feature],
                        color=shap_values[:, selected_feature],
-                       show=False, ax=ax_1)
+                       show=False) # , ax=ax_1)
     plt.title(f'Scatter Plot of Shapley Values for {use_case_name}, {classification_method} on {cohort_title}', wrap=True)
     if save_to_cache:
         save_plot_to_cache(plot_name='scatter_plot', classification_method=classification_method,
@@ -282,6 +287,9 @@ def plot_shapley_scatter(explainer, shap_values, x_test_final, use_case_name, cl
                           sampling_title=sampling_title, selected_feature=selected_feature)
     if show_plot:
         plt.show()
+    plt.close()
+
+    return None
 
 
 def plot_shapley_dependence(model, X100, explainer, shap_values, x_test_final, use_case_name, classification_method, cohort_title,
@@ -290,17 +298,22 @@ def plot_shapley_dependence(model, X100, explainer, shap_values, x_test_final, u
     shap_partial_dependence_plot = plt.figure()
     shap.partial_dependence_plot(ind=selected_feature, model=model.predict, data=X100, model_expected_value=True,
                                  feature_expected_value=True, ice=False, show=False,
-                                 shap_values=shap_values[selected_feature]  # hap_values[sample_ind:sample_ind + 1, :]
+                                 shap_values=shap_values[sample_ind:sample_ind + 1, :]
                                  )
     plt.title(
-        f'Partial Dependence Plot of Shapley Values for {use_case_name}, {classification_method} on {cohort_title}',
-        wrap=True)
+        f'Partial Dependence Plot of Shapley Values for {use_case_name}, {classification_method} on {cohort_title}', wrap=True)
+    if save_to_cache:
+        save_plot_to_cache(plot_name='dependence_plot', classification_method=classification_method,
+                           cohort_title=cohort_title,
+                           sampling_title=sampling_title, selected_feature=selected_feature)
     if save_to_file:
-        save_plot_to_file(plot_name='partial_dependence_plot', use_case_name=use_case_name,
+        save_plot_to_file(plot_name='dependence_plot', use_case_name=use_case_name,
                           classification_method=classification_method, cohort_title=cohort_title,
                           sampling_title=sampling_title, selected_feature=selected_feature)
     if show_plot:
         plt.show()
+
+    return None
 
 
 def plot_shapley_waterfall(explainer, shap_values, x_test_final, use_case_name, classification_method, cohort_title,
@@ -366,19 +379,17 @@ def get_shapely_values(use_this_function, selected_feature, classification_metho
 
     # todo future research: shap.plots can not be returned directly to frontend, better option than temp folder cache?
     # Visualize values for a random instance
-    # TODO: Streamlit plt looks bad, too little features selected?
     plot_shapley_single_value(explainer, x_test_final, use_case_name, classification_method, cohort_title,
                              sampling_title, selected_feature, save_to_cache, save_to_file, show_plot)
 
     # Scatter Plot
-    # TODO: throws an error ValueError: num must be an integer with 1 <= num <= 1, not array([1, 2], dtype=int64)
-    ## Probably a problem between plt and streamlit
-    # plot_shapley_scatter(explainer, shap_values, x_test_final, use_case_name, classification_method, cohort_title,
-      #                   sampling_title, selected_feature, save_to_cache, save_to_file, show_plot)
+    plot_shapley_scatter(explainer, shap_values, x_test_final, use_case_name, classification_method, cohort_title,
+                         sampling_title, selected_feature, save_to_cache, save_to_file, show_plot)
 
+    # TODO: Finish other plots
     # Partial Dependence Plot
     #plot_shapley_dependence(model, X100, explainer, shap_values, x_test_final, use_case_name, classification_method,
-     #                       cohort_title, sampling_title, selected_feature, save_to_cache, save_to_file, show_plot)
+     #                      cohort_title, sampling_title, selected_feature, save_to_cache, save_to_file, show_plot)
 
     # Waterfall Plot
     #plot_shapley_waterfall(explainer, shap_values, x_test_final, use_case_name, classification_method, cohort_title,
@@ -435,9 +446,7 @@ def get_confusion_matrix(use_this_function: False, selected_cohort, cohort_title
         print(cm_df)
 
     if save_to_file:
-        current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
         # save CM as seaborn png
-        cmap = 'viridis'
         fig1, ax1 = plt.subplots()
 
         # add totals to cm_df
@@ -460,7 +469,7 @@ def get_confusion_matrix(use_this_function: False, selected_cohort, cohort_title
             linewidths=0.5,
             ax=ax1,
             cbar=False,
-            cmap=cmap,
+            cmap='viridis',
             vmin=0,
             vmax=(cm_df['sum_actual']['sum_predicted'] + 20)
             # adding a bit to max value -> not such a strong color difference
@@ -480,9 +489,9 @@ def get_confusion_matrix(use_this_function: False, selected_cohort, cohort_title
         # save plot
         if classification_method == 'RandomForest':
             classification_method = 'RF'
+        current_time = datetime.datetime.now().strftime("%d%m%Y_%H_%M_%S")
         plt.savefig(
-            f'./output/{use_case_name}/classification/CM_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png',
-            dpi=600)
+            f'./output/{use_case_name}/classification/CM_{classification_method}_{cohort_title}_{sampling_title}_{current_time}.png', dpi=600)
         plt.show()
         plt.close()
 
@@ -649,7 +658,7 @@ def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, 
         print(f'STATUS: AUROC was saved to {auroc_filename}')
     if show_plot:
         plt.show()
-    # plt.close()
+    plt.close()
 
     # Plot AUPRC Curve
     try:
@@ -665,7 +674,7 @@ def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, 
             print(f'STATUS: AUPRC was saved to {auprc_filename}')
         if show_plot:
             plt.show()
-        # plt.close()
+        plt.close()
         # do not close plt, this throws RunTimeError because TKinter not thread safe https://stackoverflow.com/questions/14694408/runtimeerror-main-thread-is-not-in-main-loop#14695007
     except ValueError as e:
         print('Warning: Plotting of PrecisionRecall not possible. ValueError: ', e)

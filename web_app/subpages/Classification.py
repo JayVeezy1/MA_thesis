@@ -17,6 +17,59 @@ from web_app.util import get_avg_cohort_cache, add_download_button, get_default_
     get_preselection_two, insert_feature_selectors
 
 
+def show_shapley_plots(column, selected_shap_feature, classification_method, sampling_method, selected_cohort,
+                       cohort_title, features_df, selected_features, selected_variable, use_grid_search, test_size):
+    shap_values, sampling_title = get_shapely_values(use_this_function=True,  # True | False
+                                                     selected_feature=selected_shap_feature,
+                                                     classification_method=classification_method,
+                                                     sampling_method=sampling_method,
+                                                     selected_cohort=selected_cohort,
+                                                     cohort_title=cohort_title,
+                                                     use_case_name='frontend',
+                                                     features_df=features_df,
+                                                     selected_features=selected_features,
+                                                     selected_dependent_variable=selected_variable,
+                                                     show_plot=False,
+                                                     use_grid_search=use_grid_search,
+                                                     test_size=test_size,
+                                                     verbose=False,
+                                                     save_to_cache=True,
+                                                     save_to_file=False)
+    # print checks of variables
+    # st.write(selected_shap_feature)
+    # st.write(classification_method)
+    # st.write(sampling_method)
+    # st.dataframe(selected_cohort)
+    # st.write(shap_values[:, selected_shap_feature])
+
+    plot_name = 'single_shap'
+    filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
+    single_value_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
+    column.image(single_value_plot)
+
+    plot_name = 'scatter_plot'
+    filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
+    shap_scatter_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
+    column.image(shap_scatter_plot)
+
+    # plot_name = 'dependence_plot'
+    # filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
+    # shap_dependence_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
+    # column.image(single_value_plot)
+
+    # plot_name = 'waterfall'
+    # filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
+    # waterfall_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
+    # column.image(waterfall_plot)
+
+    # plot_name = 'beeswarm'
+    # filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
+    # beeswarm_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
+    # column.image(beeswarm_plot)
+
+    return None
+
+
 def classification_page():
     ## Start of Page: User Input Selector
     st.markdown("<h1 style='text-align: left; color: black;'>Classification</h1>", unsafe_allow_html=True)
@@ -244,7 +297,7 @@ def classification_page():
         ax1.set_title(f"{classification_method} on {cohort_title}, {sampling_method}", wrap=True)
         plt.tight_layout()
         col1.pyplot(fig1, use_container_width=True)
-
+        plt.close()
 
         ## CM Selection 2
         # col5.markdown("<h2 style='text-align: left; color: black;'>Confusion Matrix 2</h2>", unsafe_allow_html=True)
@@ -320,6 +373,7 @@ def classification_page():
         ax1.set_title(f"{classification_method_2} on {cohort_title}, {sampling_method_2}", wrap=True)
         plt.tight_layout()
         col5.pyplot(fig1, use_container_width=True)
+        plt.close()
         st.markdown('___')
 
         # AUROC 1
@@ -416,51 +470,28 @@ def classification_page():
 
         # Calculate Shapleys if Button pressed
         if st.button('Start Shapley Calculation'):
-            shap_values, sampling_title = get_shapely_values(use_this_function=True,  # True | False
-                                                                selected_feature=selected_shap_feature,
-                                                                classification_method=classification_method,
-                                                                sampling_method=sampling_method,
-                                                                selected_cohort=selected_cohort,
-                                                                cohort_title=cohort_title,
-                                                                use_case_name='frontend',
-                                                                features_df=FEATURES_DF,
-                                                                selected_features=selected_features,
-                                                                selected_dependent_variable=selected_variable,
-                                                                show_plot=False,
-                                                                use_grid_search=use_grid_search_1,
-                                                                test_size=test_size1,
-                                                                verbose=False,
-                                                                save_to_cache=True,
-                                                                save_to_file=False)
-
             col1, col2, col5 = st.columns((0.475, 0.05, 0.475))
-            # col1.dataframe(shap_values[:, selected_shap_feature], use_container_width=True)
+            # left side shapleys
+            try:
+                show_shapley_plots(column=col1, selected_shap_feature=selected_shap_feature,
+                                   classification_method=classification_method, sampling_method=sampling_method,
+                                   selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=FEATURES_DF,
+                                   selected_features=selected_features, selected_variable=selected_variable,
+                                   use_grid_search=use_grid_search_1, test_size=test_size1)
+            except ValueError as e:
+                # todo: why shapley only for oversampling possible?
+                col1.warning('ValueError occurred. Shapleys for this features selection only possible with oversampling.')
+            # right side shapleys
+            try:
+                show_shapley_plots(column=col5, selected_shap_feature=selected_shap_feature,
+                                   classification_method=classification_method_2, sampling_method=sampling_method_2,
+                                   selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=FEATURES_DF,
+                                   selected_features=selected_features, selected_variable=selected_variable,
+                                   use_grid_search=use_grid_search_2, test_size=test_size2)
+            except ValueError as e:
+                col5.warning('ValueError occurred. Shapleys for this features selection only possible with oversampling.')
 
-            plot_name = 'single_shap'
-            filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
-            single_value_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
-            col1.image(single_value_plot)
-
-            # plot_name = 'scatter'
-            # filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
-            # shap_scatter_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
-            # col1.image(shap_scatter_plot)
-
-            # plot_name = 'dependence'
-            # filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
-            # shap_dependence_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
-            # col1.image(single_value_plot)
-
-            # plot_name = 'waterfall'
-            # filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
-            # waterfall_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
-            # col2.image(waterfall_plot)
-
-            # plot_name = 'beeswarm'
-            # filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
-            # beeswarm_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
-            # col2.image(beeswarm_plot)
         else:
-            st.write('Shapley calculation can take up to 1 minute.')
+            st.write('Shapley calculations can take up to 1 minute.')
 
         st.markdown('___')
