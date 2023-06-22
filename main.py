@@ -22,6 +22,7 @@ if __name__ == '__main__':
     FEATURES_DF = pd.read_excel('./supplements/FEATURE_PREPROCESSING_TABLE.xlsx')
     SELECTED_DEPENDENT_VARIABLE = 'death_in_hosp'
     ALL_DEPENDENT_VARIABLES: list = ['death_in_hosp', 'death_3_days']   # , 'death_30_days', 'death_180_days', 'death_365_days']
+
     ### Setup, MIMIC-III Export from DB, Load from Cache
     # Step 0) Setup when first time using db:
     # mimic_to_csv.setup_postgre_files()                 # setup all needed background functions and views for postgre. Warning: Sometimes this setup from Python does not work. Then you simply copy&paste each SQL Script into PostGre QueryTool and execute it.
@@ -39,12 +40,12 @@ if __name__ == '__main__':
     # Step 1.2) Filter final patient.csvs for relevant features and export as 'final_dataset'
     # transform raw.csvs into filtered, final .csvs, also transform carevue feature-names into metavision names
     # select_relevant_features.export_final_dataset(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME)
-
     # Step 1.3) Load all .csv files as a 'Patient' Object, use Pickle for Cache
     DELETE_CACHE = False
     SELECT_SAVE_FILES = False
     cache_IO.load_data_from_cache(project_path=PROJECT_PATH, features_df=FEATURES_DF, use_case_name=USE_CASE_NAME,
                                   delete_existing_cache=DELETE_CACHE)
+
     ### Preprocessing
     # Step 2) Calculate Avg, Filter, Scale, Impute & Interpolate for each patient
     raw_avg_cohort = Patient.get_avg_patient_cohort(project_path=PROJECT_PATH, use_case_name=USE_CASE_NAME,
@@ -63,19 +64,9 @@ if __name__ == '__main__':
                                                                selected_database=SELECTED_DATABASE,
                                                                selected_stroke_type=SELECTED_STROKE_TYPE)
     SELECTED_FEATURES = list(SELECTED_COHORT_preprocessed.columns)
-
     # Automated: List of all cohorts_preprocessed for model comparison
     ALL_COHORTS_WITH_TITLES: dict = preprocessing_functions.get_all_cohorts(SELECTED_COHORT, FEATURES_DF, SELECTED_DATABASE)
     print('STATUS: Preprocessing finished.\n')
-
-
-    # todo text: update subgroup chapter
-    ## Check error with fairness measure calculation for cluster 8
-
-    # todo code: add SHAPley values to classification page
-    ## probably choose different explainer objects depending on selected prediction model
-    ## add shapley to classification chapter and compare with correlation (mention future work: different importance per subgroups)
-
 
     ### Data Analysis
     # Step 3.1) General Statistics
@@ -182,7 +173,7 @@ if __name__ == '__main__':
 
     ### Machine Learning Predictions
     # Step 4.1) Classification: (RandomForest, XGBoost, ...)
-    SELECTED_CLASSIFICATION_METHOD = 'XGBoost'  # options: RandomForest | XGBoost || NOT deeplearning_sequential -> use function get_classification_report_deeplearning()
+    SELECTED_CLASSIFICATION_METHOD = 'RandomForest'  # options: RandomForest | XGBoost || NOT deeplearning_sequential -> use function get_classification_report_deeplearning()
     USE_GRIDSEARCH = True
     SELECTED_SAMPLING_METHOD = 'oversampling'  # options: no_sampling | oversampling | undersampling   -> estimation: oversampling > no_sampling > undersampling (very bad results)
     ALL_CLASSIFICATION_METHODS: list = ['RandomForest', 'RandomForest_with_gridsearch', 'XGBoost', 'deeplearning_sequential']
@@ -348,6 +339,9 @@ if __name__ == '__main__':
 
     ### Step 7.1) Streamlit App for Visualization
     start_streamlit_frontend(use_this_function=True)
+
+    # todo text: add shapley to classification chapter and compare with correlation
+    ## then compare different feature importance per subgroups
 
     ### Deprecated: ASDF-Dashboard for visualization  https://github.com/jeschaef/ASDF-Dashboard
     # Important: Start Background Services First

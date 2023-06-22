@@ -3,3 +3,6 @@ base = "light"
 primaryColor = "#026094"                    # '#e78ac3'
 secondaryBackgroundColor = "#dce7fc"        # '#cbd5e8'
 font = "sans serif"
+
+[deprecation]
+showPyplotGlobalUse = false     # st.pyplot() without an object inside is not recommended, but needed for shapley

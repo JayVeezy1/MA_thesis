@@ -394,7 +394,7 @@ def get_aif360_report(merged_test_data, selected_dependent_variable, selected_pr
     return report
 
 
-# @st.cache_data
+@st.cache_data
 def get_fairness_report(use_this_function: False, selected_cohort, cohort_title: str, features_df,
                         selected_features: list, selected_dependent_variable: str, classification_method: str,
                         sampling_method: str, use_case_name, save_to_file, plot_performance_metrics: False,

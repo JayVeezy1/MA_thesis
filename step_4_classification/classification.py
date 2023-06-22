@@ -5,7 +5,6 @@ import shap
 import streamlit as st
 import numpy as np
 import pandas as pd
-import xgboost
 from matplotlib import pyplot as plt
 from numpy import ndarray
 from sklearn.ensemble import RandomForestClassifier
@@ -15,13 +14,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.tree import plot_tree
 from sklearn.model_selection import GridSearchCV
-from imblearn.over_sampling import SMOTE, RandomOverSampler, SMOTENC
+from imblearn.over_sampling import  RandomOverSampler, SMOTENC
 from imblearn.under_sampling import NearMiss
 from xgboost import XGBClassifier
 import seaborn as sn
 
 from step_2_preprocessing.preprocessing_functions import get_one_hot_encoding
-from step_4_classification.classification_deeplearning import get_DL_auc_score, get_DL_confusion_matrix
+from step_4_classification.classification_deeplearning import get_DL_auc_score, get_DL_confusion_matrix, \
+    split_classification_data_DL, get_sequential_model
 
 
 def preprocess_for_classification(selected_cohort, features_df, selected_features: list,
@@ -226,12 +226,6 @@ def split_classification_data(selected_cohort, cohort_title: str, features_df,
 
     return clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic
 
-@st.cache_data
-def get_shapely_explainer(_model, X100):            # with _ model is not hashed by cacheing, otherwise streamlit error
-    print('CHECK: Creation of Shapley Explainer: ')
-    explainer = shap.Explainer(_model, X100)
-    return explainer
-
 
 def save_plot_to_file(plot_name, use_case_name, classification_method, cohort_title, sampling_title, selected_feature):
     current_time = datetime.datetime.now().strftime("%H_%M_%S")
@@ -241,114 +235,11 @@ def save_plot_to_file(plot_name, use_case_name, classification_method, cohort_ti
 
 
 def save_plot_to_cache(plot_name, classification_method, cohort_title, sampling_title, selected_feature):
+    # Old idea: save SHAP plots in a temp folder and open as image in streamlit
+    # But directly plotting with st.pyplot() is possible with streamlit
     filename = f'./web_app/data_upload/temp/{plot_name}_{selected_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
     plt.savefig(filename, dpi=600)
     print(f'STATUS: Plot {plot_name} was saved to {filename}')
-
-
-
-def plot_shapley_single_value(explainer, x_test_final, use_case_name, classification_method, cohort_title, sampling_title,
-                           selected_feature, save_to_cache, save_to_file, show_plot):
-    single_shap_value = explainer(x_test_final.sample(n=1), check_additivity=False)
-    shap.summary_plot(single_shap_value, feature_names=x_test_final.columns, plot_type='bar', show=False,
-                      plot_size='auto') # , title=)
-    # TODO: title does not work for this
-    plt.title(f'Single Value Shapley Plot for {use_case_name}, {classification_method} on {cohort_title}', wrap=True)
-    # plt.title(f'Single Value Shapley Plot for {use_case_name}, {classification_method} on {cohort_title}', wrap=True)
-    if save_to_cache:
-        save_plot_to_cache(plot_name='single_shap',
-                           classification_method=classification_method, cohort_title=cohort_title,
-                           sampling_title=sampling_title, selected_feature=selected_feature)
-    if save_to_file:
-        save_plot_to_file(plot_name='single_shap', use_case_name=use_case_name,
-                          classification_method=classification_method, cohort_title=cohort_title,
-                          sampling_title=sampling_title, selected_feature=selected_feature)
-    if show_plot:
-        plt.show()
-    plt.close()
-
-    return None
-
-
-def plot_shapley_scatter(explainer, shap_values, x_test_final, use_case_name, classification_method, cohort_title, sampling_title,
-                         selected_feature, save_to_cache, save_to_file, show_plot):
-    # fig, ax_1 = plt.subplots()
-    shap.plots.scatter(shap_values=shap_values[:, selected_feature],
-                       color=shap_values[:, selected_feature],
-                       show=False) # , ax=ax_1)
-    plt.title(f'Scatter Plot of Shapley Values for {use_case_name}, {classification_method} on {cohort_title}', wrap=True)
-    if save_to_cache:
-        save_plot_to_cache(plot_name='scatter_plot', classification_method=classification_method,
-                           cohort_title=cohort_title,
-                           sampling_title=sampling_title, selected_feature=selected_feature)
-    if save_to_file:
-        save_plot_to_file(plot_name='scatter_plot', use_case_name=use_case_name,
-                          classification_method=classification_method, cohort_title=cohort_title,
-                          sampling_title=sampling_title, selected_feature=selected_feature)
-    if show_plot:
-        plt.show()
-    plt.close()
-
-    return None
-
-
-def plot_shapley_dependence(model, X100, explainer, shap_values, x_test_final, use_case_name, classification_method, cohort_title,
-                            sampling_title, selected_feature, save_to_cache, save_to_file, show_plot):
-    sample_ind = 20
-    shap_partial_dependence_plot = plt.figure()
-    shap.partial_dependence_plot(ind=selected_feature, model=model.predict, data=X100, model_expected_value=True,
-                                 feature_expected_value=True, ice=False, show=False,
-                                 shap_values=shap_values[sample_ind:sample_ind + 1, :]
-                                 )
-    plt.title(
-        f'Partial Dependence Plot of Shapley Values for {use_case_name}, {classification_method} on {cohort_title}', wrap=True)
-    if save_to_cache:
-        save_plot_to_cache(plot_name='dependence_plot', classification_method=classification_method,
-                           cohort_title=cohort_title,
-                           sampling_title=sampling_title, selected_feature=selected_feature)
-    if save_to_file:
-        save_plot_to_file(plot_name='dependence_plot', use_case_name=use_case_name,
-                          classification_method=classification_method, cohort_title=cohort_title,
-                          sampling_title=sampling_title, selected_feature=selected_feature)
-    if show_plot:
-        plt.show()
-
-    return None
-
-
-def plot_shapley_waterfall(explainer, shap_values, x_test_final, use_case_name, classification_method, cohort_title,
-                           sampling_title, selected_feature, save_to_cache, save_to_file, show_plot):
-    sample_ind = 20
-    waterfall_plot = shap.plots.waterfall(shap_values[sample_ind])  # does not work
-    plt.title(f'Waterfall Plot of Shapley Values for {use_case_name}, {classification_method} on {cohort_title}',
-              wrap=True)
-    if save_to_cache:
-        save_plot_to_cache(plot_name='waterfall', classification_method=classification_method,
-                           cohort_title=cohort_title,
-                           sampling_title=sampling_title, selected_feature=selected_feature)
-    if save_to_file:
-        save_plot_to_file(plot_name='waterfall', use_case_name=use_case_name,
-                          classification_method=classification_method, cohort_title=cohort_title,
-                          sampling_title=sampling_title, selected_feature=selected_feature)
-    if show_plot:
-        plt.show()
-
-
-def plot_shapley_beeswarm(explainer, shap_values, x_test_final, use_case_name, classification_method, cohort_title,
-                          sampling_title, selected_feature, save_to_cache, save_to_file, show_plot):
-    beeswarm_plot = shap.plots.beeswarm(shap_values)
-    plt.title(f'Beeswarm Plot of Shapley Values for {use_case_name}, {classification_method} on {cohort_title}',
-              wrap=True)
-    if save_to_cache:
-        save_plot_to_cache(plot_name='beeswarm', classification_method=classification_method,
-                           cohort_title=cohort_title,
-                           sampling_title=sampling_title, selected_feature=selected_feature)
-    if save_to_file:
-        save_plot_to_file(plot_name='beeswarm', use_case_name=use_case_name,
-                          classification_method=classification_method, cohort_title=cohort_title,
-                          sampling_title=sampling_title, selected_feature=selected_feature)
-    if show_plot:
-        plt.show()
 
 
 @st.cache_data
@@ -357,50 +248,87 @@ def get_shapely_values(use_this_function, selected_feature, classification_metho
                           use_grid_search, verbose, save_to_cache, save_to_file):
     # calculate the CM, return: CM as dataframe
     if not use_this_function:
-        return None, None
+        return None, None, None, None
 
     if classification_method == 'deeplearning_sequential':
-        return None, None
+        try:
+            x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data_DL(
+                selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=features_df,
+                selected_features=selected_features,
+                selected_dependent_variable=selected_dependent_variable, test_size=test_size,
+                sampling_method=sampling_method, verbose=verbose)
+            model, history = get_sequential_model(x_train_final=x_train_final, y_train_final=y_train_final)
 
-    # get_classification_basics
-    clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
-        selected_cohort, cohort_title, features_df, selected_features,
-        selected_dependent_variable, classification_method, sampling_method, test_size, use_grid_search, verbose)
+            X = x_test_final  # x_test_final | x_train_final
+            explainer = shap.DeepExplainer(model=model, data=X)       # todo future research: somehow model does not work here
+            shap_values = explainer(X=X, check_additivity=True)
+        except AssertionError as e:
+            st.write(e)
+            return None, None, None, None
 
-    # Create Shapely Explainer Object
-    model = clf                                             # the already fitted clf
-    X = x_train_final                                       # sampled X for training
-    X100 = shap.utils.sample(X, 100, random_state=13)       # 100 instances for use as the background distribution
-    explainer = get_shapely_explainer(model, X100)
-    shap_values = explainer(x_test_final, check_additivity=False)       # sometimes additivity does not add up
-    if verbose:
-        print('CHECK: shap_values: ')
-        print(shap_values)
+    else:
+        clf, x_train_final, x_test_final, y_train_final, y_test_final, sampling_title, x_test_basic, y_test_basic = split_classification_data(
+            selected_cohort=selected_cohort,
+            cohort_title=cohort_title,
+            features_df=features_df,
+            selected_features=selected_features,
+            selected_dependent_variable=selected_dependent_variable,
+            classification_method=classification_method,
+            sampling_method=sampling_method,
+            test_size=test_size,
+            use_grid_search=use_grid_search,
+            verbose=verbose)
 
-    # todo future research: shap.plots can not be returned directly to frontend, better option than temp folder cache?
-    # Visualize values for a random instance
-    plot_shapley_single_value(explainer, x_test_final, use_case_name, classification_method, cohort_title,
-                             sampling_title, selected_feature, save_to_cache, save_to_file, show_plot)
+        X = x_test_final                                        # x_test_final | x_train_final
+        explainer = shap.TreeExplainer(model=clf, X=X)          # this creates a TreeObject with empty data, # if model.predict in here, use X = x_train_final for shap_values, otherwise use x_test_final
+        shap_values = explainer(X=X, check_additivity=True)     # Constructor of the TreeObject returns an ExplanationObject, it contains base_values, data, feature_names, values
+        shap_values_array = explainer.shap_values(X=X, check_additivity=True)
 
-    # Scatter Plot
-    plot_shapley_scatter(explainer, shap_values, x_test_final, use_case_name, classification_method, cohort_title,
-                         sampling_title, selected_feature, save_to_cache, save_to_file, show_plot)
+        # either use Explainer=TreeObject(constructor) and then Explainer.values or alternative TreeObject.shap_values
+        # based on TreeObject: shap_values_array = explainer.shap_values(X=X, check_additivity=True)
 
-    # TODO: Finish other plots
-    # Partial Dependence Plot
-    #plot_shapley_dependence(model, X100, explainer, shap_values, x_test_final, use_case_name, classification_method,
-     #                      cohort_title, sampling_title, selected_feature, save_to_cache, save_to_file, show_plot)
+        # Testing if displayed plot works
+        if verbose:
+            if len(shap_values.shape) == 3:
+                try:
+                    shap_values.values = shap_values_array[
+                        1]  # maybe alternative: for multi-class models use shap_values[0][0] as input
+                    shap_values.base_values = shap_values.base_values[0][1]
+                except IndexError as e:
+                    print('Warning: IndexError occurred for shap_values: ', e)
+                    shap_values.values = shap_values_array
+                    shap_values.base_values = [shap_values.base_values[1]]
 
-    # Waterfall Plot
-    #plot_shapley_waterfall(explainer, shap_values, x_test_final, use_case_name, classification_method, cohort_title,
-     #                      sampling_title, selected_feature, save_to_cache, save_to_file, show_plot)
+            shap.summary_plot(shap_values, show=False)
+            plt.title(f'Beeswarm Plot of Shapley Values for {classification_method}, {sampling_title} on {cohort_title}', wrap=True)
+            plt.show()
+            plt.close()
 
-    # Beeswarm Plot
-    #plot_shapley_beeswarm(explainer, shap_values, x_test_final, use_case_name, classification_method, cohort_title,
-     #                     sampling_title, selected_feature, save_to_cache, save_to_file, show_plot)
+        # reduced samples not needed
+        # selected_instances = 150
+        # reduced_shap_values = shap_values[:selected_instances]      # returns an array of the .values attribute
+        # if verbose:
+        #     print('CHECK: shap_values: ')
+        #     print(reduced_shap_values)
 
+        # Old Approach with one function for each plot to save it locally
+        # sample_ind = 20
+        # waterfall_plot = shap.plots.waterfall(shap_values[sample_ind], show=False)  # does not work
+        # plt.title(f'Waterfall Plot of Shapley Values for {use_case_name}, {classification_method} on {cohort_title}',
+        #           wrap=True)
+        # if save_to_cache:
+        #     save_plot_to_cache(plot_name='waterfall', classification_method=classification_method,
+        #                        cohort_title=cohort_title,
+        #                        sampling_title=sampling_title, selected_feature=selected_feature)
+        # if save_to_file:
+        #     save_plot_to_file(plot_name='waterfall', use_case_name=use_case_name,
+        #                       classification_method=classification_method, cohort_title=cohort_title,
+        #                       sampling_title=sampling_title, selected_feature=selected_feature)
+        # if show_plot:
+        #     plt.show()
+        # plt.close()
 
-    return shap_values, sampling_title
+    return X, explainer, shap_values, sampling_title
 
 
 @st.cache_data
@@ -609,7 +537,7 @@ def get_auc_score(use_this_function: False, selected_cohort, cohort_title: str, 
             print('Warning: ValueError. auc_prc_score was set to 0. ', e)
             auc_prc_score = 0
     # print(f'CHECK: {classification_method}: AUROC = %.3f' % auc_score)
-    print(f'CHECK: {classification_method}: average_precision_score = %.3f' % auc_prc_score)
+    # print(f'CHECK: {classification_method}: average_precision_score = %.3f' % auc_prc_score)
 
     ## Plot AUC-ROC Curve
     # Get false-positive-rate = x-axis and true-positive-rate = y-axis

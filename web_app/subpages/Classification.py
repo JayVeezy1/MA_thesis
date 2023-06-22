@@ -19,7 +19,11 @@ from web_app.util import get_avg_cohort_cache, add_download_button, get_default_
 
 def show_shapley_plots(column, selected_shap_feature, classification_method, sampling_method, selected_cohort,
                        cohort_title, features_df, selected_features, selected_variable, use_grid_search, test_size):
-    shap_values, sampling_title = get_shapely_values(use_this_function=True,  # True | False
+    if classification_method == 'deeplearning_sequential':
+         column.warning('SHAP analysis not yet implemented for deeplearning model.')
+         return None
+
+    X_for_shap, explainer, shap_values, sampling_title = get_shapely_values(use_this_function=True,  # True | False
                                                      selected_feature=selected_shap_feature,
                                                      classification_method=classification_method,
                                                      sampling_method=sampling_method,
@@ -35,37 +39,57 @@ def show_shapley_plots(column, selected_shap_feature, classification_method, sam
                                                      verbose=False,
                                                      save_to_cache=True,
                                                      save_to_file=False)
-    # print checks of variables
-    # st.write(selected_shap_feature)
-    # st.write(classification_method)
-    # st.write(sampling_method)
-    # st.dataframe(selected_cohort)
-    # st.write(shap_values[:, selected_shap_feature])
 
-    plot_name = 'single_shap'
-    filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
-    single_value_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
-    column.image(single_value_plot)
+    shap_values_array = explainer.shap_values(X=X_for_shap, check_additivity=True)
 
-    plot_name = 'scatter_plot'
-    filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
-    shap_scatter_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
-    column.image(shap_scatter_plot)
+    # For frontend this step is important:
+    # somehow ExplainerObject contains shapley values for negative and positive class when doing RandomForest (not for XGBOOST)
+    # with index=1 only values for positive class are kept
+    # column.write(f'{classification_method}, {sampling_method}')
+    # column.write(shap_values.shape)
+    # column.write(shap_values.values)
+    if len(shap_values.shape) == 3:
+        try:
+            shap_values.values = shap_values_array[1]  # maybe alternative: for multi-class models use shap_values[0][0] as input
+            shap_values.base_values = shap_values.base_values[0][1]
+        except IndexError as e:
+            print('Warning: IndexError occurred for shap_values: ', e)
+            shap_values.values = shap_values_array
+            shap_values.base_values = [shap_values.base_values[1]]
+    # column.write(shap_values.values)
+    # column.write(shap_values.base_values)
+    # column.write(shap_values.base_values[0])
+    # column.write(shap_values.base_values[0][0])
+    # column.write(shap_values.base_values[0][1])
 
-    # plot_name = 'dependence_plot'
-    # filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
-    # shap_dependence_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
-    # column.image(single_value_plot)
+    # Waterfall for single instance
+    shap.plots.waterfall(shap_values=shap_values[0], show=False)
+    plt.title(f'Waterfall Plot for one Instance for {classification_method} on {cohort_title}', wrap=True)
+    column.pyplot(bbox_inches='tight')
+    plt.clf()
 
+    # Beeswarm
+    shap.summary_plot(shap_values, show=False) # , plot_type='compact_dot')
+    plt.title(f'Beeswarm Plot of Shapley Values for {classification_method}, {sampling_title} on {cohort_title}', wrap=True)
+    column.pyplot(bbox_inches='tight')      # this function is officially deprecated because pyplot() without a figure object is not recommended. But currently only way for shapleys
+    plt.clf()  # clear figure
+
+    shap.summary_plot(shap_values, show=False, plot_type='bar')
+    plt.title(f'Barplot of Shapley Values for {classification_method}, {sampling_title} on {cohort_title}', wrap=True)
+    column.pyplot(bbox_inches='tight')      # this function is officially deprecated because pyplot() without a figure object is not recommended. But currently only way for shapleys
+    plt.clf()
+
+    # Dependence for checking linearity of selected feature
+    shap.dependence_plot(ind=selected_shap_feature[0], shap_values=shap_values.values, features=X_for_shap, show=False)
+    plt.title(f'Dependence Plot of {selected_shap_feature} for {classification_method}, {sampling_title} on {cohort_title}', wrap=True)
+    column.pyplot(bbox_inches='tight')
+    plt.clf()
+
+    ## Old Approach with cached images
     # plot_name = 'waterfall'
     # filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
     # waterfall_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
     # column.image(waterfall_plot)
-
-    # plot_name = 'beeswarm'
-    # filename = f'{plot_name}_{selected_shap_feature}_{classification_method}_{cohort_title}_{sampling_title}.png'
-    # beeswarm_plot = Image.open(f'./web_app/data_upload/temp/{filename}')
-    # column.image(beeswarm_plot)
 
     return None
 
@@ -450,48 +474,51 @@ def classification_page():
         col5.write('')
         col5.write('')
         col5.write('')
-
         col5.pyplot(auc_prc_plot_2)
-
         st.markdown('___')
 
         # Add Shapely Feature Relevance
         st.markdown("<h2 style='text-align: left; color: black;'>Feature Relevance</h2>", unsafe_allow_html=True)
+        if 'oasis' in selected_features:
+            selected_shap_feature = st.multiselect(label='Select a Feature for Shapley Analysis', options=selected_features, default='oasis', max_selections=1)
+        else:
+            selected_shap_feature = st.multiselect(label='Select a Feature for Shapley Analysis', options=selected_features, max_selections=1)
+
+        col7, col8, col9 = st.columns((0.475, 0.05, 0.475))
 
         # TODO: own function needed for deeplearning?
         # if classification_method_2 == 'deeplearning_sequential':
         #     shap_df, shap_waterfall_plot, shap_beeswarm_plot, shap_partial_dependence_plot, shap_scatter_plot = get_shapely_relevance_deeplearning()
         # else:
 
-        if 'oasis' in selected_features:
-            selected_shap_feature = st.multiselect(label='Select a Feature for Shapley Analysis', options=selected_features, default='oasis', max_selections=1)
-        else:
-            selected_shap_feature = st.multiselect(label='Select a Feature for Shapley Analysis', options=selected_features, max_selections=1)
+        # left side shapleys
+        try:
+            show_shapley_plots(column=col7, selected_shap_feature=selected_shap_feature,
+                               classification_method=classification_method, sampling_method=sampling_method,
+                               selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=FEATURES_DF,
+                               selected_features=selected_features, selected_variable=selected_variable,
+                               use_grid_search=use_grid_search_1, test_size=test_size1)
+        except ValueError as e:
+            col7.warning('ValueError occurred. Shapleys for this features selection not possible.')
+            col7.write(e)
+
+        # right side shapleys
+        try:
+            show_shapley_plots(column=col9, selected_shap_feature=selected_shap_feature,
+                               classification_method=classification_method_2, sampling_method=sampling_method_2,
+                               selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=FEATURES_DF,
+                               selected_features=selected_features, selected_variable=selected_variable,
+                               use_grid_search=use_grid_search_2, test_size=test_size2)
+        except ValueError as e:
+            col9.warning('ValueError occurred. Shapleys for this features selection not possible.')
+            col9.write(e)
+
 
         # Calculate Shapleys if Button pressed
-        if st.button('Start Shapley Calculation'):
-            col1, col2, col5 = st.columns((0.475, 0.05, 0.475))
-            # left side shapleys
-            try:
-                show_shapley_plots(column=col1, selected_shap_feature=selected_shap_feature,
-                                   classification_method=classification_method, sampling_method=sampling_method,
-                                   selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=FEATURES_DF,
-                                   selected_features=selected_features, selected_variable=selected_variable,
-                                   use_grid_search=use_grid_search_1, test_size=test_size1)
-            except ValueError as e:
-                # todo: why shapley only for oversampling possible?
-                col1.warning('ValueError occurred. Shapleys for this features selection only possible with oversampling.')
-            # right side shapleys
-            try:
-                show_shapley_plots(column=col5, selected_shap_feature=selected_shap_feature,
-                                   classification_method=classification_method_2, sampling_method=sampling_method_2,
-                                   selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=FEATURES_DF,
-                                   selected_features=selected_features, selected_variable=selected_variable,
-                                   use_grid_search=use_grid_search_2, test_size=test_size2)
-            except ValueError as e:
-                col5.warning('ValueError occurred. Shapleys for this features selection only possible with oversampling.')
-
-        else:
-            st.write('Shapley calculations can take up to 1 minute.')
+        # if st.button('Start Shapley Calculation'):
+        #     pass
+        #     # original idea was to have shapleys in here
+        # else:
+        #     st.write('Shapley calculations can take up to 1 minute.')
 
         st.markdown('___')
