@@ -86,7 +86,8 @@ def show_shapley_plots(column, column_name, selected_shap_feature, classificatio
     plt.clf()
 
     # Dependence for checking linearity of selected feature
-    shap.dependence_plot(ind=selected_shap_feature[0], shap_values=shap_values.values, features=X_for_shap, show=False)
+    shap.dependence_plot(ind=selected_shap_feature[0], shap_values=shap_values.values, features=X_for_shap,
+                         interaction_index=selected_shap_feature[0], show=False)
     plt.title(f'Dependence Plot of {selected_shap_feature} for {classification_method}, {sampling_title} on {cohort_title}', wrap=True)
     column.pyplot(bbox_inches='tight')
     plt.clf()
