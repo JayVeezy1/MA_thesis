@@ -17,7 +17,7 @@ from web_app.util import get_avg_cohort_cache, add_download_button, get_default_
     get_preselection_two, insert_feature_selectors
 
 
-def show_shapley_plots(column, selected_shap_feature, classification_method, sampling_method, selected_cohort,
+def show_shapley_plots(column, column_name, selected_shap_feature, classification_method, sampling_method, selected_cohort,
                        cohort_title, features_df, selected_features, selected_variable, use_grid_search, test_size):
     if classification_method == 'deeplearning_sequential':
          column.warning('SHAP analysis not yet implemented for deeplearning model.')
@@ -62,9 +62,15 @@ def show_shapley_plots(column, selected_shap_feature, classification_method, sam
     # column.write(shap_values.base_values[0][0])
     # column.write(shap_values.base_values[0][1])
 
+    # column.write(shap_values)
+
+
+    shap_values_count = range(0, len(shap_values.values))       # alternative: shap_values.shape(0)
+    selected_instance = column.selectbox(label=f'Select instance for {column_name}', options=shap_values_count)
+
     # Waterfall for single instance
-    shap.plots.waterfall(shap_values=shap_values[0], show=False)
-    plt.title(f'Waterfall Plot for one Instance for {classification_method} on {cohort_title}', wrap=True)
+    shap.plots.waterfall(shap_values=shap_values[selected_instance], show=False)
+    plt.title(f'Waterfall Plot for Instance {selected_instance} for {classification_method} on {cohort_title}', wrap=True)
     column.pyplot(bbox_inches='tight')
     plt.clf()
 
@@ -493,7 +499,7 @@ def classification_page():
 
         # left side shapleys
         try:
-            show_shapley_plots(column=col7, selected_shap_feature=selected_shap_feature,
+            show_shapley_plots(column=col7, column_name='column_1', selected_shap_feature=selected_shap_feature,
                                classification_method=classification_method, sampling_method=sampling_method,
                                selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=FEATURES_DF,
                                selected_features=selected_features, selected_variable=selected_variable,
@@ -504,7 +510,7 @@ def classification_page():
 
         # right side shapleys
         try:
-            show_shapley_plots(column=col9, selected_shap_feature=selected_shap_feature,
+            show_shapley_plots(column=col9, column_name='column_2', selected_shap_feature=selected_shap_feature,
                                classification_method=classification_method_2, sampling_method=sampling_method_2,
                                selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=FEATURES_DF,
                                selected_features=selected_features, selected_variable=selected_variable,
