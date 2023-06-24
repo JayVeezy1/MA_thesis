@@ -231,12 +231,17 @@ def add_download_button(position, dataframe, title, cohort_title, keep_index: Fa
         position.download_button(label="Download the table", data=csv_table,
                              file_name=f'{cohort_title}_{title}.csv', mime="text/csv")  # , key='download-csv')
 
-def add_single_feature_filter(selected_cohort, selected_features):
+def add_single_feature_filter(selected_cohort, selected_features, use_default_feature):
     # st.write(selected_features)
     all_features = selected_cohort.columns.to_list()
+    if 'ethnicity' in selected_features and use_default_feature:
+        default_feature = ['ethnicity']
+    else:
+        default_feature = []
+
     selected_features_for_fairness = st.multiselect(label='Select features',
                                                     options=all_features,
-                                                    # default=[],
+                                                    default=default_feature,
                                                     max_selections=3)
     # st.write(selected_features_for_fairness)
     for feature in selected_features_for_fairness:

@@ -2,6 +2,7 @@ import os
 
 import pandas as pd
 import streamlit as st
+from matplotlib import pyplot as plt
 
 from step_5_fairness.fairness_analysis import get_fairness_report, plot_radar_fairness
 from web_app.util import get_avg_cohort_cache, add_download_button, get_unfactorized_values, get_default_values, \
@@ -45,7 +46,7 @@ def fairness_page():
         st.markdown("<h2 style='text-align: left; color: black;'>Feature Selection</h2>",
                     unsafe_allow_html=True)
         st.write('Select protected features/attributes and the related privileged values/classes.')
-        selected_features_for_fairness, selected_privileged_values = add_single_feature_filter(selected_cohort, selected_features)
+        selected_features_for_fairness, selected_privileged_values = add_single_feature_filter(selected_cohort, selected_features, use_default_feature=True)
         st.markdown('___')
 
         ## Select Classification Specific Parameters
@@ -86,7 +87,7 @@ def fairness_page():
         ## Plot Fairness Metrics
         try:
             if len(selected_features_for_fairness) > 0:
-                if len(selected_privileged_values) > 0:
+                if len(selected_privileged_values[0]) > 0:
                     fairness_report, metrics_plot, metrics_per_group_df, attributes_string = get_fairness_report(use_this_function=True,
                                                                                            selected_cohort=selected_cohort,
                                                                                            cohort_title=cohort_title,
@@ -172,6 +173,8 @@ def fairness_page():
                     add_download_button(position=col2, dataframe=metrics_per_group_df_2, title='metrics_per_group_df_2',
                                         cohort_title=cohort_title, keep_index=True)
                     col2.pyplot(metrics_plot_2)
+
+                    plt.clf()
                 else:
                     st.write('Select a privileged class to conduct a Fairness Analysis.')
             else:

@@ -2,12 +2,14 @@ import os
 
 import pandas as pd
 import streamlit as st
+from matplotlib import pyplot as plt
 
-from step_3_data_analysis.clustering import plot_k_means_on_pacmap, plot_k_prot_on_pacmap, add_clustering_to_cohort, \
+from step_3_data_analysis.clustering import add_clustering_to_cohort, \
     plot_sh_score
 from step_5_fairness.fairness_analysis import get_fairness_report, plot_radar_fairness
-from step_6_subgroup_analysis.subgroup_analysis import compare_classification_models_on_clusters, derive_subgroups, calculate_feature_influence_table
-from web_app.util import get_avg_cohort_cache, add_download_button, get_unfactorized_values, insert_feature_selectors
+from step_6_subgroup_analysis.subgroup_analysis import derive_subgroups, calculate_feature_influence_table
+from web_app.subpages.Classification import show_shapley_plots
+from web_app.util import get_avg_cohort_cache, add_download_button, insert_feature_selectors
 
 
 def subgroup_analysis_page():
@@ -276,12 +278,14 @@ def subgroup_analysis_page():
                     col4.markdown("<h2 style='text-align: left; color: black;'>Subgroup Comparison</h2>",
                                   unsafe_allow_html=True)
                     col4.pyplot(metrics_plot)
+                    plt.clf()
+
                     col4.dataframe(metrics_per_group_df.transpose())
                     add_download_button(position=col4, dataframe=metrics_per_group_df.transpose(),
                                         title='metrics_per_group1', cohort_title=cohort_title, keep_index=False)
-                    col4.write('Class 1 is made up of the selected protected features and their privileged attributes.')
+                    # col4.write('Class 1 is made up of the selected protected features and their privileged attributes.')
 
-                    ## Plot Classification per Cluster Table
+                    ## Deprecated: Plot Classification per Cluster Table
                     # This overview table does not work, complete_set values should be independent of selected cluster count
                     # st.markdown("<h2 style='text-align: left; color: black;'>Classification Metrics per Cluster</h2>", unsafe_allow_html=True)
                     # st.write('The comparison of prediction metrics across clusters can be an additional indicator for a fairness analysis.')
@@ -306,6 +310,61 @@ def subgroup_analysis_page():
                 except AttributeError:
                     st.warning('Select protected attributes to conduct a Fairness Analysis.')
                 st.markdown('___')
+
+                ## Feature Importance
+                st.markdown("<h2 style='text-align: left; color: black;'>Subgroup Feature Importance</h2>",
+                            unsafe_allow_html=True)
+                if 'oasis' in selected_features:
+                    selected_shap_feature = st.multiselect(label='Select a Feature for Shapley Dependence Analysis',
+                                                           options=selected_features, default='oasis', max_selections=1)
+                else:
+                    selected_shap_feature = st.multiselect(label='Select a Feature for Shapley Dependence Analysis',
+                                                           options=selected_features, max_selections=1)
+                col1, col2, col3 = st.columns((0.475, 0.05, 0.475))
+
+                # Get Shapley Beeswarm plot for each subgroup
+                try:
+                    col1.markdown("<h3 style='text-align: left; color: black;'>Other Clusters</h3>",
+                                unsafe_allow_html=True)
+                    # tilde ~ in front of df turns index around
+                    unprivileged_cohort = cohort_with_clusters[~cohort_with_clusters['cluster'].isin(selected_privileged_clusters[0])]
+                    cohort_title_1 = cohort_title + '_unprivileged'
+                    show_shapley_plots(column=col1, column_name='column_unprivileged', selected_shap_feature=selected_shap_feature,
+                                       classification_method=classification_method, sampling_method=sampling_method,
+                                       selected_cohort=unprivileged_cohort, cohort_title=cohort_title_1,
+                                       features_df=FEATURES_DF,
+                                       selected_features=selected_features, selected_variable=selected_variable,
+                                       use_grid_search=use_grid_search, test_size=test_size,
+                                       show_waterfall=False, show_beeswarm=True, show_barplot=True, show_dependence=True)
+                except ValueError as e:
+                    col1.warning('ValueError occurred. Shapleys for this features selection not possible.')
+                    col1.write(e)
+
+                try:
+                    if len(selected_privileged_clusters[0]) == 1:
+                        col3.markdown(f"<h3 style='text-align: left; color: black;'>Selected Cluster {selected_privileged_clusters[0][0]}</h3>",
+                                      unsafe_allow_html=True)
+                    else:
+                        col3.markdown(
+                            f"<h3 style='text-align: left; color: black;'>Selected Clusters {selected_privileged_clusters[0]}</h3>",
+                            unsafe_allow_html=True)
+
+                    privileged_cohort = cohort_with_clusters[cohort_with_clusters['cluster'].isin(selected_privileged_clusters[0])]
+                    cohort_title_2 = cohort_title + '_privileged'
+                    show_shapley_plots(column=col3, column_name='column_privileged', selected_shap_feature=selected_shap_feature,
+                                       classification_method=classification_method, sampling_method=sampling_method,
+                                       selected_cohort=privileged_cohort, cohort_title=cohort_title_2,
+                                       features_df=FEATURES_DF,
+                                       selected_features=selected_features, selected_variable=selected_variable,
+                                       use_grid_search=use_grid_search, test_size=test_size,
+                                       show_waterfall=False, show_beeswarm=True, show_barplot=True, show_dependence=True)
+                except ValueError as e:
+                    col3.warning('ValueError occurred. Shapleys for this features selection not possible.')
+                    col3.write(e)
+
+                st.markdown('___')
+
+
         else:
             st.warning('Clusters overview tables only available for clustering methods with preselected cluster count (kmeans and kprototype).')
             st.markdown('___')

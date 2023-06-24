@@ -152,7 +152,7 @@ def create_performance_metrics_plot(y_pred, y_true, selected_attribute_array, us
         layout=[3, 3],
         legend=False,
         figsize=[12, 8],
-        title=f'Metrics per Subgroup on {attributes_string}')
+        title=f'Metrics per Subgroup on {attributes_string}, for {classification_method}, {sampling_title}')
     count_axis = figure_object[1][2]
     y_limit = len(y_pred) + 50
     count_axis.set_ylim(bottom=0, top=y_limit)

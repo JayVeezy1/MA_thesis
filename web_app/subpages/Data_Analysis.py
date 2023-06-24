@@ -45,7 +45,7 @@ def data_analysis_page():
         checker_1 = st.checkbox(label='Optionally Filter the Dataset', value=False)
         if checker_1:
             st.write('Select categorical values to optionally filter the dataset for subgroups.')
-            selected_filter_features, selected_filter_values = add_single_feature_filter(selected_cohort, selected_features)
+            selected_filter_features, selected_filter_values = add_single_feature_filter(selected_cohort, selected_features, use_default_feature=False)
 
             # Filter the cohort based on filter selections
             factorization_df = pd.read_excel('./supplements/FACTORIZATION_TABLE.xlsx')

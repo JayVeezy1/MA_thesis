@@ -1,7 +1,5 @@
 import os
 
-from PIL import Image
-
 import numpy as np
 import pandas as pd
 import shap
@@ -13,12 +11,12 @@ from step_4_classification.classification import get_classification_report, get_
     get_shapely_values
 from step_4_classification.classification_deeplearning import get_classification_report_deeplearning, \
     get_DL_confusion_matrix
-from web_app.util import get_avg_cohort_cache, add_download_button, get_default_values, get_preselection_one, \
-    get_preselection_two, insert_feature_selectors
+from web_app.util import get_avg_cohort_cache, add_download_button, insert_feature_selectors
 
 
 def show_shapley_plots(column, column_name, selected_shap_feature, classification_method, sampling_method, selected_cohort,
-                       cohort_title, features_df, selected_features, selected_variable, use_grid_search, test_size):
+                       cohort_title, features_df, selected_features, selected_variable, use_grid_search, test_size,
+                       show_waterfall, show_beeswarm, show_barplot, show_dependence):
     if classification_method == 'deeplearning_sequential':
          column.warning('SHAP analysis not yet implemented for deeplearning model.')
          return None
@@ -61,36 +59,38 @@ def show_shapley_plots(column, column_name, selected_shap_feature, classificatio
     # column.write(shap_values.base_values[0])
     # column.write(shap_values.base_values[0][0])
     # column.write(shap_values.base_values[0][1])
-
     # column.write(shap_values)
 
 
-    shap_values_count = range(0, len(shap_values.values))       # alternative: shap_values.shape(0)
-    selected_instance = column.selectbox(label=f'Select instance for {column_name}', options=shap_values_count)
-
     # Waterfall for single instance
-    shap.plots.waterfall(shap_values=shap_values[selected_instance], show=False)
-    plt.title(f'Waterfall Plot for Instance {selected_instance} for {classification_method} on {cohort_title}', wrap=True)
-    column.pyplot(bbox_inches='tight')
-    plt.clf()
+    if show_waterfall:
+        shap_values_count = range(0, len(shap_values.values))  # alternative: shap_values.shape(0)
+        selected_instance = column.selectbox(label=f'Select instance for {column_name}', options=shap_values_count)
+        shap.plots.waterfall(shap_values=shap_values[selected_instance], show=False)
+        plt.title(f'Waterfall Plot for Instance {selected_instance} for {classification_method} on {cohort_title}', wrap=True)
+        column.pyplot(bbox_inches='tight')
+        plt.clf()
 
     # Beeswarm
-    shap.summary_plot(shap_values, show=False) # , plot_type='compact_dot')
-    plt.title(f'Beeswarm Plot of Shapley Values for {classification_method}, {sampling_title} on {cohort_title}', wrap=True)
-    column.pyplot(bbox_inches='tight')      # this function is officially deprecated because pyplot() without a figure object is not recommended. But currently only way for shapleys
-    plt.clf()  # clear figure
+    if show_beeswarm:
+        shap.summary_plot(shap_values, show=False) # , plot_type='compact_dot')
+        plt.title(f'Beeswarm Plot of Shapley Values for {classification_method}, {sampling_title} on {cohort_title}', wrap=True)
+        column.pyplot(bbox_inches='tight')      # this function is officially deprecated because pyplot() without a figure object is not recommended. But currently only way for shapleys
+        plt.clf()  # clear figure
 
-    shap.summary_plot(shap_values, show=False, plot_type='bar')
-    plt.title(f'Barplot of Shapley Values for {classification_method}, {sampling_title} on {cohort_title}', wrap=True)
-    column.pyplot(bbox_inches='tight')      # this function is officially deprecated because pyplot() without a figure object is not recommended. But currently only way for shapleys
-    plt.clf()
+    if show_barplot:
+        shap.summary_plot(shap_values, show=False, plot_type='bar')
+        plt.title(f'Barplot of Shapley Values for {classification_method}, {sampling_title} on {cohort_title}', wrap=True)
+        column.pyplot(bbox_inches='tight')      # this function is officially deprecated because pyplot() without a figure object is not recommended. But currently only way for shapleys
+        plt.clf()
 
     # Dependence for checking linearity of selected feature
-    shap.dependence_plot(ind=selected_shap_feature[0], shap_values=shap_values.values, features=X_for_shap,
-                         interaction_index=selected_shap_feature[0], show=False)
-    plt.title(f'Dependence Plot of {selected_shap_feature} for {classification_method}, {sampling_title} on {cohort_title}', wrap=True)
-    column.pyplot(bbox_inches='tight')
-    plt.clf()
+    if show_dependence and (not selected_shap_feature is None):
+        shap.dependence_plot(ind=selected_shap_feature[0], shap_values=shap_values.values, features=X_for_shap,
+                             interaction_index=selected_shap_feature[0], show=False)
+        plt.title(f'Dependence Plot of {selected_shap_feature[0]} for {classification_method}, {sampling_title} on {cohort_title}', wrap=True)
+        column.pyplot(bbox_inches='tight')
+        plt.clf()
 
     ## Old Approach with cached images
     # plot_name = 'waterfall'
@@ -492,19 +492,14 @@ def classification_page():
             selected_shap_feature = st.multiselect(label='Select a Feature for Shapley Analysis', options=selected_features, max_selections=1)
 
         col7, col8, col9 = st.columns((0.475, 0.05, 0.475))
-
-        # TODO: own function needed for deeplearning?
-        # if classification_method_2 == 'deeplearning_sequential':
-        #     shap_df, shap_waterfall_plot, shap_beeswarm_plot, shap_partial_dependence_plot, shap_scatter_plot = get_shapely_relevance_deeplearning()
-        # else:
-
         # left side shapleys
         try:
             show_shapley_plots(column=col7, column_name='column_1', selected_shap_feature=selected_shap_feature,
                                classification_method=classification_method, sampling_method=sampling_method,
                                selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=FEATURES_DF,
                                selected_features=selected_features, selected_variable=selected_variable,
-                               use_grid_search=use_grid_search_1, test_size=test_size1)
+                               use_grid_search=use_grid_search_1, test_size=test_size1,
+                               show_waterfall=True, show_beeswarm=True, show_barplot=True, show_dependence=True)
         except ValueError as e:
             col7.warning('ValueError occurred. Shapleys for this features selection not possible.')
             col7.write(e)
@@ -515,13 +510,14 @@ def classification_page():
                                classification_method=classification_method_2, sampling_method=sampling_method_2,
                                selected_cohort=selected_cohort, cohort_title=cohort_title, features_df=FEATURES_DF,
                                selected_features=selected_features, selected_variable=selected_variable,
-                               use_grid_search=use_grid_search_2, test_size=test_size2)
+                               use_grid_search=use_grid_search_2, test_size=test_size2,
+                               show_waterfall=True, show_beeswarm=True, show_barplot=True, show_dependence=True)
         except ValueError as e:
             col9.warning('ValueError occurred. Shapleys for this features selection not possible.')
             col9.write(e)
 
 
-        # Calculate Shapleys if Button pressed
+        # Old idea: only calculate Shapleys if Button pressed
         # if st.button('Start Shapley Calculation'):
         #     pass
         #     # original idea was to have shapleys in here

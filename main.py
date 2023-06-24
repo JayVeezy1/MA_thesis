@@ -340,8 +340,7 @@ if __name__ == '__main__':
     ### Step 7.1) Streamlit App for Visualization
     start_streamlit_frontend(use_this_function=True)
 
-    # todo text: add shapley to classification chapter and compare with correlation
-    ## then compare different feature importance per subgroups
+    # todo text: add shapley to subgroup chapter to compare different feature importance per subgroups
 
     ### Deprecated: ASDF-Dashboard for visualization  https://github.com/jeschaef/ASDF-Dashboard
     # Important: Start Background Services First
