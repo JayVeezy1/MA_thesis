@@ -340,8 +340,6 @@ if __name__ == '__main__':
     ### Step 7.1) Streamlit App for Visualization
     start_streamlit_frontend(use_this_function=True)
 
-    # todo text: add shapley to subgroup chapter to compare different feature importance per subgroups
-
     ### Deprecated: ASDF-Dashboard for visualization  https://github.com/jeschaef/ASDF-Dashboard
     # Important: Start Background Services First
     # Redis: docker run --name redis -p 6379:6379 -d redis (once created 'start' in Docker Desktop)
