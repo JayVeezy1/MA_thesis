@@ -123,6 +123,8 @@ def subgroup_analysis_page():
                                               use_encoding=True, clustering_method='kmeans',
                                               selected_cluster_count=selected_cluster_count, save_to_file=False)
                 col2.pyplot(sh_score_plot, use_container_width=True)
+                plt.clf()
+
             else:
                 # clustering_plot = plot_k_prot_on_pacmap(use_this_function=True,
                 #                                          display_sh_score=False,
@@ -146,6 +148,8 @@ def subgroup_analysis_page():
                                               clustering_method='kprot', selected_cluster_count=selected_cluster_count,
                                               save_to_file=False)
                 col2.pyplot(sh_score_plot, use_container_width=True)
+                plt.clf()
+
             st.markdown('___')
 
             # Feature Influence Table with selected Cluster
@@ -235,13 +239,12 @@ def subgroup_analysis_page():
 
                 # Warning if values not reliable
                 try:
-                    # 1. check: were dummys inserted?
+                    # 1. check: less than 100?
                     count_privileged = metrics_per_group_df.loc['count', 1]
                     count_unprivileged = metrics_per_group_df.loc['count', 0]
                     if count_privileged < 100 or count_unprivileged < 100:
-                        st.warning('Warning: Following performance metrics are NOT reliable because privileged or unprivileged class sizes are below 100. '
-                                   'Dummy predictions were inserted to create at least one true positive, false positive, true negative and false negative.')
-
+                        st.warning('Warning: Following performance metrics are NOT reliable because privileged or unprivileged class sizes are below 100. ')
+                                   # 'Dummy predictions were inserted to create at least one true positive, false positive, true negative and false negative.')
                         # Dummy solution is not good because metrics are wrong. Any other option possible?
 
                     # 2. check: is recall or precision definitely unrealistic
@@ -254,7 +257,6 @@ def subgroup_analysis_page():
                 except AttributeError as e:
                     # 3. check: this happens when metrics_per_group_df=None returned, and .transpose() is not possible
                     st.warning('Warning: ValueError occurred, because only one class available for fairness analysis. Metrics were not calculated')
-
                 st.markdown('___')
 
                 # Display Fairness Analysis

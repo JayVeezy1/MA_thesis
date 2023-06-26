@@ -30,6 +30,7 @@ def preprocess_for_classification(selected_cohort, features_df, selected_feature
     features_to_remove = features_df['feature_name'].loc[features_df['must_be_removed'] == 'yes'].to_list()
     selected_features = [x for x in selected_features if x not in features_to_remove]
 
+    # todo future research: does it really make sense to keep cluster feature? Or should it be ignored for classification?
     if 'cluster' in selected_cohort.columns:
         selected_features.append('cluster')
 
@@ -260,7 +261,7 @@ def get_shapely_values(use_this_function, selected_feature, classification_metho
             model, history = get_sequential_model(x_train_final=x_train_final, y_train_final=y_train_final)
 
             X = x_test_final  # x_test_final | x_train_final
-            explainer = shap.DeepExplainer(model=model, data=X)       # todo future research: somehow model does not work here
+            explainer = shap.DeepExplainer(model=model, data=X)       # todo future research: somehow parameter 'model' does not work here, how calculate shap for DL?
             shap_values = explainer(X=X, check_additivity=True)
         except AssertionError as e:
             st.write(e)

@@ -248,6 +248,7 @@ def clustering_page():
                                           use_encoding=True, clustering_method='kmeans', selected_cluster_count=selected_cluster_count, save_to_file=False)
 
             col1.pyplot(sh_score_plot, use_container_width=True)
+            plt.clf()
             # Clustering
             clustering_plot = plot_k_means_on_pacmap(use_this_function=True,
                                                  display_sh_score=False,
@@ -261,6 +262,7 @@ def clustering_page():
                                                  use_encoding=True,
                                                  save_to_file=False)
             col2.pyplot(clustering_plot, use_container_width=True)
+            plt.clf()
 
         elif clustering_method == 'kprototype':
             col1.write(f'Calculating the silhouette scores of kprototype for the first time can take up to 1 minute.')
@@ -274,6 +276,8 @@ def clustering_page():
                                           save_to_file=False)
 
             col1.pyplot(sh_score_plot, use_container_width=True)
+            plt.clf()
+
             # Clustering
             clustering_plot = plot_k_prot_on_pacmap(use_this_function=True,
                                                  display_sh_score=False,
@@ -287,6 +291,7 @@ def clustering_page():
                                                  use_encoding=False,        # not needed for kprot
                                                  save_to_file=False)
             col2.pyplot(clustering_plot, use_container_width=True)
+            plt.clf()
 
         elif clustering_method == 'DBSCAN':
             col1.write(f'Iteratively change the DBSCAN parameters of epsilon and min_samples to optimize the clustering.')
@@ -301,6 +306,8 @@ def clustering_page():
                                           save_to_file=False)
 
             col1.pyplot(sh_score_plot, use_container_width=True)
+            plt.clf()
+
             # Clustering
             clustering_plot, dbscan_list = plot_DBSCAN_on_pacmap(use_this_function=True,
                                                 display_sh_score=False,
@@ -315,6 +322,7 @@ def clustering_page():
                                                 use_encoding=True,  # not needed for kprot
                                                 save_to_file=False)
             col2.pyplot(clustering_plot, use_container_width=True)
+            plt.clf()
 
             if len(list(set(dbscan_list))) > 20:
                 col2.warning('Warning: DBSCAN results in more than 20 clusters. Clustering might not be useful.')
@@ -330,6 +338,7 @@ def clustering_page():
                                           use_encoding=True,
                                           save_to_file=False)
             col1.pyplot(sh_score_plot, use_container_width=True)
+            plt.clf()
 
             # Get SLINK Clusters
             selected_cohort_preprocessed, clusters_list, slink_z, sh_score, pacmap_data_points = plot_SLINK_on_pacmap(use_this_function=True,
@@ -352,6 +361,8 @@ def clustering_page():
                                             pacmap_data_points=pacmap_data_points, cluster_count=cluster_count,
                                             sh_score=sh_score, coloring=clusters_list, save_to_file=False)
             col2.pyplot(clustering_plot, use_container_width=True)
+            plt.clf()
+
             if len(list(set(clusters_list))) > 20:
                 col2.warning('Warning: SLINK results in more than 20 clusters. Clustering might not be useful.')
 
@@ -379,6 +390,7 @@ def clustering_page():
                                 ax=ax,
                                 above_threshold_color='C0')
             col2.pyplot(dendrogram_fig, use_container_width=True)
+            plt.clf()
 
         else:
             st.warning('Please select a clustering option.')
