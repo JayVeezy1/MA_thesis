@@ -1,41 +1,31 @@
 # MA Thesis
-## Part 1 - Export of Patients into .csv
-**What is this:**
+**Analysis Goal**
+ 
+The goal of this thesis is the mortality prediction within the MIMIC-III dataset for a use case of 2,655 stroke patients.
+The available dependent variables are  'death within the hospital stay', 'within 30 days', 'within 180 days', and 'within 360 days'. 
 
-The first part of this project prepares the Medical Information Mart for Intensive Care dataset (MIMIC-III, v1.4) dataset for data analysis. These Python scripts can be used to 
-export patients (based on icustay_ids) from a local Postgres database. 
+# Part 0 - Setup
+**MIMIC-III Setup in Postgres**
 
-For this, in a preparatory step, the data must have already been imported and set up in the Postgres database (instructions available at https://physionet.org/content/mimiciii/1.4/).
+The initial part of this project prepares the Medical Information Mart for Intensive Care dataset (MIMIC-III, v1.4) dataset for analysis. 
+The data must be imported and set up in the Postgres database (instructions available at https://physionet.org/content/mimiciii/1.4/).
 Also, in the 'supplements/SQL' folder, necessary SQL scripts are provided, to set up further required PL/pgSQL functions. 
 Once this setup is finished a user can run all functions from the main.py Python script.
 
+These Python scripts can be used to export patients (based on icustay_ids) from the local Postgres database into individual .csv files.
+
 The actual data for the MIMIC-III dataset can not be shared here. It is available, upon request, through PhysioNet.
 
-**Analysis Goal**
+**Patient Export**
 
-Previous research had 3 main directions. Either, the hourly prediction of the occurrence of a sickness, death, or 
-complications (like sepsis) is intended. For this, hourly time-series data is used as a basis. This is rather complex and many times, supportive features 
-need to be derived first.
-
-A second direction is the prediction of the upcoming occurrence of sickness based on general data (averages, not hourly).
-For this, a precise knowledge of the medical factors is required.
-
-The last case is to predict the general development of a patient. Different approaches are possible: 
-length of stay, probability of a secondary stay (relapse), and mortality prediction.
-This last case is the intention of this work: 
-The prediction of death for stroke patients within the hospital stay, within 30 days, and within 360 days.
-
-**Output:**
-
-An overview of all selected patients is created in '0_patient_cohort.csv'. For each patient, a .csv file is created
-with their hourly chart events (time-series data). These time-series data will be converted to averages in a later step. 
+For each patient, a .csv file is exported from the local Postgres DB with their hourly chart events (time-series data). These time-series data will be converted to averages in a later step. 
 The resulting 'average-patient-cohort.csv' file will be the foundation for all subsequent analysis steps. 
 This is also the file, that a user can upload in the supplement frontend to visualize the analysis.
 
 **Estimated Time:** 
 
 Getting access to the MIMIC-III dataset by PhysioNet takes between 1-4 weeks. 
-For this, also a course regarding data protection had to be conducted, which regularly takes about 4 hours.
+For this, also a course regarding data protection has to be conducted, which regularly takes about 4 hours.
 The download and import of the data into the Postgres database takes about 5 hours.
 
 Running the set-up for the table 'all_diagnoses_icd' takes about 45 minutes.
@@ -47,6 +37,7 @@ Creation of the patient_cohort can be calculated very quickly (10 seconds).
 However, the creation of the single patient files with all their chart-events takes up multiple hours. 
 Approximately the creation of one patient .csv file takes 30 seconds. 
 Depending on the use case, for example, stroke there are 2600 available patients, which leads to about 1300 minutes (~20h).
+It is recommended to run this export of patients from the Postgres DB into individual .csv files overnight.
 
 **Requirements:**
 
@@ -125,7 +116,7 @@ Features that are always included:
 
 The actual selection out of these 40 features can be changed for each analysis step within the subsequent processes and within the frontend.
 
-**Further Information about the OASIS Score Feature**
+**Additional Information about the OASIS Score Feature**
 
 The OASIS score represents a very common and important index for patient risk. It is commonly used to compare
 new prediction models with the status quo. The calculation of the score depends on a multitude of factors.
@@ -136,16 +127,6 @@ They must be loaded manually into the postgres database before running the patie
 the scripts is about 15 minutes in total (each ranging between 30 seconds and 3 minutes). 
 The created views are saved inside the MIMIC-III schema, and not inside the public schema, where all the other objects 
 of this thesis were created. This makes it easier to see, which scripts come from where. 
-
-**Notes for Future Improvements**
-
-Some aspects within this setup process can be reconsidered. For example, there are many labels in the MIMIC-III dataset that have not yet been included into this analysis.
-It is possible to include sources like: transfers, services, microbiology-events, cptevents, prescriptions for further research.
-For example, the number of transfers or a special kind of prescriptions might be strong indicators for relapse-rates. 
-However, these features are related to the treatment and behavior of the medical staff. They are not directly related
-to the illness itself and thus, were not included in this analysis.
-Especially the table note-events offer a noteworthy source for possible ML-research based on text-analysis. 
-All of these sources might be included inside the SQL-function 'get_all_events_view' for future research. 
 
 # Actual Analysis
 
