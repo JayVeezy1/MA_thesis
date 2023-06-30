@@ -4,7 +4,6 @@
   <img src="supplements/title_page.png">
 </p>
 
-**Analysis Goal:** 
 The goal of this thesis is to examine the potential of mortality prediction within the MIMIC-III dataset.
 The selected use case is 'stroke' with 2,655 patients.
 The final thesis paper, with the analysis results, can be provided upon request. 
