@@ -1,6 +1,8 @@
-# Master Thesis by Jakob Vanek, 2023
+# Master Thesis by Jakob Vanek
 
-![alt text](supplements/title_page.png?raw=true)
+<p align="center">
+  <img src="supplements/title_page.png">
+</p>
 
 **Analysis Goal:** 
 The goal of this thesis is to examine the potential of mortality prediction within the MIMIC-III dataset.
