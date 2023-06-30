@@ -1,7 +1,6 @@
 # Master Thesis by Jakob Vanek, 2023
 
-![alt text](https://github.com/JayVeezy1/MA_Thesis/supplements/title_page.png?raw=true)
-
+![alt text](supplements/title_page.png?raw=true)
 
 **Analysis Goal**
  
