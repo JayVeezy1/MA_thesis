@@ -180,8 +180,8 @@ The implementation of the following steps makes up the core of my master thesis.
 ## Part 6 - Frontend
     # A streamlit frontend was developed for this thesis to visualize each of the previous chapters
     # It can be started directly by running the 'main.py' file
-    # Herein, a user has to upload the 'average_patient_cohort.csv' file. So a user must have access to the MIMIC-III dataset and previously implement the setup (Part 0) and pre-processing (Part 1) of this thesis.
+    # Herein, a user has to upload the 'average_patient_cohort.csv' file. 
+    
+In conclusion, a user must have access to the MIMIC-III dataset and at least implement the setup (Part 0) and pre-processing (Part 1) to visualize the results of this thesis in the frontend. 
 
-
-Overall, this thesis offers a broad foundation for research within the MIMIC-III dataset.
-If any questions arise, please, feel free to get in contact.
+Overall, the code for this thesis offers a broad foundation for research within the MIMIC-III dataset. If any questions arise, please, feel free to get in contact.
