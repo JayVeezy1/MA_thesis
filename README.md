@@ -1,8 +1,9 @@
 # MA Thesis
 **Analysis Goal**
  
-The goal of this thesis is the mortality prediction within the MIMIC-III dataset for a use case of 2,655 stroke patients.
-The available dependent variables are  'death within the hospital stay', 'within 30 days', 'within 180 days', and 'within 360 days'. 
+The goal of this thesis is to examine the potential of mortality prediction within the MIMIC-III dataset.
+The selected use case is 'stroke' with 2,655 patients.
+The final thesis paper, with the analysis results, can be provided upon request. 
 
 # Part 0 - Setup
 **MIMIC-III Setup in Postgres**
@@ -53,7 +54,7 @@ There are 3 steps where the dataset is filtered.
 
 The first filtering determines, which patient is suitable. While there are 58.976 unique admissions in the dataset, 
 many patients are underage or need to be excluded because there is missing data.
-Currently, patients from the `metavision' as well as the `CareVue' dataset are included. 
+Currently, patients from the 'metavision' as well as the 'CareVue' dataset are included. 
 
 This filtering was in parts based on concepts from previous research by Alistair et al. (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5851804/pdf/nihms925667.pdf).
 It should not be changed by the user. After this first step, there are still 13.383 unique icu-stays left. 
@@ -89,7 +90,7 @@ Also, all icu-stays with less than 24 hours were removed, which resulted in a to
 A patient can come to the ICU multiple times, within one hospital stay (one admission). 
 Thus, the relevant key shall be the ICU stay, to not use duplicate patients.
 
-**Further Info**
+**Further Info:**
 When checking the .csv files manually, be sure to turn off excels column-data-transformation. 
 Otherwise, some comma numbers, which are separated with a '.' will appear as dates and then be transformed to very large numbers.
 
